@@ -41,6 +41,7 @@ export const UrunGirdi = z.object({
   aciklama: z.string().trim().max(500).optional(),
   fiyatKurus: z.number().int().min(0).max(1_000_000),
   stoktaMi: z.boolean(),
+  stokMiktar: z.number().int().min(0).max(100_000).optional(),
   sira: z.number().int().min(0).max(9999).default(0),
   gorselUrl: z.string().url().optional(),
   opsiyonGruplari: z.array(UrunOpsiyonGrubuGirdi).max(10).optional(),

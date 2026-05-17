@@ -47,7 +47,7 @@ export async function PATCH(
     const aRef = db.doc(`restoranlar/${R}/adisyonlar/${body.adisyonId}`);
 
     await db.runTransaction(async (tx) => {
-      // Okumalar
+      // ── Okumalar ───────────────────────────────────────────────────
       const sSnap = await tx.get(sRef);
       if (!sSnap.exists) {
         throw new AppError('siparis_yok', 'Sipariş bulunamadı.', 404);
@@ -55,6 +55,7 @@ export async function PATCH(
       const mevcut = sSnap.data() as {
         durum: SiparisDurumu;
         toplamKurus: number;
+        kalemler?: Array<{ urunId: string; adet: number }>;
       };
       const izin = IZIN[mevcut.durum];
       if (!izin.includes(body.durum)) {
@@ -70,6 +71,11 @@ export async function PATCH(
         siparisSayisi: number;
       } | null = null;
 
+      const stokGeriAlim: Array<{
+        ref: FirebaseFirestore.DocumentReference;
+        miktar: number;
+      }> = [];
+
       if (body.durum === 'iptal') {
         const aSnap = await tx.get(aRef);
         if (aSnap.exists) {
@@ -82,9 +88,32 @@ export async function PATCH(
             siparisSayisi: Math.max(0, a.siparisSayisi - 1),
           };
         }
+
+        // Stok geri al — kalemler içindeki ürünleri oku, stokMiktar varsa ekle
+        if (mevcut.kalemler && mevcut.kalemler.length > 0) {
+          const istenenMap = new Map<string, number>();
+          for (const k of mevcut.kalemler) {
+            istenenMap.set(
+              k.urunId,
+              (istenenMap.get(k.urunId) ?? 0) + k.adet,
+            );
+          }
+          for (const [urunId, adet] of istenenMap.entries()) {
+            const uRef = db.doc(`restoranlar/${R}/urunler/${urunId}`);
+            const uSnap = await tx.get(uRef);
+            if (!uSnap.exists) continue;
+            const ud = uSnap.data() as { stokMiktar?: number };
+            if (typeof ud.stokMiktar === 'number') {
+              stokGeriAlim.push({
+                ref: uRef,
+                miktar: ud.stokMiktar + adet,
+              });
+            }
+          }
+        }
       }
 
-      // Yazımlar
+      // ── Yazımlar ───────────────────────────────────────────────────
       tx.update(sRef, {
         durum: body.durum,
         [`durumTarihleri.${body.durum}`]: FieldValue.serverTimestamp(),
@@ -92,6 +121,10 @@ export async function PATCH(
 
       if (adisyonGuncelle) {
         tx.update(aRef, adisyonGuncelle);
+      }
+
+      for (const g of stokGeriAlim) {
+        tx.update(g.ref, { stokMiktar: g.miktar, stoktaMi: true });
       }
     });
 

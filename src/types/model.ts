@@ -59,6 +59,8 @@ export interface Urun {
   aciklama?: string;
   fiyatKurus: Kurus;
   stoktaMi: boolean;
+  /** Opsiyonel sayısal stok. undefined → sınırsız (boolean stoktaMi yeterli). */
+  stokMiktar?: number;
   gorselUrl?: string;
   sira: number;
   opsiyonGruplari?: UrunOpsiyonGrubu[];

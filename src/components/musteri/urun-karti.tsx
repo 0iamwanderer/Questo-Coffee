@@ -91,6 +91,14 @@ export function UrunKarti({ urun, onDetay }: Props) {
               seçenekli
             </span>
           )}
+          {!stokYok &&
+            typeof urun.stokMiktar === 'number' &&
+            urun.stokMiktar > 0 &&
+            urun.stokMiktar <= 5 && (
+              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+                Son {urun.stokMiktar}
+              </span>
+            )}
           {stokYok && (
             <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               Stokta yok

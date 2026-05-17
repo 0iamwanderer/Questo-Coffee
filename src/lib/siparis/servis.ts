@@ -33,6 +33,7 @@ interface UrunOkuma {
   ad: string;
   fiyatKurus: number;
   stoktaMi: boolean;
+  stokMiktar?: number;
   opsiyonGruplari?: OpsiyonGrubuOkuma[];
 }
 
@@ -161,7 +162,23 @@ export const siparisYaz = async (
     const sayacSnap = await tx.get(sayacRef);
 
     // ── 4) Hesaplama ───────────────────────────────────────────────────
+    // Aynı ürün birden fazla satırda istenirse stoktan toplam düşmeli
+    const urunBasinaToplamAdet = new Map<string, number>();
+    for (let i = 0; i < istek.kalemler.length; i++) {
+      const istem = istek.kalemler[i]!;
+      urunBasinaToplamAdet.set(
+        istem.urunId,
+        (urunBasinaToplamAdet.get(istem.urunId) ?? 0) + istem.adet,
+      );
+    }
+
     let toplamKurus = 0;
+    const stokGuncellemeleri: Array<{
+      ref: DocumentReference;
+      yeniMiktar: number;
+    }> = [];
+    const stokKayitlandi = new Set<string>();
+
     const kalemler = urunSnaps.map((s, i) => {
       const istem = istek.kalemler[i]!;
       if (!s.exists) {
@@ -174,6 +191,26 @@ export const siparisYaz = async (
       const u = s.data() as UrunOkuma;
       if (!u.stoktaMi) {
         throw new AppError('stok_yok', `Stokta yok: ${u.ad}`, 409);
+      }
+
+      // Sayısal stok kontrolü (varsa). Aynı ürün birden fazla satırda
+      // olsa bile toplam adet üzerinden tek seferlik karşılaştır.
+      if (typeof u.stokMiktar === 'number') {
+        const istenenToplam = urunBasinaToplamAdet.get(s.id) ?? 0;
+        if (istenenToplam > u.stokMiktar) {
+          throw new AppError(
+            'stok_yetmez',
+            `${u.ad}: yalnız ${u.stokMiktar} adet kaldı.`,
+            409,
+          );
+        }
+        if (!stokKayitlandi.has(s.id)) {
+          stokGuncellemeleri.push({
+            ref: urunlerRefBase.doc(s.id),
+            yeniMiktar: u.stokMiktar - istenenToplam,
+          });
+          stokKayitlandi.add(s.id);
+        }
       }
 
       // ── Modifier (opsiyon) doğrulama + ek fiyat hesabı ──────────────
@@ -283,6 +320,14 @@ export const siparisYaz = async (
       durumTarihleri: { yeni: simdiTs },
       olusturulduAt: simdiTs,
     });
+
+    // Stok düşürme (varsa). 0'a düşerse stoktaMi otomatik false.
+    for (const g of stokGuncellemeleri) {
+      tx.update(g.ref, {
+        stokMiktar: g.yeniMiktar,
+        ...(g.yeniMiktar === 0 ? { stoktaMi: false } : {}),
+      });
+    }
 
     // Rate limit penceresini güncelle
     tx.set(rateRef, { pencere: [...guncelPencere, simdi] }, { merge: true });

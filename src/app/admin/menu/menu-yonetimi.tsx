@@ -36,6 +36,7 @@ interface UrunForm {
   fiyatTL: string;
   aciklama: string;
   stoktaMi: boolean;
+  stokMiktar: string; // boş ise sınırsız
   sira: number;
 }
 
@@ -46,6 +47,7 @@ const bosUrun: UrunForm = {
   fiyatTL: '',
   aciklama: '',
   stoktaMi: true,
+  stokMiktar: '',
   sira: 0,
 };
 
@@ -145,13 +147,24 @@ export function MenuYonetimi() {
       const v = urunForm.veri;
       const tl = parseFloat(v.fiyatTL.replace(',', '.'));
       if (Number.isNaN(tl) || tl < 0) throw new Error('Geçersiz fiyat.');
-      const payload = {
+
+      let stokMiktar: number | undefined;
+      if (v.stokMiktar.trim() !== '') {
+        const sm = parseInt(v.stokMiktar, 10);
+        if (Number.isNaN(sm) || sm < 0) {
+          throw new Error('Geçersiz stok miktarı.');
+        }
+        stokMiktar = sm;
+      }
+
+      const payload: Record<string, unknown> = {
         ad: v.ad,
         kategoriId: v.kategoriId || aktif,
         fiyatKurus: tlToKurus(tl),
         aciklama: v.aciklama || undefined,
         stoktaMi: v.stoktaMi,
         sira: v.sira,
+        ...(stokMiktar !== undefined ? { stokMiktar } : {}),
       };
       if (urunForm.duzenleId) {
         await istek(`/api/admin/urun/${urunForm.duzenleId}`, 'PATCH', payload);
@@ -448,19 +461,40 @@ export function MenuYonetimi() {
                 className="rounded-md border bg-background px-2 py-1.5 text-sm"
               />
             </div>
-            <label className="inline-flex items-center gap-1.5 text-sm">
-              <input
-                type="checkbox"
-                checked={urunForm.veri.stoktaMi}
-                onChange={(e) =>
-                  setUrunForm((f) => ({
-                    ...f,
-                    veri: { ...f.veri, stoktaMi: e.target.checked },
-                  }))
-                }
-              />
-              Stokta
-            </label>
+            <div className="flex flex-wrap items-center gap-3 text-sm">
+              <label className="inline-flex items-center gap-1.5">
+                <input
+                  type="checkbox"
+                  checked={urunForm.veri.stoktaMi}
+                  onChange={(e) =>
+                    setUrunForm((f) => ({
+                      ...f,
+                      veri: { ...f.veri, stoktaMi: e.target.checked },
+                    }))
+                  }
+                />
+                Stokta
+              </label>
+              <label className="inline-flex items-center gap-1.5">
+                <span className="text-muted-foreground">Stok adet:</span>
+                <input
+                  type="number"
+                  min={0}
+                  placeholder="sınırsız"
+                  value={urunForm.veri.stokMiktar}
+                  onChange={(e) =>
+                    setUrunForm((f) => ({
+                      ...f,
+                      veri: { ...f.veri, stokMiktar: e.target.value },
+                    }))
+                  }
+                  className="w-20 rounded-md border bg-background px-2 py-1 text-sm tabular-nums"
+                />
+                <span className="text-xs text-muted-foreground">
+                  boş = sınırsız
+                </span>
+              </label>
+            </div>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -576,6 +610,10 @@ export function MenuYonetimi() {
                           fiyatTL: (u.fiyatKurus / 100).toString(),
                           aciklama: u.aciklama ?? '',
                           stoktaMi: u.stoktaMi,
+                          stokMiktar:
+                            u.stokMiktar !== undefined
+                              ? String(u.stokMiktar)
+                              : '',
                           sira: u.sira,
                         },
                       })
