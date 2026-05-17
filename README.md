@@ -54,6 +54,6 @@ npm run dev
 - [x] Faz 0 — Konfig iskeleti
 - [x] Faz 1 — Tipler & temel altyapı
 - [x] Faz 2 — Güvenlik & rol (firestore.rules, session, middleware, kasa girişi)
-- [ ] Faz 3 — Müşteri akışı (menü, sepet, sipariş transaction)
+- [x] Faz 3 — Müşteri akışı (menü, sepet, sipariş transaction)
 - [ ] Faz 4 — Kasa (Kanban, adisyon paneli, durum güncelleme)
 - [ ] Faz 5 — Admin (menü/masa CRUD, QR PDF)

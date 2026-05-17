@@ -15,6 +15,22 @@
         { "fieldPath": "masaId", "order": "ASCENDING" },
         { "fieldPath": "olusturulduAt", "order": "DESCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "masalar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "token", "order": "ASCENDING" },
+        { "fieldPath": "aktifMi", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "adisyonlar",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "masaId", "order": "ASCENDING" },
+        { "fieldPath": "durum", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []
