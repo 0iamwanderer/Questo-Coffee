@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
-import { Bell, Minus, Plus, Sparkles, X } from 'lucide-react';
-import { toast } from 'sonner';
+import { Minus, Plus, X } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet } from '@/stores/sepet';
@@ -42,10 +41,9 @@ function DetayGorseli({ urun }: { urun: Urun }) {
   );
 }
 
-export function UrunDetaySheet({ urun, acik, onKapat, masaToken }: Props) {
+export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
   const [render, setRender] = useState(acik);
   const [kapaniyor, setKapaniyor] = useState(false);
-  const [sefNotuAcik, setSefNotuAcik] = useState(false);
 
   const ekle = useSepet((s) => s.ekle);
   const adetGetir = useSepet((s) => s.adetGetir);
@@ -55,7 +53,6 @@ export function UrunDetaySheet({ urun, acik, onKapat, masaToken }: Props) {
     if (acik) {
       setRender(true);
       setKapaniyor(false);
-      setSefNotuAcik(false);
       document.body.style.overflow = 'hidden';
       return () => {
         document.body.style.overflow = '';
@@ -76,28 +73,6 @@ export function UrunDetaySheet({ urun, acik, onKapat, masaToken }: Props) {
       setKapaniyor(false);
       onKapat();
     }, 240);
-  };
-
-  const garsonuCagir = async () => {
-    if (!masaToken) {
-      toast.info('Bu sayfada garson çağrısı kullanılamıyor.');
-      return;
-    }
-    try {
-      const res = await fetch('/api/garson-cagir', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ masaToken, urunId: urun.id }),
-      });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { mesaj?: string };
-        throw new Error(j.mesaj ?? 'Çağrı gönderilemedi.');
-      }
-      toast.success('Garson çağrıldı.');
-      kapat();
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Çağrı gönderilemedi.');
-    }
   };
 
   return (
@@ -175,38 +150,9 @@ export function UrunDetaySheet({ urun, acik, onKapat, masaToken }: Props) {
             </p>
           )}
 
-          {sefNotuAcik && urun.aciklama && (
-            <div className="rounded-2xl border bg-accent/40 px-4 py-3 text-sm leading-relaxed text-accent-foreground">
-              <p className="micro-caps mb-1 text-muted-foreground">
-                Şefin notu
-              </p>
-              {urun.aciklama}
-            </div>
-          )}
-
-          {/* Çift buton: Şefin notu + Garsonu Çağır */}
-          <div className="flex gap-2.5">
-            <button
-              type="button"
-              onClick={() => setSefNotuAcik((v) => !v)}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full border bg-background px-4 py-3 text-sm font-medium transition active:scale-[0.98]"
-            >
-              <Sparkles className="size-4" />
-              Şefin notu
-            </button>
-            <button
-              type="button"
-              onClick={garsonuCagir}
-              className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-full bg-foreground px-4 py-3 text-sm font-medium text-background transition active:scale-[0.98]"
-            >
-              <Bell className="size-4" />
-              Garsonu çağır
-            </button>
-          </div>
-
           {/* Adet & sepete ekle */}
           {!stokYok && (
-            <div className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-3 pt-2">
               {adet === 0 ? (
                 <button
                   type="button"
@@ -250,6 +196,12 @@ export function UrunDetaySheet({ urun, acik, onKapat, masaToken }: Props) {
                   </button>
                 </>
               )}
+            </div>
+          )}
+
+          {stokYok && (
+            <div className="rounded-lg border border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+              Bu ürün şu anda stokta yok.
             </div>
           )}
         </div>
