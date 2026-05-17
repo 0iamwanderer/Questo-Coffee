@@ -133,3 +133,4 @@ firebase emulators:start --only firestore,functions,auth
 - [x] Faz 5 — Admin (menü/masa CRUD, QR PDF)
 - [x] Faz 6 — Operasyonel + Cloud Functions (SLA bildirim)
 - [x] Faz 7 — Güvenlik sertleştirme (rate limit + idempotency + audit log)
+- [x] Faz 8 — Ürün görseli + günlük rapor + KVKK

@@ -8,6 +8,7 @@ import {
 } from 'firebase/app';
 import { getAuth, type Auth } from 'firebase/auth';
 import { getFirestore, type Firestore } from 'firebase/firestore';
+import { getStorage, type FirebaseStorage } from 'firebase/storage';
 import {
   initializeAppCheck,
   ReCaptchaV3Provider,
@@ -26,6 +27,7 @@ const yapilandirma = {
 let _app: FirebaseApp | null = null;
 let _auth: Auth | null = null;
 let _db: Firestore | null = null;
+let _storage: FirebaseStorage | null = null;
 let _appCheck: AppCheck | null = null;
 
 const baslat = (): FirebaseApp => {
@@ -51,3 +53,5 @@ const baslat = (): FirebaseApp => {
 export const getClientApp = (): FirebaseApp => baslat();
 export const getClientAuth = (): Auth => (_auth ??= getAuth(baslat()));
 export const getClientDb = (): Firestore => (_db ??= getFirestore(baslat()));
+export const getClientStorage = (): FirebaseStorage =>
+  (_storage ??= getStorage(baslat()));

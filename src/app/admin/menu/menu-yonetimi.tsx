@@ -1,14 +1,17 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Pencil, Plus, Trash2 } from 'lucide-react';
+import Image from 'next/image';
+import { ImageIcon, Pencil, Plus, Trash2, Upload } from 'lucide-react';
 import {
   collection,
   onSnapshot,
   orderBy,
   query,
 } from 'firebase/firestore';
-import { getClientDb } from '@/lib/firebase/client';
+import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { toast } from 'sonner';
+import { getClientDb, getClientStorage } from '@/lib/firebase/client';
 import {
   kategoriConverter,
   urunConverter,
@@ -16,6 +19,8 @@ import {
 import type { Kategori, Urun } from '@/types/model';
 import { formatTL, tlToKurus } from '@/lib/utils/para';
 import { cn } from '@/lib/utils';
+
+const MAX_GORSEL_BYTE = 2 * 1024 * 1024;
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 
@@ -171,6 +176,33 @@ export function MenuYonetimi() {
       await istek(`/api/admin/urun/${u.id}`, 'PATCH', { stoktaMi: yeni });
     } catch (e) {
       setHata(e instanceof Error ? e.message : 'Hata');
+    }
+  };
+
+  const gorselYukle = async (u: Urun, dosya: File) => {
+    if (dosya.size > MAX_GORSEL_BYTE) {
+      toast.error('Görsel 2 MB sınırını aşıyor.');
+      return;
+    }
+    if (!dosya.type.startsWith('image/')) {
+      toast.error('Yalnız resim dosyaları kabul edilir.');
+      return;
+    }
+    const restoran = process.env.NEXT_PUBLIC_RESTORAN_ID;
+    if (!restoran) return;
+
+    try {
+      const uzanti = dosya.name.split('.').pop() ?? 'jpg';
+      const yol = `restoranlar/${restoran}/urunler/${u.id}/${Date.now()}.${uzanti}`;
+      const ref = storageRef(getClientStorage(), yol);
+      await uploadBytes(ref, dosya, { contentType: dosya.type });
+      const url = await getDownloadURL(ref);
+      await istek(`/api/admin/urun/${u.id}`, 'PATCH', { gorselUrl: url });
+      toast.success('Görsel yüklendi.');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Yükleme başarısız.';
+      setHata(msg);
+      toast.error(msg);
     }
   };
 
@@ -460,6 +492,37 @@ export function MenuYonetimi() {
                 key={u.id}
                 className="flex items-start gap-3 rounded-lg border bg-card p-3"
               >
+                <label
+                  className="relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-muted"
+                  title="Görsel yükle"
+                >
+                  {u.gorselUrl ? (
+                    <Image
+                      src={u.gorselUrl}
+                      alt={u.ad}
+                      fill
+                      sizes="64px"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full items-center justify-center text-muted-foreground">
+                      <ImageIcon className="size-5" />
+                    </div>
+                  )}
+                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-foreground/60 py-0.5 text-[10px] text-background">
+                    <Upload className="size-3 mr-0.5" /> Yükle
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void gorselYukle(u, f);
+                      e.target.value = '';
+                    }}
+                  />
+                </label>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{u.ad}</div>
                   {u.aciklama && (

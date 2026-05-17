@@ -8,6 +8,7 @@ const NAV = [
   { yol: '/admin/menu', etiket: 'Menü' },
   { yol: '/admin/masalar', etiket: 'Masalar' },
   { yol: '/admin/masalar/qr', etiket: 'QR PDF' },
+  { yol: '/admin/rapor', etiket: 'Rapor' },
   { yol: '/admin/ayarlar', etiket: 'Ayarlar' },
 ];
 

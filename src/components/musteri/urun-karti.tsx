@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { Minus, Plus } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
@@ -14,6 +15,17 @@ export function UrunKarti({ urun }: { urun: Urun }) {
 
   return (
     <div className="flex items-start gap-3 rounded-lg border bg-card p-3">
+      {urun.gorselUrl && (
+        <div className="relative size-16 shrink-0 overflow-hidden rounded-md border bg-muted">
+          <Image
+            src={urun.gorselUrl}
+            alt={urun.ad}
+            fill
+            sizes="64px"
+            className="object-cover"
+          />
+        </div>
+      )}
       <div className="flex-1 min-w-0">
         <div className="font-medium leading-tight">{urun.ad}</div>
         {urun.aciklama && (
