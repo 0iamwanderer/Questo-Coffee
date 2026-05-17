@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Instrument_Serif, Manrope } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
+import { SwRegister } from './sw-register';
 import './globals.css';
 
 const manrope = Manrope({
@@ -21,6 +22,15 @@ const serif = Instrument_Serif({
 export const metadata: Metadata = {
   title: 'Questo — QR Sipariş',
   description: 'QR Kodlu Sipariş ve Adisyon Sistemi',
+  applicationName: 'Questo',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Questo',
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
@@ -44,6 +54,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background text-foreground antialiased font-sans">
         {children}
         <Toaster richColors position="top-center" closeButton />
+        <SwRegister />
       </body>
     </html>
   );
