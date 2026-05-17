@@ -1,6 +1,22 @@
 import type { Metadata, Viewport } from 'next';
+import { Instrument_Serif, Manrope } from 'next/font/google';
 import { Toaster } from 'sonner';
+import { cn } from '@/lib/utils';
 import './globals.css';
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-sans',
+  display: 'swap',
+  weight: ['300', '400', '500', '600', '700'],
+});
+
+const serif = Instrument_Serif({
+  subsets: ['latin'],
+  variable: '--font-serif',
+  display: 'swap',
+  weight: '400',
+});
 
 export const metadata: Metadata = {
   title: 'Questo — QR Sipariş',
@@ -11,7 +27,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#ffffff',
+  themeColor: '#f7f3e8',
 };
 
 export default function RootLayout({
@@ -20,8 +36,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="tr" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground antialiased">
+    <html
+      lang="tr"
+      suppressHydrationWarning
+      className={cn(manrope.variable, serif.variable)}
+    >
+      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
         {children}
         <Toaster richColors position="top-center" closeButton />
       </body>
