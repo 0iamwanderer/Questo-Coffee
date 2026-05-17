@@ -1,30 +1,54 @@
 'use client';
 
+import { customAlphabet } from 'nanoid';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
+export interface SepetSecim {
+  grupId: string;
+  secenekIds: string[];
+}
+
 export interface SepetKalemi {
+  /** Sepet satırının uniq id'si — aynı urunId farklı opsiyonlar ile birden fazla satır olabilir */
+  satirId: string;
   urunId: string;
   adet: number;
   notlar?: string;
+  secimler?: SepetSecim[];
 }
 
 interface SepetState {
-  /** Sepetin bağlı olduğu masa token'ı. Token değişirse sepet sıfırlanır. */
   aktifMasaToken: string | null;
   kalemler: SepetKalemi[];
 
   masaAyarla: (token: string) => void;
-  ekle: (urunId: string, adet?: number) => void;
-  cikar: (urunId: string) => void;
-  guncelle: (urunId: string, adet: number) => void;
-  notGuncelle: (urunId: string, notlar: string | undefined) => void;
+  ekle: (
+    urunId: string,
+    opts?: { adet?: number; secimler?: SepetSecim[]; notlar?: string },
+  ) => void;
+  cikar: (satirId: string) => void;
+  guncelle: (satirId: string, adet: number) => void;
+  notGuncelle: (satirId: string, notlar: string | undefined) => void;
   temizle: () => void;
 
-  // türetilmiş
+  /** Ürünün sepetteki tüm varyantlarının toplam adedi */
   adetGetir: (urunId: string) => number;
   toplamAdet: () => number;
 }
+
+const satirIdUret = customAlphabet(
+  '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+  10,
+);
+
+const secimAnahtar = (secimler?: SepetSecim[]): string => {
+  if (!secimler || secimler.length === 0) return '';
+  return secimler
+    .map((s) => `${s.grupId}:${[...s.secenekIds].sort().join(',')}`)
+    .sort()
+    .join('|');
+};
 
 export const useSepet = create<SepetState>()(
   persist(
@@ -41,49 +65,75 @@ export const useSepet = create<SepetState>()(
         }
       },
 
-      ekle: (urunId, adet = 1) =>
+      ekle: (urunId, opts = {}) => {
+        const { adet = 1, secimler, notlar } = opts;
+        const yeniAnahtar = secimAnahtar(secimler);
         set((s) => {
-          const mevcut = s.kalemler.find((k) => k.urunId === urunId);
+          const mevcut = s.kalemler.find(
+            (k) =>
+              k.urunId === urunId &&
+              secimAnahtar(k.secimler) === yeniAnahtar,
+          );
           if (mevcut) {
             return {
               kalemler: s.kalemler.map((k) =>
-                k.urunId === urunId ? { ...k, adet: k.adet + adet } : k,
+                k.satirId === mevcut.satirId
+                  ? {
+                      ...k,
+                      adet: k.adet + adet,
+                      ...(notlar !== undefined ? { notlar } : {}),
+                    }
+                  : k,
               ),
             };
           }
-          return { kalemler: [...s.kalemler, { urunId, adet }] };
-        }),
+          return {
+            kalemler: [
+              ...s.kalemler,
+              {
+                satirId: satirIdUret(),
+                urunId,
+                adet,
+                ...(secimler && secimler.length > 0 ? { secimler } : {}),
+                ...(notlar ? { notlar } : {}),
+              },
+            ],
+          };
+        });
+      },
 
-      cikar: (urunId) =>
+      cikar: (satirId) =>
         set((s) => ({
-          kalemler: s.kalemler.filter((k) => k.urunId !== urunId),
+          kalemler: s.kalemler.filter((k) => k.satirId !== satirId),
         })),
 
-      guncelle: (urunId, adet) =>
+      guncelle: (satirId, adet) =>
         set((s) => {
           if (adet <= 0) {
             return {
-              kalemler: s.kalemler.filter((k) => k.urunId !== urunId),
+              kalemler: s.kalemler.filter((k) => k.satirId !== satirId),
             };
           }
           return {
             kalemler: s.kalemler.map((k) =>
-              k.urunId === urunId ? { ...k, adet } : k,
+              k.satirId === satirId ? { ...k, adet } : k,
             ),
           };
         }),
 
-      notGuncelle: (urunId, notlar) =>
+      notGuncelle: (satirId, notlar) =>
         set((s) => ({
           kalemler: s.kalemler.map((k) =>
-            k.urunId === urunId ? { ...k, notlar } : k,
+            k.satirId === satirId ? { ...k, notlar } : k,
           ),
         })),
 
       temizle: () => set({ kalemler: [] }),
 
       adetGetir: (urunId) =>
-        get().kalemler.find((k) => k.urunId === urunId)?.adet ?? 0,
+        get()
+          .kalemler.filter((k) => k.urunId === urunId)
+          .reduce((a, k) => a + k.adet, 0),
       toplamAdet: () => get().kalemler.reduce((a, b) => a + b.adet, 0),
     }),
     {

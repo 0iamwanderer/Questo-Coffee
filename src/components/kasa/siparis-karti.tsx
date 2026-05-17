@@ -82,6 +82,18 @@ export function SiparisKarti({ siparis }: { siparis: Siparis }) {
                 {k.adet}×
               </span>{' '}
               {k.ad}
+              {k.secimler && k.secimler.length > 0 && (
+                <span className="block text-xs font-medium text-foreground">
+                  {k.secimler
+                    .map(
+                      (sec) =>
+                        `${sec.grupAd}: ${sec.secenekler
+                          .map((s) => s.ad)
+                          .join(', ')}`,
+                    )
+                    .join(' · ')}
+                </span>
+              )}
               {k.notlar && (
                 <span className="block text-xs text-muted-foreground">
                   Not: {k.notlar}

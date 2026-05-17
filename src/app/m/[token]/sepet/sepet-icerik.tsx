@@ -5,20 +5,33 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  collection,
-  onSnapshot,
-  query,
-} from 'firebase/firestore';
-import { getClientAuth, getClientDb } from '@/lib/firebase/client';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { getClientDb } from '@/lib/firebase/client';
 import { urunConverter } from '@/lib/firebase/converters';
 import { formatTL } from '@/lib/utils/para';
-import { useSepet } from '@/stores/sepet';
+import { useSepet, type SepetKalemi } from '@/stores/sepet';
 import { useMasa } from '../masa-provider';
 import { anonGirisiSagla } from '@/lib/auth/anon';
 import type { Urun } from '@/types/model';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
+
+const kalemBirimFiyat = (
+  urun: Urun | undefined,
+  kalem: SepetKalemi,
+): number => {
+  if (!urun) return 0;
+  let ek = 0;
+  for (const sec of kalem.secimler ?? []) {
+    const grup = urun.opsiyonGruplari?.find((g) => g.id === sec.grupId);
+    if (!grup) continue;
+    for (const id of sec.secenekIds) {
+      const sc = grup.secenekler.find((s) => s.id === id);
+      if (sc) ek += sc.ekFiyatKurus;
+    }
+  }
+  return urun.fiyatKurus + ek;
+};
 
 export function SepetIcerik() {
   const router = useRouter();
@@ -57,7 +70,7 @@ export function SepetIcerik() {
     () =>
       kalemler.reduce((a, k) => {
         const u = urunler.get(k.urunId);
-        return a + (u ? u.fiyatKurus * k.adet : 0);
+        return a + kalemBirimFiyat(u, k) * k.adet;
       }, 0),
     [kalemler, urunler],
   );
@@ -82,6 +95,9 @@ export function SepetIcerik() {
             urunId: k.urunId,
             adet: k.adet,
             ...(k.notlar ? { notlar: k.notlar } : {}),
+            ...(k.secimler && k.secimler.length > 0
+              ? { secimler: k.secimler }
+              : {}),
           })),
         }),
       });
@@ -124,7 +140,7 @@ export function SepetIcerik() {
   }
 
   return (
-    <div className="space-y-5 anim-fade-in pb-32">
+    <div className="space-y-5 anim-fade-in pb-32 pt-4 px-4">
       <div className="space-y-2">
         <Link
           href={`/m/${masaToken}`}
@@ -144,19 +160,45 @@ export function SepetIcerik() {
           const u = urunler.get(k.urunId);
           const yok = !u;
           const tukenmis = u && !u.stoktaMi;
+          const birimFiyat = kalemBirimFiyat(u, k);
           return (
-            <li key={k.urunId} className="py-4 space-y-2">
+            <li key={k.satirId} className="py-4 space-y-2">
               <div className="flex items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-serif text-lg leading-tight">
                     {u?.ad ?? 'Ürün bulunamadı'}
                   </div>
+                  {k.secimler && k.secimler.length > 0 && u && (
+                    <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
+                      {k.secimler.map((sec, i) => {
+                        const grup = u.opsiyonGruplari?.find(
+                          (g) => g.id === sec.grupId,
+                        );
+                        if (!grup) return null;
+                        const adlar = sec.secenekIds
+                          .map(
+                            (id) =>
+                              grup.secenekler.find((sc) => sc.id === id)?.ad,
+                          )
+                          .filter(Boolean)
+                          .join(', ');
+                        return (
+                          <li key={`${k.satirId}-${i}`}>
+                            <span className="font-medium text-foreground/70">
+                              {grup.ad}:
+                            </span>{' '}
+                            {adlar}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
                   {!yok && (
-                    <div className="mt-0.5 text-sm text-muted-foreground tabular-nums">
-                      {formatTL(u.fiyatKurus)} × {k.adet}
+                    <div className="mt-1 text-sm text-muted-foreground tabular-nums">
+                      {formatTL(birimFiyat)} × {k.adet}
                       <span className="mx-1.5">·</span>
                       <span className="text-foreground font-medium">
-                        {formatTL(u.fiyatKurus * k.adet)}
+                        {formatTL(birimFiyat * k.adet)}
                       </span>
                     </div>
                   )}
@@ -171,7 +213,7 @@ export function SepetIcerik() {
                 <button
                   type="button"
                   aria-label="Sepetten çıkar"
-                  onClick={() => cikar(k.urunId)}
+                  onClick={() => cikar(k.satirId)}
                   className="rounded-full p-2 text-muted-foreground transition active:scale-90"
                 >
                   <Trash2 className="size-4" />
@@ -182,7 +224,7 @@ export function SepetIcerik() {
                 <button
                   type="button"
                   aria-label="Azalt"
-                  onClick={() => guncelle(k.urunId, k.adet - 1)}
+                  onClick={() => guncelle(k.satirId, k.adet - 1)}
                   className="rounded-full p-1.5 transition active:scale-90"
                 >
                   <Minus className="size-3.5" />
@@ -193,7 +235,7 @@ export function SepetIcerik() {
                 <button
                   type="button"
                   aria-label="Arttır"
-                  onClick={() => guncelle(k.urunId, k.adet + 1)}
+                  onClick={() => guncelle(k.satirId, k.adet + 1)}
                   className="rounded-full p-1.5 transition active:scale-90"
                 >
                   <Plus className="size-3.5" />
@@ -206,7 +248,7 @@ export function SepetIcerik() {
                 value={k.notlar ?? ''}
                 maxLength={200}
                 onChange={(e) =>
-                  notGuncelle(k.urunId, e.target.value || undefined)
+                  notGuncelle(k.satirId, e.target.value || undefined)
                 }
                 className="w-full rounded-xl border bg-card px-3 py-2 text-sm outline-none transition focus:border-foreground focus:ring-1 focus:ring-foreground"
               />

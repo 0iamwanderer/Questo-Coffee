@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ImageIcon, Pencil, Plus, Trash2, Upload } from 'lucide-react';
+import { ImageIcon, Pencil, Plus, Sliders, Trash2, Upload } from 'lucide-react';
 import {
   collection,
   onSnapshot,
@@ -19,6 +19,7 @@ import {
 import type { Kategori, Urun } from '@/types/model';
 import { formatTL, tlToKurus } from '@/lib/utils/para';
 import { cn } from '@/lib/utils';
+import { UrunOpsiyonlariModal } from './urun-opsiyonlari';
 
 const MAX_GORSEL_BYTE = 2 * 1024 * 1024;
 
@@ -62,6 +63,7 @@ export function MenuYonetimi() {
     duzenleId: string | null;
     veri: UrunForm;
   }>({ acik: false, duzenleId: null, veri: bosUrun });
+  const [opsiyonUrun, setOpsiyonUrun] = useState<Urun | null>(null);
   const [hata, setHata] = useState<string | null>(null);
 
   useEffect(() => {
@@ -545,6 +547,24 @@ export function MenuYonetimi() {
                   </label>
                   <button
                     type="button"
+                    aria-label="Opsiyonlar"
+                    title="Opsiyonlar (boy, şeker, ekstra)"
+                    onClick={() => setOpsiyonUrun(u)}
+                    className={cn(
+                      'inline-flex items-center gap-0.5 rounded-md p-1.5',
+                      (u.opsiyonGruplari?.length ?? 0) > 0 &&
+                        'text-primary',
+                    )}
+                  >
+                    <Sliders className="size-3.5" />
+                    {(u.opsiyonGruplari?.length ?? 0) > 0 && (
+                      <span className="text-[10px] tabular-nums">
+                        {u.opsiyonGruplari!.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
                     aria-label="Düzenle"
                     onClick={() =>
                       setUrunForm({
@@ -578,6 +598,12 @@ export function MenuYonetimi() {
           )}
         </ul>
       </section>
+
+      <UrunOpsiyonlariModal
+        urun={opsiyonUrun}
+        onKapat={() => setOpsiyonUrun(null)}
+        onKaydet={() => setOpsiyonUrun(null)}
+      />
     </div>
   );
 }

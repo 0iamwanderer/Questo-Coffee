@@ -1,18 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { Minus, Plus, X } from 'lucide-react';
-import type { Urun } from '@/types/model';
+import { X } from 'lucide-react';
+import { toast } from 'sonner';
+import type { Urun, UrunOpsiyonGrubu } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
-import { useSepet } from '@/stores/sepet';
+import { useSepet, type SepetSecim } from '@/stores/sepet';
 import { cn } from '@/lib/utils';
 
 interface Props {
   urun: Urun | null;
   acik: boolean;
   onKapat: () => void;
-  masaToken?: string;
 }
 
 function DetayGorseli({ urun }: { urun: Urun }) {
@@ -44,10 +44,23 @@ function DetayGorseli({ urun }: { urun: Urun }) {
 export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
   const [render, setRender] = useState(acik);
   const [kapaniyor, setKapaniyor] = useState(false);
+  const [secimler, setSecimler] = useState<Record<string, string[]>>({});
 
   const ekle = useSepet((s) => s.ekle);
-  const adetGetir = useSepet((s) => s.adetGetir);
-  const guncelle = useSepet((s) => s.guncelle);
+
+  // Sheet açıldığında varsayılan seçimleri kur (tek+zorunlu için ilk seçenek)
+  useEffect(() => {
+    if (!acik || !urun) return;
+    const def: Record<string, string[]> = {};
+    for (const grup of urun.opsiyonGruplari ?? []) {
+      if (grup.tip === 'tek' && grup.zorunlu && grup.secenekler[0]) {
+        def[grup.id] = [grup.secenekler[0].id];
+      } else {
+        def[grup.id] = [];
+      }
+    }
+    setSecimler(def);
+  }, [acik, urun]);
 
   useEffect(() => {
     if (acik) {
@@ -61,10 +74,32 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
     return undefined;
   }, [acik]);
 
+  const opsiyonlu = (urun?.opsiyonGruplari?.length ?? 0) > 0;
+
+  const ekFiyat = useMemo(() => {
+    if (!urun) return 0;
+    let toplam = 0;
+    for (const grup of urun.opsiyonGruplari ?? []) {
+      const seciliIds = secimler[grup.id] ?? [];
+      for (const id of seciliIds) {
+        const sec = grup.secenekler.find((s) => s.id === id);
+        if (sec) toplam += sec.ekFiyatKurus;
+      }
+    }
+    return toplam;
+  }, [urun, secimler]);
+
+  const eksikZorunlu = useMemo(() => {
+    if (!urun) return false;
+    return (urun.opsiyonGruplari ?? []).some(
+      (g) => g.zorunlu && (secimler[g.id] ?? []).length === 0,
+    );
+  }, [urun, secimler]);
+
   if (!render || !urun) return null;
 
-  const adet = adetGetir(urun.id);
   const stokYok = !urun.stoktaMi;
+  const birimFiyat = urun.fiyatKurus + ekFiyat;
 
   const kapat = () => {
     setKapaniyor(true);
@@ -73,6 +108,34 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
       setKapaniyor(false);
       onKapat();
     }, 240);
+  };
+
+  const tekDegistir = (grupId: string, secenekId: string) => {
+    setSecimler((prev) => ({ ...prev, [grupId]: [secenekId] }));
+  };
+
+  const cokDegistir = (grupId: string, secenekId: string) => {
+    setSecimler((prev) => {
+      const mevcut = prev[grupId] ?? [];
+      const yeni = mevcut.includes(secenekId)
+        ? mevcut.filter((id) => id !== secenekId)
+        : [...mevcut, secenekId];
+      return { ...prev, [grupId]: yeni };
+    });
+  };
+
+  const sepeteEkle = () => {
+    if (eksikZorunlu) {
+      toast.error('Zorunlu seçimleri yapın.');
+      return;
+    }
+    const secimDizisi: SepetSecim[] = Object.entries(secimler)
+      .filter(([, ids]) => ids.length > 0)
+      .map(([grupId, secenekIds]) => ({ grupId, secenekIds }));
+    ekle(urun.id, {
+      ...(secimDizisi.length > 0 ? { secimler: secimDizisi } : {}),
+    });
+    kapat();
   };
 
   return (
@@ -104,7 +167,6 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
           <div className="h-1.5 w-10 rounded-full bg-foreground/15" />
         </div>
 
-        {/* Görsel */}
         <div className="relative h-56 w-full overflow-hidden bg-muted/40">
           <DetayGorseli urun={urun} />
           <button
@@ -118,7 +180,6 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
         </div>
 
         <div className="space-y-4 px-5 pb-6 pt-3">
-          {/* Rozetler */}
           <div className="flex flex-wrap items-center gap-1.5">
             <span className="rounded-full bg-accent px-2.5 py-1 micro-caps text-accent-foreground">
               Günlük taze
@@ -133,73 +194,51 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
             )}
           </div>
 
-          {/* Başlık + fiyat */}
           <header className="flex items-start justify-between gap-4">
             <h2 className="font-serif text-3xl leading-tight">{urun.ad}</h2>
             <div className="text-right">
               <div className="font-serif text-2xl leading-none tabular-nums">
-                {formatTL(urun.fiyatKurus)}
+                {formatTL(birimFiyat)}
               </div>
+              {ekFiyat > 0 && (
+                <div className="mt-0.5 text-xs text-muted-foreground">
+                  baz {formatTL(urun.fiyatKurus)} + {formatTL(ekFiyat)}
+                </div>
+              )}
             </div>
           </header>
 
-          {/* Açıklama */}
           {urun.aciklama && (
             <p className="text-sm leading-relaxed text-muted-foreground">
               {urun.aciklama}
             </p>
           )}
 
-          {/* Adet & sepete ekle */}
-          {!stokYok && (
-            <div className="flex items-center gap-3 pt-2">
-              {adet === 0 ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    ekle(urun.id);
-                    kapat();
-                  }}
-                  className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-soft transition active:scale-[0.98]"
-                >
-                  Sepete ekle · {formatTL(urun.fiyatKurus)}
-                </button>
-              ) : (
-                <>
-                  <div className="inline-flex items-center gap-1 rounded-full border bg-background px-1">
-                    <button
-                      type="button"
-                      aria-label="Azalt"
-                      onClick={() => guncelle(urun.id, adet - 1)}
-                      className="rounded-full p-2 transition active:scale-90"
-                    >
-                      <Minus className="size-4" />
-                    </button>
-                    <span className="min-w-6 text-center text-base font-medium tabular-nums">
-                      {adet}
-                    </span>
-                    <button
-                      type="button"
-                      aria-label="Arttır"
-                      onClick={() => guncelle(urun.id, adet + 1)}
-                      className="rounded-full p-2 transition active:scale-90"
-                    >
-                      <Plus className="size-4" />
-                    </button>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={kapat}
-                    className="flex-1 rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-soft transition active:scale-[0.98]"
-                  >
-                    Tamam · {formatTL(urun.fiyatKurus * adet)}
-                  </button>
-                </>
-              )}
+          {/* Opsiyon grupları */}
+          {opsiyonlu && (
+            <div className="space-y-4 border-t pt-4">
+              {urun.opsiyonGruplari!.map((grup) => (
+                <OpsiyonGrubu
+                  key={grup.id}
+                  grup={grup}
+                  secili={secimler[grup.id] ?? []}
+                  onTek={(id) => tekDegistir(grup.id, id)}
+                  onCok={(id) => cokDegistir(grup.id, id)}
+                />
+              ))}
             </div>
           )}
 
-          {stokYok && (
+          {!stokYok ? (
+            <button
+              type="button"
+              onClick={sepeteEkle}
+              disabled={eksikZorunlu}
+              className="w-full rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-soft transition active:scale-[0.98] disabled:opacity-50"
+            >
+              Sepete ekle · {formatTL(birimFiyat)}
+            </button>
+          ) : (
             <div className="rounded-lg border border-muted bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
               Bu ürün şu anda stokta yok.
             </div>
@@ -207,5 +246,92 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
         </div>
       </div>
     </div>
+  );
+}
+
+function OpsiyonGrubu({
+  grup,
+  secili,
+  onTek,
+  onCok,
+}: {
+  grup: UrunOpsiyonGrubu;
+  secili: string[];
+  onTek: (id: string) => void;
+  onCok: (id: string) => void;
+}) {
+  return (
+    <section className="space-y-2">
+      <div className="flex items-baseline justify-between">
+        <h3 className="text-sm font-medium">{grup.ad}</h3>
+        <span className="micro-caps text-muted-foreground">
+          {grup.zorunlu
+            ? 'Zorunlu'
+            : grup.tip === 'tek'
+              ? 'Tek seçim'
+              : 'Çoklu'}
+        </span>
+      </div>
+      <ul className="space-y-1.5">
+        {grup.secenekler.map((sec) => {
+          const aktif = secili.includes(sec.id);
+          return (
+            <li key={sec.id}>
+              <button
+                type="button"
+                onClick={() =>
+                  grup.tip === 'tek' ? onTek(sec.id) : onCok(sec.id)
+                }
+                className={cn(
+                  'flex w-full items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-left text-sm transition',
+                  aktif
+                    ? 'border-foreground bg-foreground/[0.04]'
+                    : 'border-border bg-card',
+                )}
+              >
+                <span className="flex items-center gap-2">
+                  <span
+                    className={cn(
+                      'inline-flex size-4 shrink-0 items-center justify-center',
+                      grup.tip === 'tek'
+                        ? 'rounded-full border-2'
+                        : 'rounded border-2',
+                      aktif
+                        ? 'border-foreground bg-foreground'
+                        : 'border-border',
+                    )}
+                  >
+                    {aktif && grup.tip === 'tek' && (
+                      <span className="size-1.5 rounded-full bg-background" />
+                    )}
+                    {aktif && grup.tip === 'cok' && (
+                      <svg
+                        viewBox="0 0 14 14"
+                        className="size-2.5 text-background"
+                        fill="none"
+                      >
+                        <path
+                          d="M3 7.2 5.8 10 11 4.2"
+                          stroke="currentColor"
+                          strokeWidth="2.4"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                  {sec.ad}
+                </span>
+                {sec.ekFiyatKurus > 0 && (
+                  <span className="text-xs tabular-nums text-muted-foreground">
+                    +{formatTL(sec.ekFiyatKurus)}
+                  </span>
+                )}
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

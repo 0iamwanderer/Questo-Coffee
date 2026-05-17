@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, Plus, Sliders } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet } from '@/stores/sepet';
@@ -12,7 +12,6 @@ interface Props {
   onDetay?: (urun: Urun) => void;
 }
 
-// Görsel yoksa serif monogram ile gradient swatch (prototipten ödünç)
 function UrunGorseli({ urun }: { urun: Urun }) {
   if (urun.gorselUrl) {
     return (
@@ -43,8 +42,16 @@ export function UrunKarti({ urun, onDetay }: Props) {
   const adet = useSepet((s) => s.adetGetir(urun.id));
   const ekle = useSepet((s) => s.ekle);
   const guncelle = useSepet((s) => s.guncelle);
+  const kalemler = useSepet((s) => s.kalemler);
 
   const stokYok = !urun.stoktaMi;
+  const opsiyonlu = (urun.opsiyonGruplari?.length ?? 0) > 0;
+
+  // Opsiyonsuz ürünün sepetteki tek satırı (varsa)
+  const tekSatir =
+    !opsiyonlu
+      ? kalemler.find((k) => k.urunId === urun.id && !k.secimler)
+      : undefined;
 
   return (
     <article
@@ -78,6 +85,12 @@ export function UrunKarti({ urun, onDetay }: Props) {
           <span className="text-sm font-semibold tabular-nums">
             {formatTL(urun.fiyatKurus)}
           </span>
+          {opsiyonlu && (
+            <span className="inline-flex items-center gap-0.5 rounded-full border bg-card px-2 py-0.5 text-[10px] text-muted-foreground">
+              <Sliders className="size-2.5" />
+              seçenekli
+            </span>
+          )}
           {stokYok && (
             <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
               Stokta yok
@@ -87,7 +100,46 @@ export function UrunKarti({ urun, onDetay }: Props) {
       </div>
 
       <div className="shrink-0 self-center" onClick={(e) => e.stopPropagation()}>
-        {stokYok ? null : adet === 0 ? (
+        {stokYok ? null : opsiyonlu ? (
+          <button
+            type="button"
+            onClick={() => onDetay?.(urun)}
+            className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground shadow-soft transition active:scale-[0.96]"
+          >
+            Seç
+            {adet > 0 && (
+              <span className="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] tabular-nums">
+                {adet}
+              </span>
+            )}
+          </button>
+        ) : tekSatir ? (
+          <div className="inline-flex items-center gap-1 rounded-full border bg-card px-1 shadow-soft">
+            <button
+              type="button"
+              aria-label="Azalt"
+              onClick={() =>
+                guncelle(tekSatir.satirId, tekSatir.adet - 1)
+              }
+              className="rounded-full p-1.5 transition active:scale-[0.92]"
+            >
+              <Minus className="size-3.5" />
+            </button>
+            <span className="min-w-5 text-center text-sm font-medium tabular-nums">
+              {tekSatir.adet}
+            </span>
+            <button
+              type="button"
+              aria-label="Arttır"
+              onClick={() =>
+                guncelle(tekSatir.satirId, tekSatir.adet + 1)
+              }
+              className="rounded-full p-1.5 transition active:scale-[0.92]"
+            >
+              <Plus className="size-3.5" />
+            </button>
+          </div>
+        ) : (
           <button
             type="button"
             onClick={() => ekle(urun.id)}
@@ -95,28 +147,6 @@ export function UrunKarti({ urun, onDetay }: Props) {
           >
             Ekle
           </button>
-        ) : (
-          <div className="inline-flex items-center gap-1 rounded-full border bg-card px-1 shadow-soft">
-            <button
-              type="button"
-              aria-label="Azalt"
-              onClick={() => guncelle(urun.id, adet - 1)}
-              className="rounded-full p-1.5 transition active:scale-[0.92]"
-            >
-              <Minus className="size-3.5" />
-            </button>
-            <span className="min-w-5 text-center text-sm font-medium tabular-nums">
-              {adet}
-            </span>
-            <button
-              type="button"
-              aria-label="Arttır"
-              onClick={() => guncelle(urun.id, adet + 1)}
-              className="rounded-full p-1.5 transition active:scale-[0.92]"
-            >
-              <Plus className="size-3.5" />
-            </button>
-          </div>
         )}
       </div>
     </article>

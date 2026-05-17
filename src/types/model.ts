@@ -35,6 +35,23 @@ export interface Kategori {
   aktifMi: boolean;
 }
 
+export interface UrunOpsiyonSecenek {
+  id: string;
+  ad: string;
+  ekFiyatKurus: Kurus;
+}
+
+export type UrunOpsiyonTipi = 'tek' | 'cok';
+
+export interface UrunOpsiyonGrubu {
+  id: string;
+  ad: string;
+  /** 'tek' = radio (zorunlu olur genelde) · 'cok' = checkbox */
+  tip: UrunOpsiyonTipi;
+  zorunlu: boolean;
+  secenekler: UrunOpsiyonSecenek[];
+}
+
 export interface Urun {
   id: string;
   kategoriId: string;
@@ -44,6 +61,7 @@ export interface Urun {
   stoktaMi: boolean;
   gorselUrl?: string;
   sira: number;
+  opsiyonGruplari?: UrunOpsiyonGrubu[];
 }
 
 export interface Masa {
@@ -54,12 +72,19 @@ export interface Masa {
   olusturulduAt: Date;
 }
 
+export interface SiparisSecimSnapshot {
+  grupAd: string;
+  secenekler: Array<{ ad: string; ekFiyatKurus: Kurus }>;
+}
+
 export interface SiparisKalemi {
   urunId: string;
   ad: string;
+  /** Birim fiyat = baz fiyat + opsiyon ek fiyatları */
   birimFiyatKurus: Kurus;
   adet: number;
   notlar?: string;
+  secimler?: SiparisSecimSnapshot[];
   araToplamKurus: Kurus;
 }
 

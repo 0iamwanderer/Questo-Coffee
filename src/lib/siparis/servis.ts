@@ -17,10 +17,23 @@ export interface SiparisYazSonuc {
   toplamKurus: number;
 }
 
+interface OpsiyonSecenekOkuma {
+  id: string;
+  ad: string;
+  ekFiyatKurus: number;
+}
+interface OpsiyonGrubuOkuma {
+  id: string;
+  ad: string;
+  tip: 'tek' | 'cok';
+  zorunlu: boolean;
+  secenekler: OpsiyonSecenekOkuma[];
+}
 interface UrunOkuma {
   ad: string;
   fiyatKurus: number;
   stoktaMi: boolean;
+  opsiyonGruplari?: OpsiyonGrubuOkuma[];
 }
 
 interface AdisyonOkuma {
@@ -162,14 +175,67 @@ export const siparisYaz = async (
       if (!u.stoktaMi) {
         throw new AppError('stok_yok', `Stokta yok: ${u.ad}`, 409);
       }
-      const araToplamKurus = u.fiyatKurus * istem.adet;
+
+      // ── Modifier (opsiyon) doğrulama + ek fiyat hesabı ──────────────
+      const opGruplari = u.opsiyonGruplari ?? [];
+      const secimMap = new Map(
+        (istem.secimler ?? []).map((sec) => [sec.grupId, sec.secenekIds]),
+      );
+      let ekFiyat = 0;
+      const secimSnapshot: Array<{
+        grupAd: string;
+        secenekler: Array<{ ad: string; ekFiyatKurus: number }>;
+      }> = [];
+
+      for (const grup of opGruplari) {
+        const seciliIds = secimMap.get(grup.id) ?? [];
+        if (grup.zorunlu && seciliIds.length === 0) {
+          throw new AppError(
+            'opsiyon_eksik',
+            `${u.ad}: "${grup.ad}" seçimi zorunlu.`,
+            400,
+          );
+        }
+        if (grup.tip === 'tek' && seciliIds.length > 1) {
+          throw new AppError(
+            'opsiyon_gecersiz',
+            `${u.ad} → ${grup.ad}: yalnız bir seçim olabilir.`,
+            400,
+          );
+        }
+        const secilenler = grup.secenekler.filter((sc) =>
+          seciliIds.includes(sc.id),
+        );
+        if (secilenler.length !== seciliIds.length) {
+          throw new AppError(
+            'opsiyon_gecersiz',
+            `${u.ad} → ${grup.ad}: bilinmeyen seçenek.`,
+            400,
+          );
+        }
+        for (const sc of secilenler) ekFiyat += sc.ekFiyatKurus;
+        if (secilenler.length > 0) {
+          secimSnapshot.push({
+            grupAd: grup.ad,
+            secenekler: secilenler.map((sc) => ({
+              ad: sc.ad,
+              ekFiyatKurus: sc.ekFiyatKurus,
+            })),
+          });
+        }
+      }
+
+      const birimFiyat = u.fiyatKurus + ekFiyat;
+      const araToplamKurus = birimFiyat * istem.adet;
       toplamKurus += araToplamKurus;
+
       return {
         urunId: s.id,
         ad: u.ad,
-        birimFiyatKurus: u.fiyatKurus,
+        birimFiyatKurus: birimFiyat,
         adet: istem.adet,
         ...(istem.notlar ? { notlar: istem.notlar } : {}),
+        ...(secimSnapshot.length > 0 ? { secimler: secimSnapshot } : {}),
         araToplamKurus,
       };
     });

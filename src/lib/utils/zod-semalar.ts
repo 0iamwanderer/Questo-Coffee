@@ -1,10 +1,16 @@
 import { z } from 'zod';
 
 // ── Müşteri → sipariş POST ──────────────────────────────────────────────
+export const SepetSecimGirdi = z.object({
+  grupId: z.string().min(1).max(64),
+  secenekIds: z.array(z.string().min(1).max(64)).min(0).max(20),
+});
+
 export const SiparisKalemiGirdi = z.object({
   urunId: z.string().min(1).max(64),
   adet: z.number().int().min(1).max(99),
   notlar: z.string().trim().max(200).optional(),
+  secimler: z.array(SepetSecimGirdi).max(10).optional(),
 });
 
 export const SiparisIstegi = z.object({
@@ -12,6 +18,21 @@ export const SiparisIstegi = z.object({
   kalemler: z.array(SiparisKalemiGirdi).min(1).max(50),
 });
 export type SiparisIstegiT = z.infer<typeof SiparisIstegi>;
+
+// ── Admin: ürün opsiyonları ─────────────────────────────────────────────
+export const UrunOpsiyonSecenekGirdi = z.object({
+  id: z.string().min(1).max(64),
+  ad: z.string().trim().min(1).max(60),
+  ekFiyatKurus: z.number().int().min(0).max(1_000_000),
+});
+
+export const UrunOpsiyonGrubuGirdi = z.object({
+  id: z.string().min(1).max(64),
+  ad: z.string().trim().min(1).max(60),
+  tip: z.enum(['tek', 'cok']),
+  zorunlu: z.boolean(),
+  secenekler: z.array(UrunOpsiyonSecenekGirdi).min(1).max(20),
+});
 
 // ── Admin: ürün / kategori / masa ───────────────────────────────────────
 export const UrunGirdi = z.object({
@@ -22,6 +43,7 @@ export const UrunGirdi = z.object({
   stoktaMi: z.boolean(),
   sira: z.number().int().min(0).max(9999).default(0),
   gorselUrl: z.string().url().optional(),
+  opsiyonGruplari: z.array(UrunOpsiyonGrubuGirdi).max(10).optional(),
 });
 export type UrunGirdiT = z.infer<typeof UrunGirdi>;
 

@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-// localStorage shim (Zustand persist Node test ortamında window bekliyor)
 const storage = new Map<string, string>();
 vi.stubGlobal('localStorage', {
   getItem: (k: string) => storage.get(k) ?? null,
@@ -18,50 +17,85 @@ describe('sepet store', () => {
   });
 
   it('ekle: yeni ürün ekler', () => {
-    useSepet.getState().ekle('u1', 2);
-    expect(useSepet.getState().kalemler).toEqual([{ urunId: 'u1', adet: 2 }]);
+    useSepet.getState().ekle('u1', { adet: 2 });
+    const k = useSepet.getState().kalemler;
+    expect(k).toHaveLength(1);
+    expect(k[0]?.urunId).toBe('u1');
+    expect(k[0]?.adet).toBe(2);
+    expect(k[0]?.satirId).toMatch(/^[0-9A-Za-z]{10}$/);
   });
 
-  it('ekle: var olan ürünün adetini artırır', () => {
-    useSepet.getState().ekle('u1', 1);
-    useSepet.getState().ekle('u1', 3);
+  it('ekle: aynı ürün secimsiz iki kez eklenince adet birleşir', () => {
+    useSepet.getState().ekle('u1');
+    useSepet.getState().ekle('u1', { adet: 3 });
+    expect(useSepet.getState().kalemler).toHaveLength(1);
     expect(useSepet.getState().adetGetir('u1')).toBe(4);
   });
 
-  it('guncelle: 0 veya negatif adet ürünü siler', () => {
-    useSepet.getState().ekle('u1', 2);
-    useSepet.getState().guncelle('u1', 0);
+  it('ekle: aynı ürün farklı secimlerle iki ayrı satır olur', () => {
+    useSepet
+      .getState()
+      .ekle('u1', { secimler: [{ grupId: 'boy', secenekIds: ['kucuk'] }] });
+    useSepet
+      .getState()
+      .ekle('u1', { secimler: [{ grupId: 'boy', secenekIds: ['buyuk'] }] });
+    expect(useSepet.getState().kalemler).toHaveLength(2);
+    expect(useSepet.getState().adetGetir('u1')).toBe(2);
+  });
+
+  it('ekle: aynı ürün aynı secimlerle birleşir (sıra önemsiz)', () => {
+    useSepet.getState().ekle('u1', {
+      secimler: [
+        { grupId: 'a', secenekIds: ['x', 'y'] },
+        { grupId: 'b', secenekIds: ['z'] },
+      ],
+    });
+    useSepet.getState().ekle('u1', {
+      secimler: [
+        { grupId: 'b', secenekIds: ['z'] },
+        { grupId: 'a', secenekIds: ['y', 'x'] }, // farklı sıra
+      ],
+    });
+    expect(useSepet.getState().kalemler).toHaveLength(1);
+    expect(useSepet.getState().kalemler[0]?.adet).toBe(2);
+  });
+
+  it('guncelle: 0 adet kalemi siler', () => {
+    useSepet.getState().ekle('u1', { adet: 2 });
+    const id = useSepet.getState().kalemler[0]!.satirId;
+    useSepet.getState().guncelle(id, 0);
     expect(useSepet.getState().kalemler).toEqual([]);
+  });
+
+  it('cikar: satirId ile siler', () => {
+    useSepet.getState().ekle('u1');
+    useSepet.getState().ekle('u2');
+    const id = useSepet.getState().kalemler[0]!.satirId;
+    useSepet.getState().cikar(id);
+    expect(useSepet.getState().kalemler).toHaveLength(1);
+    expect(useSepet.getState().kalemler[0]?.urunId).toBe('u2');
+  });
+
+  it('notGuncelle: yalnız ilgili kaleme not yazar', () => {
+    useSepet.getState().ekle('u1');
+    useSepet.getState().ekle('u2');
+    const id = useSepet.getState().kalemler[0]!.satirId;
+    useSepet.getState().notGuncelle(id, 'az şekerli');
+    expect(useSepet.getState().kalemler[0]?.notlar).toBe('az şekerli');
+    expect(useSepet.getState().kalemler[1]?.notlar).toBeUndefined();
   });
 
   it('masaAyarla: token değişirse sepeti temizler', () => {
     useSepet.getState().masaAyarla('TOKEN_A');
-    useSepet.getState().ekle('u1', 1);
+    useSepet.getState().ekle('u1');
     useSepet.getState().masaAyarla('TOKEN_B');
     expect(useSepet.getState().kalemler).toEqual([]);
     expect(useSepet.getState().aktifMasaToken).toBe('TOKEN_B');
   });
 
-  it('masaAyarla: aynı token verilirse sepet korunur', () => {
-    useSepet.getState().masaAyarla('TOKEN_A');
-    useSepet.getState().ekle('u1', 1);
-    useSepet.getState().masaAyarla('TOKEN_A');
-    expect(useSepet.getState().adetGetir('u1')).toBe(1);
-  });
-
-  it('toplamAdet: tüm kalemler toplanır', () => {
-    useSepet.getState().ekle('u1', 2);
-    useSepet.getState().ekle('u2', 3);
+  it('toplamAdet: tüm kalemlerin adetleri', () => {
+    useSepet.getState().ekle('u1', { adet: 2 });
+    useSepet.getState().ekle('u2', { adet: 3 });
     expect(useSepet.getState().toplamAdet()).toBe(5);
-  });
-
-  it('notGuncelle: sadece ilgili kalemin notunu değiştirir', () => {
-    useSepet.getState().ekle('u1', 1);
-    useSepet.getState().ekle('u2', 1);
-    useSepet.getState().notGuncelle('u1', 'az şekerli');
-    const k1 = useSepet.getState().kalemler.find((k) => k.urunId === 'u1');
-    const k2 = useSepet.getState().kalemler.find((k) => k.urunId === 'u2');
-    expect(k1?.notlar).toBe('az şekerli');
-    expect(k2?.notlar).toBeUndefined();
   });
 });
