@@ -1,12 +1,67 @@
 rules_version = '2';
 
-// Faz 0 — KİLİTLİ BAŞLANGIÇ.
-// Tüm yazma işlemleri sunucu (Admin SDK) üzerinden yapılacak.
-// Gerçek okuma izinleri Faz 2'de aşağıya yazılacak (menü/masa publik read; adisyon/sipariş yalnız kasiyer).
+// Tüm yazma işlemleri Admin SDK üzerinden (Next.js route handler'lardan) yapılır.
+// Bu dosya yalnızca OKUMA izinlerini ve emniyet ağı olarak yazma yasaklarını tanımlar.
+// App Check zorunluluğu Firebase Console > Firestore üzerinden enforce edilir.
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    function kasiyerMi() {
+      return request.auth != null
+        && request.auth.token.rol == 'kasiyer';
+    }
+
+    function sahipMi() {
+      return kasiyerMi() && request.auth.token.sahip == true;
+    }
+
+    match /restoranlar/{restoranId} {
+
+      // Restoran meta — public read (App Check Console'da enforce edilir)
+      allow read: if true;
+      allow write: if false;
+
+      // ── Menü (public read) ──────────────────────────────────────────
+      match /kategoriler/{kategoriId} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      match /urunler/{urunId} {
+        allow read: if true;
+        allow write: if false;
+      }
+
+      // ── Masalar — yalnız kasiyer listeler; müşteri token→masa çözümü
+      //    server route'unda yapılır, client'tan listelenmez ─────────────
+      match /masalar/{masaId} {
+        allow read: if kasiyerMi();
+        allow write: if false;
+      }
+
+      // ── Adisyon ve siparişler — yalnız kasiyer canlı dinler ────────
+      //    Müşteri kendi açık adisyonunu /api/adisyon/[token] üzerinden alır.
+      match /adisyonlar/{adisyonId} {
+        allow read: if kasiyerMi();
+        allow write: if false;
+
+        match /siparisler/{siparisId} {
+          allow read: if kasiyerMi();
+          allow write: if false;
+        }
+      }
+
+      // ── Günlük sipariş sayaçları — sadece sunucu ───────────────────
+      match /sayaclar/{sayacId} {
+        allow read, write: if false;
+      }
+
+      // ── Personel kayıtları — yalnız kasiyer okur ──────────────────
+      match /kullanicilar/{uid} {
+        allow read: if kasiyerMi();
+        allow write: if false;
+      }
     }
   }
 }

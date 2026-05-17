@@ -36,11 +36,24 @@ cp .env.example .env.local   # değerleri doldur
 npm run dev
 ```
 
+## İlk Kasiyer/Sahip Atama (bir kerelik)
+
+1. Firebase Console > Authentication üzerinden e-posta/şifre ile bir kullanıcı oluştur.
+2. `.env.local` içinde `ADMIN_SETUP_TOKEN` rastgele bir string olarak ayarla.
+3. Dev sunucusu açıkken:
+   ```bash
+   curl -X POST http://localhost:3000/api/admin/rol \
+     -H 'content-type: application/json' \
+     -d '{"setupToken":"<token>","email":"sahip@kafem.com","sahip":true}'
+   ```
+4. Kullanıcı `/kasa/giris` üzerinden oturum açabilir.
+5. Güvenlik için `ADMIN_SETUP_TOKEN`'ı sonradan `.env.local`'dan kaldır.
+
 ## Faz Planı
 
 - [x] Faz 0 — Konfig iskeleti
 - [x] Faz 1 — Tipler & temel altyapı
-- [ ] Faz 2 — Güvenlik & rol (firestore.rules, session, middleware, kasa girişi)
+- [x] Faz 2 — Güvenlik & rol (firestore.rules, session, middleware, kasa girişi)
 - [ ] Faz 3 — Müşteri akışı (menü, sepet, sipariş transaction)
 - [ ] Faz 4 — Kasa (Kanban, adisyon paneli, durum güncelleme)
 - [ ] Faz 5 — Admin (menü/masa CRUD, QR PDF)

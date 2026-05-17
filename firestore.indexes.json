@@ -1,4 +1,21 @@
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "siparisler",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "durum", "order": "ASCENDING" },
+        { "fieldPath": "olusturulduAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "siparisler",
+      "queryScope": "COLLECTION_GROUP",
+      "fields": [
+        { "fieldPath": "masaId", "order": "ASCENDING" },
+        { "fieldPath": "olusturulduAt", "order": "DESCENDING" }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
