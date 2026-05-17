@@ -36,6 +36,41 @@ cp .env.example .env.local   # değerleri doldur
 npm run dev
 ```
 
+## Emulator Akışı (Geliştirme)
+
+Firebase emulators ile (Firebase project veya kredi kartı gerektirmez):
+
+```bash
+# 1. Emulator'ları başlat (ayrı terminal)
+npm run emulators
+
+# 2. Diğer terminalde demo veriyi seed et
+FIRESTORE_EMULATOR_HOST=localhost:8080 \
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 \
+NEXT_PUBLIC_RESTORAN_ID=demo-1 \
+npm run seed
+
+# 3. Next.js'i emulator değişkenleri ile çalıştır
+FIRESTORE_EMULATOR_HOST=localhost:8080 \
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 \
+npm run dev
+```
+
+Emulator UI: <http://localhost:4000>
+
+> Not: PowerShell'de değişken atamak için `$env:FIRESTORE_EMULATOR_HOST = 'localhost:8080'` kullanın.
+
+## Üretim'e seed (opsiyonel)
+
+```bash
+node --env-file=.env.local scripts/seed.mjs
+# veya:
+npm run seed
+```
+
+`.env.local`'da `SEED_SAHIP_EMAIL` ayarlıysa, o e-posta ile yaratılmış Auth
+kullanıcısına otomatik `kasiyer + sahip` claim'i atanır.
+
 ## İlk Kasiyer/Sahip Atama (bir kerelik)
 
 1. Firebase Console > Authentication üzerinden e-posta/şifre ile bir kullanıcı oluştur.

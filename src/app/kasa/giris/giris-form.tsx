@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import { toast } from 'sonner';
 import { getClientAuth } from '@/lib/firebase/client';
 
 export function GirisForm() {
@@ -37,6 +38,7 @@ export function GirisForm() {
         throw new Error(j.mesaj ?? 'Oturum açılamadı.');
       }
 
+      toast.success('Hoş geldiniz.');
       router.replace(geri);
       router.refresh();
     } catch (e) {
@@ -45,6 +47,7 @@ export function GirisForm() {
           ? e.message.replace(/^Firebase:\s*/i, '')
           : 'Giriş başarısız.';
       setHata(msg);
+      toast.error(msg);
     } finally {
       setYukleniyor(false);
     }

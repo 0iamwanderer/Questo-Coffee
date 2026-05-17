@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import {
   collection,
   onSnapshot,
@@ -86,9 +87,12 @@ export function SepetIcerik() {
       }
 
       temizle();
+      toast.success('Siparişiniz alındı.');
       router.replace(`/m/${masaToken}/adisyon?yeni=1`);
     } catch (e) {
-      setHata(e instanceof Error ? e.message : 'Sipariş gönderilemedi.');
+      const msg = e instanceof Error ? e.message : 'Sipariş gönderilemedi.';
+      setHata(msg);
+      toast.error(msg);
     } finally {
       setGonderiliyor(false);
     }
