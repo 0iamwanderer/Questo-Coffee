@@ -1,0 +1,12 @@
+rules_version = '2';
+
+// Faz 0 — KİLİTLİ BAŞLANGIÇ.
+// Tüm yazma işlemleri sunucu (Admin SDK) üzerinden yapılacak.
+// Gerçek okuma izinleri Faz 2'de aşağıya yazılacak (menü/masa publik read; adisyon/sipariş yalnız kasiyer).
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
