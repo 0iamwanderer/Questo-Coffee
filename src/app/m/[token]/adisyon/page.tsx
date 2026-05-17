@@ -21,6 +21,14 @@ const DURUM_ETIKET: Record<SiparisDurumu, string> = {
   iptal: 'İptal',
 };
 
+const DURUM_RENK: Record<SiparisDurumu, string> = {
+  yeni: 'bg-accent text-accent-foreground',
+  hazirlaniyor: 'bg-amber-100 text-amber-900 dark:bg-amber-950/40 dark:text-amber-200',
+  hazir: 'bg-emerald-100 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200',
+  teslim: 'bg-muted text-muted-foreground',
+  iptal: 'bg-destructive/10 text-destructive',
+};
+
 interface Props {
   params: Promise<{ token: string }>;
   searchParams: Promise<{ yeni?: string }>;
@@ -57,8 +65,8 @@ export default async function AdisyonSayfasi({ params, searchParams }: Props) {
   const masaAd = (masa.data() as { ad: string }).ad;
 
   return (
-    <main className="mx-auto max-w-md px-4 py-4 space-y-4">
-      <div className="flex items-center justify-between gap-2">
+    <main className="mx-auto max-w-md px-4 py-4 space-y-5 anim-fade-in">
+      <div className="space-y-2">
         <Link
           href={`/m/${token}`}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
@@ -66,19 +74,25 @@ export default async function AdisyonSayfasi({ params, searchParams }: Props) {
           <ArrowLeft className="size-4" />
           Menü
         </Link>
-        <h1 className="text-lg font-semibold">Adisyon · {masaAd}</h1>
+        <div className="space-y-0.5">
+          <p className="micro-caps text-muted-foreground">{masaAd}</p>
+          <h1 className="font-serif text-3xl leading-none">Adisyon</h1>
+        </div>
       </div>
 
       {yeni && (
-        <div className="flex items-start gap-2 rounded-md border border-green-600/30 bg-green-50 p-3 text-sm dark:bg-green-950/30">
-          <CheckCircle2 className="size-4 mt-0.5 text-green-700 dark:text-green-400" />
+        <div className="flex items-start gap-2.5 rounded-2xl border border-emerald-600/30 bg-emerald-50 p-3 text-sm dark:bg-emerald-950/30">
+          <CheckCircle2 className="size-5 mt-0.5 shrink-0 text-emerald-700 dark:text-emerald-400" />
           <p>Siparişiniz alındı. Hazırlandığında haber vereceğiz.</p>
         </div>
       )}
 
       {adisyonSnap.empty ? (
-        <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
-          Henüz açık adisyon yok.
+        <div className="rounded-2xl border bg-card p-10 text-center shadow-soft">
+          <p className="font-serif text-2xl">Henüz açık adisyon yok</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Menüden ürün seçerek ilk siparişinizi verin.
+          </p>
         </div>
       ) : (
         <AdisyonGosterici
@@ -118,21 +132,26 @@ async function AdisyonGosterici({
   );
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <ul className="space-y-3">
         {siparisler.map((s) => (
-          <li key={s.id} className="rounded-lg border bg-card p-3">
+          <li
+            key={s.id}
+            className="rounded-2xl border bg-card p-4 shadow-soft"
+          >
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">#{s.gunlukNo}</span>
-              <span className="rounded-md border px-2 py-0.5 text-xs">
+              <span className="font-medium tabular-nums">#{s.gunlukNo}</span>
+              <span
+                className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${DURUM_RENK[s.durum]}`}
+              >
                 {DURUM_ETIKET[s.durum]}
               </span>
             </div>
-            <ul className="mt-2 space-y-1 text-sm">
+            <ul className="mt-3 space-y-1.5 text-sm">
               {(s.kalemler as SiparisKalemi[]).map((k, i) => (
                 <li
                   key={`${k.urunId}-${i}`}
-                  className="flex items-center justify-between gap-2"
+                  className="flex items-start justify-between gap-2"
                 >
                   <span className="min-w-0">
                     <span className="tabular-nums text-muted-foreground">
@@ -151,18 +170,20 @@ async function AdisyonGosterici({
                 </li>
               ))}
             </ul>
-            <div className="mt-2 flex items-center justify-between border-t pt-2 text-sm">
+            <div className="mt-3 flex items-center justify-between border-t pt-2 text-sm">
               <span className="text-muted-foreground">Ara toplam</span>
-              <span className="font-medium">{formatTL(s.toplamKurus)}</span>
+              <span className="font-medium tabular-nums">
+                {formatTL(s.toplamKurus)}
+              </span>
             </div>
           </li>
         ))}
       </ul>
 
-      <div className="rounded-lg border bg-card p-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Toplam</span>
-          <span className="text-lg font-semibold">
+      <div className="rounded-2xl border bg-card p-4 shadow-soft">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">Toplam</span>
+          <span className="font-serif text-3xl">
             {formatTL(adisyon.toplamKurus)}
           </span>
         </div>

@@ -32,8 +32,6 @@ export function SepetIcerik() {
   const [urunler, setUrunler] = useState<Map<string, Urun>>(new Map());
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
-  // Bu sayfa açıkken sabit kalan idempotency anahtarı — çift tıklama,
-  // ağ retry'ı veya hızlı refresh sırasında tek sipariş garantisi.
   const [idempotencyKey] = useState(() =>
     typeof crypto !== 'undefined' && crypto.randomUUID
       ? crypto.randomUUID()
@@ -55,7 +53,6 @@ export function SepetIcerik() {
     return () => unsub();
   }, []);
 
-  // Yalnız görüntüleme için tahmini toplam — gerçek toplam sunucu hesaplar.
   const tahminiToplam = useMemo(
     () =>
       kalemler.reduce((a, k) => {
@@ -108,7 +105,7 @@ export function SepetIcerik() {
 
   if (kalemler.length === 0) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6 anim-fade-in">
         <Link
           href={`/m/${masaToken}`}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
@@ -116,16 +113,19 @@ export function SepetIcerik() {
           <ArrowLeft className="size-4" />
           Menüye dön
         </Link>
-        <div className="rounded-lg border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">Sepetiniz boş.</p>
+        <div className="rounded-2xl border bg-card p-10 text-center shadow-soft">
+          <p className="font-serif text-2xl">Sepetiniz boş</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Menüden ürün ekleyerek başlayın.
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-2">
+    <div className="space-y-5 anim-fade-in pb-32">
+      <div className="space-y-2">
         <Link
           href={`/m/${masaToken}`}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
@@ -133,27 +133,28 @@ export function SepetIcerik() {
           <ArrowLeft className="size-4" />
           Menü
         </Link>
-        <h1 className="text-lg font-semibold">Sepet · {masaAd}</h1>
+        <div className="space-y-0.5">
+          <p className="micro-caps text-muted-foreground">{masaAd}</p>
+          <h1 className="font-serif text-3xl leading-none">Sepetim</h1>
+        </div>
       </div>
 
-      <ul className="space-y-2">
+      <ul className="divide-y divide-border">
         {kalemler.map((k) => {
           const u = urunler.get(k.urunId);
           const yok = !u;
           const tukenmis = u && !u.stoktaMi;
           return (
-            <li
-              key={k.urunId}
-              className="rounded-lg border bg-card p-3 space-y-2"
-            >
+            <li key={k.urunId} className="py-4 space-y-2">
               <div className="flex items-start gap-2">
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium leading-tight">
+                  <div className="font-serif text-lg leading-tight">
                     {u?.ad ?? 'Ürün bulunamadı'}
                   </div>
                   {!yok && (
-                    <div className="text-sm text-muted-foreground">
-                      {formatTL(u.fiyatKurus)} × {k.adet} ={' '}
+                    <div className="mt-0.5 text-sm text-muted-foreground tabular-nums">
+                      {formatTL(u.fiyatKurus)} × {k.adet}
+                      <span className="mx-1.5">·</span>
                       <span className="text-foreground font-medium">
                         {formatTL(u.fiyatKurus * k.adet)}
                       </span>
@@ -171,34 +172,32 @@ export function SepetIcerik() {
                   type="button"
                   aria-label="Sepetten çıkar"
                   onClick={() => cikar(k.urunId)}
-                  className="p-1.5 text-muted-foreground"
+                  className="rounded-full p-2 text-muted-foreground transition active:scale-90"
                 >
                   <Trash2 className="size-4" />
                 </button>
               </div>
 
-              <div className="flex items-center justify-between gap-2">
-                <div className="inline-flex items-center gap-2 rounded-md border bg-background">
-                  <button
-                    type="button"
-                    aria-label="Azalt"
-                    onClick={() => guncelle(k.urunId, k.adet - 1)}
-                    className="p-1.5"
-                  >
-                    <Minus className="size-4" />
-                  </button>
-                  <span className="min-w-5 text-center text-sm tabular-nums">
-                    {k.adet}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Arttır"
-                    onClick={() => guncelle(k.urunId, k.adet + 1)}
-                    className="p-1.5"
-                  >
-                    <Plus className="size-4" />
-                  </button>
-                </div>
+              <div className="inline-flex items-center gap-1 rounded-full border bg-card px-1 shadow-soft">
+                <button
+                  type="button"
+                  aria-label="Azalt"
+                  onClick={() => guncelle(k.urunId, k.adet - 1)}
+                  className="rounded-full p-1.5 transition active:scale-90"
+                >
+                  <Minus className="size-3.5" />
+                </button>
+                <span className="min-w-5 text-center text-sm font-medium tabular-nums">
+                  {k.adet}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Arttır"
+                  onClick={() => guncelle(k.urunId, k.adet + 1)}
+                  className="rounded-full p-1.5 transition active:scale-90"
+                >
+                  <Plus className="size-3.5" />
+                </button>
               </div>
 
               <input
@@ -209,40 +208,44 @@ export function SepetIcerik() {
                 onChange={(e) =>
                   notGuncelle(k.urunId, e.target.value || undefined)
                 }
-                className="w-full rounded-md border bg-background px-2.5 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-xl border bg-card px-3 py-2 text-sm outline-none transition focus:border-foreground focus:ring-1 focus:ring-foreground"
               />
             </li>
           );
         })}
       </ul>
 
-      <div className="rounded-lg border bg-card p-3">
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-muted-foreground">Tahmini toplam</span>
-          <span className="font-semibold">{formatTL(tahminiToplam)}</span>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Gerçek toplam siparişiniz onaylanırken sunucuda hesaplanır.
-        </p>
-      </div>
-
       {hata && (
         <p
           role="alert"
-          className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-2 text-sm text-destructive"
+          className="rounded-2xl border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive"
         >
           {hata}
         </p>
       )}
 
-      <button
-        type="button"
-        onClick={gonder}
-        disabled={gonderiliyor}
-        className="w-full rounded-md bg-primary px-3 py-3 text-sm font-medium text-primary-foreground disabled:opacity-50"
-      >
-        {gonderiliyor ? 'Gönderiliyor…' : 'Siparişi gönder'}
-      </button>
+      {/* Sticky alt CTA */}
+      <div className="fixed inset-x-0 bottom-0 z-20 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
+        <div className="mx-auto max-w-md space-y-2 rounded-3xl border bg-card/95 p-3 shadow-floating backdrop-blur">
+          <div className="flex items-center justify-between px-2">
+            <span className="text-xs text-muted-foreground">Toplam</span>
+            <span className="text-lg font-semibold tabular-nums">
+              {formatTL(tahminiToplam)}
+            </span>
+          </div>
+          <button
+            type="button"
+            onClick={gonder}
+            disabled={gonderiliyor}
+            className="w-full rounded-full bg-primary px-4 py-3 text-sm font-medium text-primary-foreground shadow-soft transition active:scale-[0.98] disabled:opacity-50"
+          >
+            {gonderiliyor ? 'Gönderiliyor…' : 'Siparişi gönder'}
+          </button>
+          <p className="text-center text-[10px] text-muted-foreground">
+            Toplam sunucuda yeniden hesaplanır. Ödeme kasada alınır.
+          </p>
+        </div>
+      </div>
     </div>
   );
 }

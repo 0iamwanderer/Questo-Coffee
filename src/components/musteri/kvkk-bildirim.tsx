@@ -26,17 +26,17 @@ export function KvkkBildirim({ masaToken }: { masaToken: string }) {
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-x-0 bottom-0 z-40 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]"
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]"
     >
-      <div className="mx-auto max-w-md rounded-lg border bg-card p-3 shadow-lg space-y-2">
-        <div className="flex items-start gap-2">
+      <div className="pointer-events-auto mx-auto max-w-md rounded-3xl border bg-card/95 p-4 shadow-floating backdrop-blur space-y-3 anim-fade-in">
+        <div className="flex items-start gap-2.5">
           <ShieldCheck className="size-5 shrink-0 text-primary" />
-          <p className="text-xs text-foreground/90">
+          <p className="text-sm leading-relaxed text-foreground/90">
             Sipariş alabilmek için anonim bir cihaz kimliği oluşturuyoruz.
-            Kişisel veriniz toplanmıyor.{' '}
+            Adınız, telefon ve konum gibi kişisel veri toplanmaz.{' '}
             <Link
               href={`/m/${masaToken}/kvkk`}
-              className="underline text-primary"
+              className="font-medium underline text-primary"
             >
               Detaylı bilgi
             </Link>
@@ -46,7 +46,7 @@ export function KvkkBildirim({ masaToken }: { masaToken: string }) {
         <button
           type="button"
           onClick={onayla}
-          className="w-full rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground"
+          className="w-full rounded-full bg-primary px-3 py-2 text-sm font-medium text-primary-foreground shadow-soft transition active:scale-[0.98]"
         >
           Anladım
         </button>
