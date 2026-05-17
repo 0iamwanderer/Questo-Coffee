@@ -6,17 +6,16 @@
  * yeniSiparisSesi() arka planda çalabilir.
  */
 
-interface WebkitWindow extends Window {
-  webkitAudioContext?: typeof AudioContext;
-}
-
 let ctx: AudioContext | null = null;
 let kilitAcildi = false;
 
 const sesContext = (): AudioContext | null => {
   if (typeof window === 'undefined') return null;
   if (ctx) return ctx;
-  const w = window as WebkitWindow;
+  const w = window as Window & {
+    AudioContext?: typeof AudioContext;
+    webkitAudioContext?: typeof AudioContext;
+  };
   const Ctor = w.AudioContext ?? w.webkitAudioContext;
   if (!Ctor) return null;
   ctx = new Ctor();

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { COOKIE_ADI } from '@/lib/auth/session';
+import { COOKIE_ADI } from '@/lib/auth/cookie';
 
 // Yalnızca cookie varlığını kontrol eder. Cookie içeriğinin geçerliliği
 // (imza + revoke kontrolü) ilgili sayfanın server guard'ında yapılır;
