@@ -36,29 +36,38 @@ cp .env.example .env.local   # değerleri doldur
 npm run dev
 ```
 
-## Emulator Akışı (Geliştirme)
+## Emulator Akışı (Geliştirme) — Tek Komut
 
-Firebase emulators ile (Firebase project veya kredi kartı gerektirmez):
+`.env.local` zaten emulator için hazırlanmıştır (`NEXT_PUBLIC_USE_EMULATOR=1`).
+Tek komutla emulator + Next.js birlikte başlar:
 
-```bash
-# 1. Emulator'ları başlat (ayrı terminal)
-npm run emulators
-
-# 2. Diğer terminalde demo veriyi seed et
-FIRESTORE_EMULATOR_HOST=localhost:8080 \
-FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 \
-NEXT_PUBLIC_RESTORAN_ID=demo-1 \
-npm run seed
-
-# 3. Next.js'i emulator değişkenleri ile çalıştır
-FIRESTORE_EMULATOR_HOST=localhost:8080 \
-FIREBASE_AUTH_EMULATOR_HOST=localhost:9099 \
-npm run dev
+```powershell
+npm run dev:all
 ```
+
+Bu komut:
+- `emulators` → Firestore + Auth + Storage emulator'ları
+- `dev` → Next.js dev sunucusu
+- Logları tek terminalde renkli prefix'lerle gösterir (`emu` sarı, `next` cyan)
+- Ctrl+C ile ikisini birlikte durdurur
+
+### İlk seferinde demo veri
+
+Yeni terminal aç ve bir kere çalıştır:
+
+```powershell
+npm run seed
+```
+
+5 masa + 8 ürün oluşur. Token çıktısı listelenir.
+
+**Veri kalıcıdır** — emulator `--export-on-exit` ile çıkışta `./emulator-veri/`
+klasörüne yazar, sonraki açılışta `--import` ile geri yükler. Yani seed'i
+yalnız bir kez yapman yeterli.
 
 Emulator UI: <http://localhost:4000>
 
-> Not: PowerShell'de değişken atamak için `$env:FIRESTORE_EMULATOR_HOST = 'localhost:8080'` kullanın.
+> Ayrı ayrı çalıştırmak istersen: `npm run emulators` ve `npm run dev`
 
 ## Üretim'e seed (opsiyonel)
 

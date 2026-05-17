@@ -8,6 +8,7 @@ next-env.d.ts
 .firebase
 firebase-debug.log
 firestore-debug.log
+emulator-veri/
 .DS_Store
 dist
 coverage
