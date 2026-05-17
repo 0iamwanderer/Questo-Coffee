@@ -19,6 +19,20 @@ interface ServiceAccountJson {
 const yukle = (): App => {
   if (getApps().length > 0) return getApp();
 
+  // Emulator modu: FIRESTORE_EMULATOR_HOST veya FIREBASE_AUTH_EMULATOR_HOST
+  // set edilmişse Admin SDK bunları otomatik kullanır; service account
+  // gerekmez, projectId yeter.
+  const emulatorAcik =
+    !!process.env.FIRESTORE_EMULATOR_HOST ||
+    !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
+
+  if (emulatorAcik) {
+    return initializeApp({
+      projectId:
+        process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID ?? 'demo-questo',
+    });
+  }
+
   const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
   if (!raw) {
     throw new Error('FIREBASE_SERVICE_ACCOUNT ortam değişkeni eksik.');

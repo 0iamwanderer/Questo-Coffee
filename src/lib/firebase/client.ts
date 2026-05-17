@@ -6,9 +6,21 @@ import {
   initializeApp,
   type FirebaseApp,
 } from 'firebase/app';
-import { getAuth, type Auth } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
-import { getStorage, type FirebaseStorage } from 'firebase/storage';
+import {
+  connectAuthEmulator,
+  getAuth,
+  type Auth,
+} from 'firebase/auth';
+import {
+  connectFirestoreEmulator,
+  getFirestore,
+  type Firestore,
+} from 'firebase/firestore';
+import {
+  connectStorageEmulator,
+  getStorage,
+  type FirebaseStorage,
+} from 'firebase/storage';
 import {
   initializeAppCheck,
   ReCaptchaV3Provider,
@@ -24,17 +36,20 @@ const yapilandirma = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
+const emulatorAcik = process.env.NEXT_PUBLIC_USE_EMULATOR === '1';
+
 let _app: FirebaseApp | null = null;
 let _auth: Auth | null = null;
 let _db: Firestore | null = null;
 let _storage: FirebaseStorage | null = null;
 let _appCheck: AppCheck | null = null;
+let _emulatorBaglandi = false;
 
 const baslat = (): FirebaseApp => {
   if (_app) return _app;
   _app = getApps().length ? getApp() : initializeApp(yapilandirma);
 
-  if (typeof window !== 'undefined' && !_appCheck) {
+  if (typeof window !== 'undefined' && !emulatorAcik && !_appCheck) {
     const siteKey = process.env.NEXT_PUBLIC_APPCHECK_SITE_KEY;
     if (siteKey) {
       try {
@@ -50,8 +65,48 @@ const baslat = (): FirebaseApp => {
   return _app;
 };
 
+const emulatoraBagla = (
+  auth: Auth,
+  db: Firestore,
+  storage: FirebaseStorage,
+) => {
+  if (_emulatorBaglandi || !emulatorAcik) return;
+  if (typeof window === 'undefined') return;
+  try {
+    connectAuthEmulator(auth, 'http://localhost:9099', {
+      disableWarnings: true,
+    });
+    connectFirestoreEmulator(db, 'localhost', 8080);
+    connectStorageEmulator(storage, 'localhost', 9199);
+    _emulatorBaglandi = true;
+    console.log('[questo] Firebase emulator bağlantısı kuruldu.');
+  } catch (e) {
+    console.warn('[questo] Emulator bağlantısı başarısız:', e);
+  }
+};
+
 export const getClientApp = (): FirebaseApp => baslat();
-export const getClientAuth = (): Auth => (_auth ??= getAuth(baslat()));
-export const getClientDb = (): Firestore => (_db ??= getFirestore(baslat()));
-export const getClientStorage = (): FirebaseStorage =>
-  (_storage ??= getStorage(baslat()));
+
+const tumServisleriHazirla = () => {
+  if (!_auth) _auth = getAuth(baslat());
+  if (!_db) _db = getFirestore(baslat());
+  if (!_storage) _storage = getStorage(baslat());
+  if (emulatorAcik && !_emulatorBaglandi) {
+    emulatoraBagla(_auth, _db, _storage);
+  }
+};
+
+export const getClientAuth = (): Auth => {
+  tumServisleriHazirla();
+  return _auth!;
+};
+
+export const getClientDb = (): Firestore => {
+  tumServisleriHazirla();
+  return _db!;
+};
+
+export const getClientStorage = (): FirebaseStorage => {
+  tumServisleriHazirla();
+  return _storage!;
+};
