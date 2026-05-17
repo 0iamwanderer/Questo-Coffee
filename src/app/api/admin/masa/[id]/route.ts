@@ -3,6 +3,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
 import { MasaYama } from '@/lib/utils/zod-semalar';
 import { kapsamiDogrula } from '@/lib/admin/restoran';
+import { auditLogla } from '@/lib/audit/log';
 
 export const runtime = 'nodejs';
 
@@ -16,7 +17,17 @@ export async function PATCH(
     const { id } = await params;
     const body = MasaYama.parse(await req.json());
 
-    await getAdminDb().doc(`restoranlar/${R}/masalar/${id}`).update(body);
+    const ref = getAdminDb().doc(`restoranlar/${R}/masalar/${id}`);
+    const onceki = (await ref.get()).data();
+    await ref.update(body);
+
+    await auditLogla(u, R, {
+      aksiyon: 'masa.update',
+      kaynak: `masalar/${id}`,
+      oncekiVeri: onceki,
+      sonrakiVeri: body,
+    });
+
     return Response.json({ ok: true });
   } catch (e) {
     return httpHata(e);
@@ -33,7 +44,6 @@ export async function DELETE(
     const { id } = await params;
     const db = getAdminDb();
 
-    // Bu masaya bağlı açık adisyon varsa silmeyi reddet
     const acik = await db
       .collection(`restoranlar/${R}/adisyonlar`)
       .where('masaId', '==', id)
@@ -48,7 +58,16 @@ export async function DELETE(
       );
     }
 
-    await db.doc(`restoranlar/${R}/masalar/${id}`).delete();
+    const ref = db.doc(`restoranlar/${R}/masalar/${id}`);
+    const onceki = (await ref.get()).data();
+    await ref.delete();
+
+    await auditLogla(u, R, {
+      aksiyon: 'masa.delete',
+      kaynak: `masalar/${id}`,
+      oncekiVeri: onceki,
+    });
+
     return Response.json({ ok: true });
   } catch (e) {
     return httpHata(e);

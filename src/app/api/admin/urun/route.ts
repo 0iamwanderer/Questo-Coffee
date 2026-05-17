@@ -4,6 +4,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
 import { UrunGirdi } from '@/lib/utils/zod-semalar';
 import { kapsamiDogrula } from '@/lib/admin/restoran';
+import { auditLogla } from '@/lib/audit/log';
 
 export const runtime = 'nodejs';
 
@@ -24,6 +25,12 @@ export async function POST(req: Request) {
     const ref = await db.collection(`restoranlar/${R}/urunler`).add({
       ...body,
       olusturulduAt: FieldValue.serverTimestamp(),
+    });
+
+    await auditLogla(u, R, {
+      aksiyon: 'urun.create',
+      kaynak: `urunler/${ref.id}`,
+      sonrakiVeri: body,
     });
 
     return Response.json({ ok: true, id: ref.id });

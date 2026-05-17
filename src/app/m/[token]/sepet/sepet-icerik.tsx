@@ -32,6 +32,13 @@ export function SepetIcerik() {
   const [urunler, setUrunler] = useState<Map<string, Urun>>(new Map());
   const [gonderiliyor, setGonderiliyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
+  // Bu sayfa açıkken sabit kalan idempotency anahtarı — çift tıklama,
+  // ağ retry'ı veya hızlı refresh sırasında tek sipariş garantisi.
+  const [idempotencyKey] = useState(() =>
+    typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
 
   useEffect(() => {
     const db = getClientDb();
@@ -70,6 +77,7 @@ export function SepetIcerik() {
         headers: {
           'content-type': 'application/json',
           authorization: `Bearer ${idToken}`,
+          'idempotency-key': idempotencyKey,
         },
         body: JSON.stringify({
           masaToken,

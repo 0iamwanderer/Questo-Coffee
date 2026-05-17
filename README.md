@@ -84,6 +84,21 @@ kullanıcısına otomatik `kasiyer + sahip` claim'i atanır.
 4. Kullanıcı `/kasa/giris` üzerinden oturum açabilir.
 5. Güvenlik için `ADMIN_SETUP_TOKEN`'ı sonradan `.env.local`'dan kaldır.
 
+## Güvenlik — Üretim Notu
+
+**Idempotency TTL'i etkinleştir** (Firestore Console > Indexes > TTL):
+- Koleksiyon: `idempotency`
+- Field: `expireAt`
+
+Bu, idempotency dokümanlarının 24 saat sonra otomatik silinmesini sağlar.
+Etkinleştirilmezse koleksiyon zamanla büyür.
+
+**Rate limit:** Her müşteri Anon UID için 60 saniyede 10 sipariş. Aşılırsa
+HTTP 429 döner. Limiti `lib/siparis/servis.ts` içinden değiştirebilirsin.
+
+**Audit log:** Tüm admin yazımları `restoranlar/{R}/kullaniciAksiyonlari`
+altına yazılır. Yalnız sahip okuyabilir (Firestore rules).
+
 ## Cloud Functions (SLA Bildirim)
 
 `functions/` altında 2 fonksiyon:
@@ -117,3 +132,4 @@ firebase emulators:start --only firestore,functions,auth
 - [x] Faz 4 — Kasa (Kanban, adisyon paneli, durum güncelleme)
 - [x] Faz 5 — Admin (menü/masa CRUD, QR PDF)
 - [x] Faz 6 — Operasyonel + Cloud Functions (SLA bildirim)
+- [x] Faz 7 — Güvenlik sertleştirme (rate limit + idempotency + audit log)

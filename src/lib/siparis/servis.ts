@@ -2,6 +2,7 @@ import 'server-only';
 
 import {
   FieldValue,
+  Timestamp,
   type DocumentReference,
 } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase/admin';
@@ -31,6 +32,21 @@ interface SayacOkuma {
   gunlukSiparisNo: number;
 }
 
+interface RateLimitOkuma {
+  pencere: number[];
+}
+
+interface IdempotencyOkuma {
+  musteriUid: string;
+  sonuc: SiparisYazSonuc;
+}
+
+// ── Rate limit ayarları ────────────────────────────────────────────────
+const RATE_PENCERE_MS = 60_000;
+const RATE_LIMIT = 10;
+// ── Idempotency ──────────────────────────────────────────────────────
+const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
+
 const restoranId = (): string => {
   const id = process.env.NEXT_PUBLIC_RESTORAN_ID;
   if (!id) throw new AppError('yapilandirma', 'Restoran tanımlı değil.', 500);
@@ -41,16 +57,18 @@ const restoranId = (): string => {
  * Müşteri siparişini transaction içinde yazar.
  *
  * Güvenlik garantileri:
- * - İstemciden gelen fiyat YOKSAYILIR; tüm fiyatlar Firestore'dan okunur.
+ * - İstemciden gelen fiyat YOKSAYILIR; fiyatlar Firestore'dan okunur.
  * - Stokta olmayan ürün → işlem tümüyle geri alınır.
- * - Günlük sıra no, sayaç doc'una atomik increment ile yazılır.
- * - Açık adisyon aynı masada birden fazla olamaz: aynı transaction'da
- *   açık adisyon sorgulanır, yoksa oluşturulur (yarış koşulu transaction
- *   tarafından çözülür).
+ * - Günlük sıra no atomik increment ile yazılır.
+ * - Açık adisyon aynı transaction'da sorgulanıp tek tutulur (yarış koşulu yok).
+ * - **Rate limit:** musteriUid başına 60 saniyede en fazla 10 sipariş.
+ * - **Idempotency:** opsiyonel idempotencyKey ile aynı istek tekrarlanırsa
+ *   önceki sonuç döner (24 saat TTL).
  */
 export const siparisYaz = async (
   istek: SiparisIstegiT,
   musteriUid: string,
+  idempotencyKey?: string,
 ): Promise<SiparisYazSonuc> => {
   const R = restoranId();
   const db = getAdminDb();
@@ -61,9 +79,50 @@ export const siparisYaz = async (
   const sayacRef = db.doc(
     `restoranlar/${R}/sayaclar/${istanbulGunId()}`,
   );
+  const rateRef = db.doc(`rateLimit/${musteriUid}`);
+  const idempotencyRef = idempotencyKey
+    ? db.doc(`idempotency/${idempotencyKey}`)
+    : null;
 
   return await db.runTransaction(async (tx) => {
-    // ── 1) Okumalar (yazılardan önce HEPSİ) ────────────────────────────
+    // ── 1) Idempotency kontrolü ────────────────────────────────────────
+    if (idempotencyRef) {
+      const idemSnap = await tx.get(idempotencyRef);
+      if (idemSnap.exists) {
+        const data = idemSnap.data() as IdempotencyOkuma;
+        if (data.musteriUid !== musteriUid) {
+          throw new AppError(
+            'idempotency_carpisma',
+            'Bu istek anahtarı başka bir kullanıcıya ait.',
+            409,
+          );
+        }
+        return data.sonuc;
+      }
+    }
+
+    // ── 2) Rate limit kontrolü ─────────────────────────────────────────
+    const simdi = Date.now();
+    const rateSnap = await tx.get(rateRef);
+    const oncekiPencere = rateSnap.exists
+      ? ((rateSnap.data() as RateLimitOkuma).pencere ?? [])
+      : [];
+    const guncelPencere = oncekiPencere.filter(
+      (t) => simdi - t < RATE_PENCERE_MS,
+    );
+    if (guncelPencere.length >= RATE_LIMIT) {
+      const ilkZaman = guncelPencere[0] ?? simdi;
+      const beklemeSn = Math.ceil(
+        (RATE_PENCERE_MS - (simdi - ilkZaman)) / 1000,
+      );
+      throw new AppError(
+        'rate_limit',
+        `Çok sık sipariş veriyorsunuz. ${beklemeSn} saniye sonra tekrar deneyin.`,
+        429,
+      );
+    }
+
+    // ── 3) Diğer okumalar (yazılardan önce HEPSİ) ──────────────────────
     const masaQ = masalarRef
       .where('token', '==', istek.masaToken)
       .where('aktifMi', '==', true)
@@ -88,7 +147,7 @@ export const siparisYaz = async (
 
     const sayacSnap = await tx.get(sayacRef);
 
-    // ── 2) Hesaplama (sunucu fiyatı) ───────────────────────────────────
+    // ── 4) Hesaplama ───────────────────────────────────────────────────
     let toplamKurus = 0;
     const kalemler = urunSnaps.map((s, i) => {
       const istem = istek.kalemler[i]!;
@@ -115,7 +174,6 @@ export const siparisYaz = async (
       };
     });
 
-    // ── 3) Adisyon ref + günlük no ─────────────────────────────────────
     const mevcutAdisyon = acikSnap.empty ? null : acikSnap.docs[0]!;
     const adisyonRef = mevcutAdisyon
       ? mevcutAdisyon.ref
@@ -126,9 +184,9 @@ export const siparisYaz = async (
       : 0;
     const gunlukNo = oncekiNo + 1;
 
-    const simdi = FieldValue.serverTimestamp();
+    const simdiTs = FieldValue.serverTimestamp();
 
-    // ── 4) Yazımlar ────────────────────────────────────────────────────
+    // ── 5) Yazımlar ────────────────────────────────────────────────────
     if (mevcutAdisyon) {
       const m = mevcutAdisyon.data() as AdisyonOkuma;
       tx.update(adisyonRef, {
@@ -140,7 +198,7 @@ export const siparisYaz = async (
         masaId,
         durum: 'acik',
         toplamKurus,
-        acilisAt: simdi,
+        acilisAt: simdiTs,
         siparisSayisi: 1,
       });
     }
@@ -156,15 +214,29 @@ export const siparisYaz = async (
       kalemler,
       toplamKurus,
       durum: 'yeni',
-      durumTarihleri: { yeni: simdi },
-      olusturulduAt: simdi,
+      durumTarihleri: { yeni: simdiTs },
+      olusturulduAt: simdiTs,
     });
 
-    return {
+    // Rate limit penceresini güncelle
+    tx.set(rateRef, { pencere: [...guncelPencere, simdi] }, { merge: true });
+
+    const sonuc: SiparisYazSonuc = {
       adisyonId: adisyonRef.id,
       siparisId: siparisRef.id,
       gunlukNo,
       toplamKurus,
     };
+
+    // Idempotency doc'unu yaz (TTL field ile)
+    if (idempotencyRef) {
+      tx.set(idempotencyRef, {
+        musteriUid,
+        sonuc,
+        expireAt: Timestamp.fromMillis(simdi + IDEMPOTENCY_TTL_MS),
+      });
+    }
+
+    return sonuc;
   });
 };

@@ -3,6 +3,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { httpHata } from '@/lib/utils/hata';
 import { kapsamiDogrula } from '@/lib/admin/restoran';
 import { uretMasaToken } from '@/lib/utils/token';
+import { auditLogla } from '@/lib/audit/log';
 
 export const runtime = 'nodejs';
 
@@ -19,6 +20,11 @@ export async function POST(
     await getAdminDb()
       .doc(`restoranlar/${R}/masalar/${id}`)
       .update({ token: yeniToken });
+
+    await auditLogla(u, R, {
+      aksiyon: 'masa.rotate',
+      kaynak: `masalar/${id}`,
+    });
 
     return Response.json({ ok: true, token: yeniToken });
   } catch (e) {

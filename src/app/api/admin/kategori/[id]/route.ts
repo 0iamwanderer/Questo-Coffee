@@ -3,6 +3,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
 import { KategoriYama } from '@/lib/utils/zod-semalar';
 import { kapsamiDogrula } from '@/lib/admin/restoran';
+import { auditLogla } from '@/lib/audit/log';
 
 export const runtime = 'nodejs';
 
@@ -16,9 +17,16 @@ export async function PATCH(
     const { id } = await params;
     const body = KategoriYama.parse(await req.json());
 
-    await getAdminDb()
-      .doc(`restoranlar/${R}/kategoriler/${id}`)
-      .update(body);
+    const ref = getAdminDb().doc(`restoranlar/${R}/kategoriler/${id}`);
+    const onceki = (await ref.get()).data();
+    await ref.update(body);
+
+    await auditLogla(u, R, {
+      aksiyon: 'kategori.update',
+      kaynak: `kategoriler/${id}`,
+      oncekiVeri: onceki,
+      sonrakiVeri: body,
+    });
 
     return Response.json({ ok: true });
   } catch (e) {
@@ -36,7 +44,6 @@ export async function DELETE(
     const { id } = await params;
     const db = getAdminDb();
 
-    // Bu kategoriye bağlı ürün varsa silmeyi reddet
     const urunSnap = await db
       .collection(`restoranlar/${R}/urunler`)
       .where('kategoriId', '==', id)
@@ -50,7 +57,16 @@ export async function DELETE(
       );
     }
 
-    await db.doc(`restoranlar/${R}/kategoriler/${id}`).delete();
+    const ref = db.doc(`restoranlar/${R}/kategoriler/${id}`);
+    const onceki = (await ref.get()).data();
+    await ref.delete();
+
+    await auditLogla(u, R, {
+      aksiyon: 'kategori.delete',
+      kaynak: `kategoriler/${id}`,
+      oncekiVeri: onceki,
+    });
+
     return Response.json({ ok: true });
   } catch (e) {
     return httpHata(e);

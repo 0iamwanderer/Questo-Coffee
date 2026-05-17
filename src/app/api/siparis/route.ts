@@ -17,7 +17,10 @@ export async function POST(req: Request) {
     const idToken = auth.slice('Bearer '.length).trim();
     const decoded = await getAdminAuth().verifyIdToken(idToken);
 
-    const sonuc = await siparisYaz(body, decoded.uid);
+    const idempotencyKey =
+      req.headers.get('idempotency-key')?.slice(0, 128) ?? undefined;
+
+    const sonuc = await siparisYaz(body, decoded.uid, idempotencyKey);
     return Response.json({ ok: true, ...sonuc });
   } catch (e) {
     return httpHata(e);

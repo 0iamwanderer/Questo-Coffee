@@ -3,6 +3,7 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { httpHata } from '@/lib/utils/hata';
 import { UrunYama } from '@/lib/utils/zod-semalar';
 import { kapsamiDogrula } from '@/lib/admin/restoran';
+import { auditLogla } from '@/lib/audit/log';
 
 export const runtime = 'nodejs';
 
@@ -16,7 +17,17 @@ export async function PATCH(
     const { id } = await params;
     const body = UrunYama.parse(await req.json());
 
-    await getAdminDb().doc(`restoranlar/${R}/urunler/${id}`).update(body);
+    const ref = getAdminDb().doc(`restoranlar/${R}/urunler/${id}`);
+    const onceki = (await ref.get()).data();
+    await ref.update(body);
+
+    await auditLogla(u, R, {
+      aksiyon: 'urun.update',
+      kaynak: `urunler/${id}`,
+      oncekiVeri: onceki,
+      sonrakiVeri: body,
+    });
+
     return Response.json({ ok: true });
   } catch (e) {
     return httpHata(e);
@@ -32,7 +43,16 @@ export async function DELETE(
     const R = kapsamiDogrula(u);
     const { id } = await params;
 
-    await getAdminDb().doc(`restoranlar/${R}/urunler/${id}`).delete();
+    const ref = getAdminDb().doc(`restoranlar/${R}/urunler/${id}`);
+    const onceki = (await ref.get()).data();
+    await ref.delete();
+
+    await auditLogla(u, R, {
+      aksiyon: 'urun.delete',
+      kaynak: `urunler/${id}`,
+      oncekiVeri: onceki,
+    });
+
     return Response.json({ ok: true });
   } catch (e) {
     return httpHata(e);
