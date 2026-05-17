@@ -72,14 +72,18 @@ const emulatoraBagla = (
 ) => {
   if (_emulatorBaglandi || !emulatorAcik) return;
   if (typeof window === 'undefined') return;
+  // Sayfayı serve eden host'a göre emulator host'unu seç:
+  // localhost → emulator localhost'ta
+  // 192.168.x.x (telefon LAN) → emulator aynı IP üzerinden
+  const host = window.location.hostname || 'localhost';
   try {
-    connectAuthEmulator(auth, 'http://localhost:9099', {
+    connectAuthEmulator(auth, `http://${host}:9099`, {
       disableWarnings: true,
     });
-    connectFirestoreEmulator(db, 'localhost', 8080);
-    connectStorageEmulator(storage, 'localhost', 9199);
+    connectFirestoreEmulator(db, host, 8080);
+    connectStorageEmulator(storage, host, 9199);
     _emulatorBaglandi = true;
-    console.log('[questo] Firebase emulator bağlantısı kuruldu.');
+    console.log(`[questo] Emulator bağlantısı kuruldu → ${host}`);
   } catch (e) {
     console.warn('[questo] Emulator bağlantısı başarısız:', e);
   }
