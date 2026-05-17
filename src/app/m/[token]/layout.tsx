@@ -45,7 +45,7 @@ export default async function MusteriLayout({ children, params }: Props) {
         restoranAd,
       }}
     >
-      <div className="min-h-screen bg-background pb-24">{children}</div>
+      {children}
     </MasaSaglayici>
   );
 }

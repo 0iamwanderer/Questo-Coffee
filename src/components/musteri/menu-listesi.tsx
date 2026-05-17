@@ -14,6 +14,7 @@ import {
   urunConverter,
 } from '@/lib/firebase/converters';
 import type { Kategori, Urun } from '@/types/model';
+import { useMasa } from '@/app/m/[token]/masa-provider';
 import { UrunKarti } from './urun-karti';
 import { UrunDetaySheet } from './urun-detay-sheet';
 import { cn } from '@/lib/utils';
@@ -21,6 +22,7 @@ import { cn } from '@/lib/utils';
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 
 export function MenuListesi() {
+  const { masaToken } = useMasa();
   const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
   const [urunler, setUrunler] = useState<Urun[]>([]);
   const [aktifKategori, setAktifKategori] = useState<string | null>(null);
@@ -146,6 +148,7 @@ export function MenuListesi() {
         urun={detayUrun}
         acik={!!detayUrun}
         onKapat={() => setDetayUrun(null)}
+        masaToken={masaToken}
       />
     </div>
   );

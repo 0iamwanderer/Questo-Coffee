@@ -68,6 +68,12 @@ service cloud.firestore {
         allow read: if sahipMi();
         allow write: if false;
       }
+
+      // ── Garson çağrıları — yalnız kasiyer okur ───────────────────
+      match /cagri/{cagriId} {
+        allow read: if kasiyerMi();
+        allow write: if false;
+      }
     }
   }
 }
