@@ -33,10 +33,17 @@ if (getApps().length === 0) {
     initializeApp({ projectId });
     console.log(`• Emulator: ${emulatorHost}`);
   } else {
-    const sa = process.env.FIREBASE_SERVICE_ACCOUNT;
+    const inline = process.env.FIREBASE_SERVICE_ACCOUNT;
+    const path = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+    let sa = inline && inline.trim().length > 0 ? inline : null;
+    if (!sa && path && path.trim().length > 0) {
+      const { readFileSync } = await import('node:fs');
+      const { resolve } = await import('node:path');
+      sa = readFileSync(resolve(path), 'utf8');
+    }
     if (!sa) {
       console.error(
-        '✗ FIREBASE_SERVICE_ACCOUNT eksik (emulator kullanmıyorsanız gereklidir).',
+        '✗ FIREBASE_SERVICE_ACCOUNT veya FIREBASE_SERVICE_ACCOUNT_PATH eksik.',
       );
       process.exit(1);
     }

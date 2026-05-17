@@ -11,3 +11,5 @@ firestore-debug.log
 .DS_Store
 dist
 coverage
+service-account*.json
+*-firebase-adminsdk-*.json

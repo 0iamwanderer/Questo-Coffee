@@ -1,5 +1,7 @@
 import 'server-only';
 
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import {
   cert,
   getApp,
@@ -15,6 +17,24 @@ interface ServiceAccountJson {
   client_email: string;
   private_key: string;
 }
+
+const serviceAccountOku = (): string | null => {
+  const inline = process.env.FIREBASE_SERVICE_ACCOUNT;
+  if (inline && inline.trim().length > 0) return inline;
+  const path = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  if (path && path.trim().length > 0) {
+    try {
+      return readFileSync(resolve(path), 'utf8');
+    } catch (e) {
+      throw new Error(
+        `FIREBASE_SERVICE_ACCOUNT_PATH okunamadı (${path}): ${
+          e instanceof Error ? e.message : e
+        }`,
+      );
+    }
+  }
+  return null;
+};
 
 const yukle = (): App => {
   if (getApps().length > 0) return getApp();
@@ -33,9 +53,11 @@ const yukle = (): App => {
     });
   }
 
-  const raw = process.env.FIREBASE_SERVICE_ACCOUNT;
+  const raw = serviceAccountOku();
   if (!raw) {
-    throw new Error('FIREBASE_SERVICE_ACCOUNT ortam değişkeni eksik.');
+    throw new Error(
+      'FIREBASE_SERVICE_ACCOUNT veya FIREBASE_SERVICE_ACCOUNT_PATH tanımlı değil.',
+    );
   }
 
   let parsed: ServiceAccountJson;
