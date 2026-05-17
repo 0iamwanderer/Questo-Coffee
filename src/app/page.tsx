@@ -12,6 +12,7 @@ interface MasaListeItem {
 
 // Emulator/dev modunda masaları listele — dev kolaylığı.
 // Production'da bu kart render edilmez.
+// 3 saniye timeout: emulator kapalıysa sayfa hang olmasın.
 async function masalariYukle(): Promise<MasaListeItem[]> {
   const devMode =
     !!process.env.FIRESTORE_EMULATOR_HOST ||
@@ -21,17 +22,27 @@ async function masalariYukle(): Promise<MasaListeItem[]> {
   const R = process.env.NEXT_PUBLIC_RESTORAN_ID;
   if (!R) return [];
 
+  const sorgu = getAdminDb()
+    .collection(`restoranlar/${R}/masalar`)
+    .where('aktifMi', '==', true)
+    .orderBy('ad', 'asc')
+    .get();
+
+  const timeout = new Promise<never>((_, reject) =>
+    setTimeout(() => reject(new Error('emulator-timeout')), 3000),
+  );
+
   try {
-    const snap = await getAdminDb()
-      .collection(`restoranlar/${R}/masalar`)
-      .where('aktifMi', '==', true)
-      .orderBy('ad', 'asc')
-      .get();
+    const snap = await Promise.race([sorgu, timeout]);
     return snap.docs.map((d) => {
       const data = d.data() as { ad: string; token: string };
       return { id: d.id, ad: data.ad, token: data.token };
     });
-  } catch {
+  } catch (e) {
+    console.warn(
+      '[questo] masalar yüklenemedi (emulator çalışıyor mu?):',
+      e instanceof Error ? e.message : e,
+    );
     return [];
   }
 }
