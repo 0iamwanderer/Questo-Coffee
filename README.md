@@ -84,6 +84,24 @@ kullanıcısına otomatik `kasiyer + sahip` claim'i atanır.
 4. Kullanıcı `/kasa/giris` üzerinden oturum açabilir.
 5. Güvenlik için `ADMIN_SETUP_TOKEN`'ı sonradan `.env.local`'dan kaldır.
 
+## Test
+
+```bash
+npm test            # watch mode
+npm test -- --run   # tek seferlik
+```
+
+`tests/` altında 28 birim test: para format, masa token, zod şemaları,
+sayaç tarih hesabı, AppError, sepet store (masaAyarla, ekle, guncelle vb.).
+
+## CI
+
+`.github/workflows/ci.yml`:
+- Next.js: `npm ci` → typecheck → test → build (placeholder env'lerle)
+- Functions: `npm ci` → build
+
+Push veya PR'da otomatik tetiklenir.
+
 ## Güvenlik — Üretim Notu
 
 **Idempotency TTL'i etkinleştir** (Firestore Console > Indexes > TTL):
@@ -134,3 +152,4 @@ firebase emulators:start --only firestore,functions,auth
 - [x] Faz 6 — Operasyonel + Cloud Functions (SLA bildirim)
 - [x] Faz 7 — Güvenlik sertleştirme (rate limit + idempotency + audit log)
 - [x] Faz 8 — Ürün görseli + günlük rapor + KVKK
+- [x] Faz 9 — CI + Vitest birim testleri (28 test)

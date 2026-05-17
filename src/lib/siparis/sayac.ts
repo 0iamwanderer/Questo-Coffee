@@ -1,8 +1,7 @@
-import 'server-only';
-
 /**
  * Europe/Istanbul saat dilimine göre YYYY-MM-DD.
  * Günlük sipariş sayacının doc id'si bu fonksiyondan üretilir.
+ * Pure fonksiyon — server ve istemciden çağrılabilir.
  */
 export const istanbulGunId = (d: Date = new Date()): string => {
   const fmt = new Intl.DateTimeFormat('en-CA', {
