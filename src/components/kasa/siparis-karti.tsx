@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import { AlertTriangle } from 'lucide-react';
 import { formatTL } from '@/lib/utils/para';
+import { cn } from '@/lib/utils';
 import type { Siparis, SiparisDurumu } from '@/types/model';
 
 const SONRAKI: Partial<
@@ -47,10 +49,24 @@ export function SiparisKarti({ siparis }: { siparis: Siparis }) {
   const sonraki = SONRAKI[siparis.durum];
 
   return (
-    <div className="rounded-lg border bg-card p-3 space-y-2 shadow-sm">
+    <div
+      className={cn(
+        'rounded-lg border bg-card p-3 space-y-2 shadow-sm',
+        siparis.slaUyari && 'border-destructive/60 ring-1 ring-destructive/30',
+      )}
+    >
       <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">
+        <span className="flex items-center gap-1.5 font-medium text-foreground">
           Sipariş #{siparis.gunlukNo}
+          {siparis.slaUyari && (
+            <span
+              title="SLA aşıldı"
+              className="inline-flex items-center gap-0.5 rounded-md bg-destructive/10 px-1.5 py-0.5 text-[10px] font-medium text-destructive"
+            >
+              <AlertTriangle className="size-3" />
+              Geç
+            </span>
+          )}
         </span>
         <span>{saatFmt(siparis.olusturulduAt)}</span>
       </div>

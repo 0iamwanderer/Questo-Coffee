@@ -84,6 +84,30 @@ kullanıcısına otomatik `kasiyer + sahip` claim'i atanır.
 4. Kullanıcı `/kasa/giris` üzerinden oturum açabilir.
 5. Güvenlik için `ADMIN_SETUP_TOKEN`'ı sonradan `.env.local`'dan kaldır.
 
+## Cloud Functions (SLA Bildirim)
+
+`functions/` altında 2 fonksiyon:
+- **slaKontrol** — her 5 dk'da bir çalışır. `yeni` durumda 10+ dk veya
+  `hazirlaniyor` durumda 15+ dk kalmış siparişlere `slaUyari: true` yazar.
+  Kasa Kanban'da kırmızı "Geç" rozeti olarak görünür.
+- **slaUyariniTemizle** — sipariş ileri durumlara geçtiğinde `slaUyari` alanını
+  siler.
+
+Deploy (Firebase Blaze planı gereklidir):
+
+```bash
+cd functions && npm install && npm run build && cd ..
+firebase functions:params:set RESTORAN_ID
+firebase deploy --only functions
+```
+
+Emulator'da:
+
+```bash
+cd functions && npm run build && cd ..
+firebase emulators:start --only firestore,functions,auth
+```
+
 ## Faz Planı
 
 - [x] Faz 0 — Konfig iskeleti
@@ -92,3 +116,4 @@ kullanıcısına otomatik `kasiyer + sahip` claim'i atanır.
 - [x] Faz 3 — Müşteri akışı (menü, sepet, sipariş transaction)
 - [x] Faz 4 — Kasa (Kanban, adisyon paneli, durum güncelleme)
 - [x] Faz 5 — Admin (menü/masa CRUD, QR PDF)
+- [x] Faz 6 — Operasyonel + Cloud Functions (SLA bildirim)

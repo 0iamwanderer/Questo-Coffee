@@ -82,6 +82,8 @@ export interface Siparis {
   durum: SiparisDurumu;
   durumTarihleri: SiparisDurumTarihleri;
   olusturulduAt: Date;
+  /** SLA Cloud Function tarafından konur (10 dk yeni / 15 dk hazırlanıyor). */
+  slaUyari?: boolean;
 }
 
 export interface Adisyon {
