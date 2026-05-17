@@ -48,7 +48,7 @@ export const sahipGerekli = async (
 ): Promise<OturumKullanicisi> => {
   const u = await kasiyerGerekli(geri);
   if (!u.claims.sahip) {
-    throw new AppError('yetkisiz', 'Yalnızca sahip yetkili.', 403);
+    redirect('/kasa');
   }
   return u;
 };

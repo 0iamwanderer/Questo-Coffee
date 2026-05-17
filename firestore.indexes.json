@@ -31,6 +31,22 @@
         { "fieldPath": "masaId", "order": "ASCENDING" },
         { "fieldPath": "durum", "order": "ASCENDING" }
       ]
+    },
+    {
+      "collectionGroup": "kategoriler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "aktifMi", "order": "ASCENDING" },
+        { "fieldPath": "sira", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "urunler",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "kategoriId", "order": "ASCENDING" },
+        { "fieldPath": "sira", "order": "ASCENDING" }
+      ]
     }
   ],
   "fieldOverrides": []

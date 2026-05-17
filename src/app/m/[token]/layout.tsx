@@ -21,9 +21,9 @@ export default async function MusteriLayout({ children, params }: Props) {
   const db = getAdminDb();
 
   const restoranSnap = await db.doc(`restoranlar/${R}`).get();
-  if (!restoranSnap.exists) notFound();
-  const restoranAd =
-    (restoranSnap.data() as { ad?: string }).ad ?? 'Restoran';
+  const restoranAd = restoranSnap.exists
+    ? ((restoranSnap.data() as { ad?: string }).ad ?? 'Restoran')
+    : 'Restoran';
 
   const masaSnap = await db
     .collection(`restoranlar/${R}/masalar`)

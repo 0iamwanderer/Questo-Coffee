@@ -37,6 +37,19 @@ export const MasaGirdi = z.object({
 });
 export type MasaGirdiT = z.infer<typeof MasaGirdi>;
 
+// ── PATCH varyantları (kısmi) ──────────────────────────────────────────
+export const UrunYama = UrunGirdi.partial();
+export const KategoriYama = KategoriGirdi.partial();
+export const MasaYama = z.object({
+  ad: z.string().trim().min(1).max(40).optional(),
+  aktifMi: z.boolean().optional(),
+});
+
+// ── Restoran ayarları ──────────────────────────────────────────────────
+export const RestoranAyar = z.object({
+  ad: z.string().trim().min(1).max(120),
+});
+
 // ── Kasa: durum güncelleme ──────────────────────────────────────────────
 export const DurumGirdi = z.object({
   durum: z.enum(['hazirlaniyor', 'hazir', 'teslim', 'iptal']),
