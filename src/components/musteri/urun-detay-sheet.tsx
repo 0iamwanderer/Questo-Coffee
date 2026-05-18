@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import { X } from 'lucide-react';
 import { toast } from 'sonner';
@@ -197,9 +197,7 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
           <header className="flex items-start justify-between gap-4">
             <h2 className="font-serif text-3xl leading-tight">{urun.ad}</h2>
             <div className="text-right">
-              <div className="font-serif text-2xl leading-none tabular-nums">
-                {formatTL(birimFiyat)}
-              </div>
+              <FiyatGoster fiyat={birimFiyat} />
               {ekFiyat > 0 && (
                 <div className="mt-0.5 text-xs text-muted-foreground">
                   baz {formatTL(urun.fiyatKurus)} + {formatTL(ekFiyat)}
@@ -245,6 +243,26 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+// Fiyat değiştiğinde küçük pop animasyonu (boy/ekstra seçimi sonucu)
+function FiyatGoster({ fiyat }: { fiyat: number }) {
+  const [animKey, setAnimKey] = useState(0);
+  const oncekiFiyat = useRef(fiyat);
+  useEffect(() => {
+    if (oncekiFiyat.current !== fiyat) {
+      oncekiFiyat.current = fiyat;
+      setAnimKey((k) => k + 1);
+    }
+  }, [fiyat]);
+  return (
+    <div
+      key={animKey}
+      className="anim-pop font-serif text-2xl leading-none tabular-nums"
+    >
+      {formatTL(fiyat)}
     </div>
   );
 }

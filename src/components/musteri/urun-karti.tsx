@@ -56,14 +56,15 @@ export function UrunKarti({ urun, onDetay }: Props) {
   return (
     <article
       className={cn(
-        'group flex items-start gap-3 py-3',
+        'group flex items-start gap-3 py-3 transition-transform',
         stokYok && 'opacity-55',
+        !stokYok && 'hover:-translate-y-px',
       )}
     >
       <button
         type="button"
         onClick={() => onDetay?.(urun)}
-        className="relative size-20 shrink-0 overflow-hidden rounded-2xl border bg-muted/40 shadow-soft transition active:scale-[0.98]"
+        className="relative size-20 shrink-0 overflow-hidden rounded-2xl border bg-muted/40 shadow-soft transition active:scale-[0.97] group-hover:shadow-md"
         aria-label={`${urun.ad} detayı`}
         disabled={!onDetay}
       >
@@ -95,7 +96,7 @@ export function UrunKarti({ urun, onDetay }: Props) {
             typeof urun.stokMiktar === 'number' &&
             urun.stokMiktar > 0 &&
             urun.stokMiktar <= 5 && (
-              <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+              <span className="anim-pulse-soft rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
                 Son {urun.stokMiktar}
               </span>
             )}

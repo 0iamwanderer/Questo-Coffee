@@ -130,7 +130,10 @@ export function MenuListesi() {
         </div>
       </nav>
 
-      <div className="anim-fade-in divide-y divide-border">
+      <div
+        key={aktifKategori ?? 'all'}
+        className="anim-fade-in divide-y divide-border"
+      >
         {goruntulenenUrunler.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             Bu kategoride ürün yok.
