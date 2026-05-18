@@ -30,6 +30,7 @@ export function SepetCekmecesi() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-20 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">
       <Link
         href={`/m/${masaToken}/sepet`}
+        data-sepet-target
         className="pointer-events-auto mx-auto flex max-w-md items-center justify-between rounded-full bg-primary px-5 py-3.5 text-primary-foreground transition active:scale-[0.98]"
         style={{ boxShadow: 'var(--shadow-floating)' }}
       >

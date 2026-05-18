@@ -217,3 +217,26 @@
 .anim-steam {
   animation: steam 3.2s ease-out infinite;
 }
+
+/* Sepete uçma — kavisli yörünge (ortada yukarı, sonra hedefe) */
+@keyframes fly-to-cart {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  45% {
+    transform: translate(
+        calc(var(--dx) * 0.55),
+        calc(var(--dy) * 0.45 - 80px)
+      )
+      scale(0.7) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.15) rotate(18deg);
+    opacity: 0.3;
+  }
+}
+.anim-fly-to-cart {
+  animation: fly-to-cart 720ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}

@@ -8,6 +8,7 @@ import type { Urun, UrunOpsiyonGrubu } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet, type SepetSecim } from '@/stores/sepet';
 import { cn } from '@/lib/utils';
+import { flyToCart } from './sepete-uc';
 
 interface Props {
   urun: Urun | null;
@@ -45,6 +46,7 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
   const [render, setRender] = useState(acik);
   const [kapaniyor, setKapaniyor] = useState(false);
   const [secimler, setSecimler] = useState<Record<string, string[]>>({});
+  const gorselRef = useRef<HTMLDivElement>(null);
 
   const ekle = useSepet((s) => s.ekle);
 
@@ -125,6 +127,7 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
   };
 
   const sepeteEkle = () => {
+    if (!urun) return;
     if (eksikZorunlu) {
       toast.error('Zorunlu seçimleri yapın.');
       return;
@@ -132,9 +135,24 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
     const secimDizisi: SepetSecim[] = Object.entries(secimler)
       .filter(([, ids]) => ids.length > 0)
       .map(([grupId, secenekIds]) => ({ grupId, secenekIds }));
+
+    // Sheet'in görselinin rect'ini kapanmadan al
+    const rect = gorselRef.current?.getBoundingClientRect();
+
     ekle(urun.id, {
       ...(secimDizisi.length > 0 ? { secimler: secimDizisi } : {}),
     });
+
+    // Sheet kapanma animasyonu sırasında uçur (görsel hâlâ ekranda)
+    if (rect) {
+      requestAnimationFrame(() => {
+        flyToCart({
+          fromRect: rect,
+          imgUrl: urun.gorselUrl,
+          harf: urun.ad.charAt(0),
+        });
+      });
+    }
     kapat();
   };
 
@@ -167,7 +185,10 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
           <div className="h-1.5 w-10 rounded-full bg-foreground/15" />
         </div>
 
-        <div className="relative h-56 w-full overflow-hidden bg-muted/40">
+        <div
+          ref={gorselRef}
+          className="relative h-56 w-full overflow-hidden bg-muted/40"
+        >
           <DetayGorseli urun={urun} />
           <button
             type="button"

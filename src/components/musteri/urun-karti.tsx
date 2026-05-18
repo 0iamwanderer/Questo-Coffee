@@ -1,11 +1,13 @@
 'use client';
 
+import { useRef } from 'react';
 import Image from 'next/image';
 import { Minus, Plus, Sliders } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet } from '@/stores/sepet';
 import { cn } from '@/lib/utils';
+import { flyToCart } from './sepete-uc';
 
 interface Props {
   urun: Urun;
@@ -43,9 +45,22 @@ export function UrunKarti({ urun, onDetay }: Props) {
   const ekle = useSepet((s) => s.ekle);
   const guncelle = useSepet((s) => s.guncelle);
   const kalemler = useSepet((s) => s.kalemler);
+  const gorselRef = useRef<HTMLButtonElement>(null);
 
   const stokYok = !urun.stoktaMi;
   const opsiyonlu = (urun.opsiyonGruplari?.length ?? 0) > 0;
+
+  const sepeteEkleAnimasyonlu = () => {
+    ekle(urun.id);
+    requestAnimationFrame(() => {
+      if (!gorselRef.current) return;
+      flyToCart({
+        fromRect: gorselRef.current.getBoundingClientRect(),
+        imgUrl: urun.gorselUrl,
+        harf: urun.ad.charAt(0),
+      });
+    });
+  };
 
   // Opsiyonsuz ürünün sepetteki tek satırı (varsa)
   const tekSatir =
@@ -62,6 +77,7 @@ export function UrunKarti({ urun, onDetay }: Props) {
       )}
     >
       <button
+        ref={gorselRef}
         type="button"
         onClick={() => onDetay?.(urun)}
         className="relative size-20 shrink-0 overflow-hidden rounded-2xl border bg-muted/40 shadow-soft transition active:scale-[0.97] group-hover:shadow-md"
@@ -140,9 +156,7 @@ export function UrunKarti({ urun, onDetay }: Props) {
             <button
               type="button"
               aria-label="Arttır"
-              onClick={() =>
-                guncelle(tekSatir.satirId, tekSatir.adet + 1)
-              }
+              onClick={sepeteEkleAnimasyonlu}
               className="rounded-full p-1.5 transition active:scale-[0.92]"
             >
               <Plus className="size-3.5" />
@@ -151,7 +165,7 @@ export function UrunKarti({ urun, onDetay }: Props) {
         ) : (
           <button
             type="button"
-            onClick={() => ekle(urun.id)}
+            onClick={sepeteEkleAnimasyonlu}
             className="rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-soft transition active:scale-[0.96]"
           >
             Ekle
