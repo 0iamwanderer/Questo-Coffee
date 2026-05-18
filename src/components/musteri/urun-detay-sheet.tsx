@@ -228,7 +228,7 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
           </header>
 
           {urun.aciklama && (
-            <p className="text-sm leading-relaxed text-muted-foreground">
+            <p className="dropcap text-sm leading-relaxed text-foreground/80">
               {urun.aciklama}
             </p>
           )}

@@ -113,6 +113,28 @@
   .hairline {
     border-color: hsl(var(--border));
   }
+
+  /* Kağıt grain dokusu — sayfa zeminine sıcaklık */
+  .bg-paper {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch' /%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.13 0 0 0 0 0.08 0 0 0 0.085 0' /%3E%3C/filter%3E%3Crect width='220' height='220' filter='url(%23n)' /%3E%3C/svg%3E");
+  }
+
+  /* Kahve çekirdeği pattern — tekrarlanan zarif SVG */
+  .bg-cekirdek {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%235a3320' stroke-width='0.8' opacity='0.10'%3E%3Cellipse cx='20' cy='20' rx='5' ry='8' transform='rotate(-30 20 20)'/%3E%3Cpath d='M16 22 L24 18' transform='rotate(-30 20 20)'/%3E%3Cellipse cx='60' cy='60' rx='5' ry='8' transform='rotate(45 60 60)'/%3E%3Cpath d='M56 62 L64 58' transform='rotate(45 60 60)'/%3E%3C/g%3E%3C/svg%3E");
+    background-size: 80px 80px;
+  }
+
+  /* Drop cap — paragraf ilk harfini büyüt */
+  .dropcap::first-letter {
+    font-family: var(--font-serif), Georgia, serif;
+    font-size: 2.6rem;
+    line-height: 1;
+    float: left;
+    margin-right: 0.4rem;
+    margin-top: 0.1rem;
+    color: hsl(var(--primary));
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────

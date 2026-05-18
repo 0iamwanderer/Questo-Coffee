@@ -71,7 +71,7 @@ export function UrunKarti({ urun, onDetay }: Props) {
   return (
     <article
       className={cn(
-        'group flex items-start gap-3 py-3 transition-transform',
+        'group flex items-start gap-3 py-4 transition-transform',
         stokYok && 'opacity-55',
         !stokYok && 'hover:-translate-y-px',
       )}

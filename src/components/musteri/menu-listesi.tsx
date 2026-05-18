@@ -21,6 +21,35 @@ import { cn } from '@/lib/utils';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 
+// Kategori başlığına ek karakter — kategorinin "hikâyesi"
+const KATEGORI_HIKAYE: Record<string, string> = {
+  'Sıcak İçecekler': 'Tek menşeli çekirdek, taze kavrum',
+  'Soğuk İçecekler': 'Yaza, molalara, ferahlığa dair',
+  'Tatlılar': 'Şefin günlük seçkisi',
+  'Atıştırmalıklar': 'Hafif öğünler ve ekşi maya',
+};
+
+// Dekoratif "ornament" SVG — bölüm ayraçları için
+function Ornament() {
+  return (
+    <svg
+      aria-hidden
+      viewBox="0 0 80 12"
+      className="mx-auto h-3 text-muted-foreground/60"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1"
+      strokeLinecap="round"
+    >
+      <path d="M2 6 L24 6" />
+      <circle cx="30" cy="6" r="2" fill="currentColor" />
+      <path d="M36 6 Q40 1 44 6 Q40 11 36 6" fill="currentColor" />
+      <circle cx="50" cy="6" r="2" fill="currentColor" />
+      <path d="M56 6 L78 6" />
+    </svg>
+  );
+}
+
 export function MenuListesi() {
   const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
   const [urunler, setUrunler] = useState<Urun[]>([]);
@@ -126,6 +155,31 @@ export function MenuListesi() {
           ))}
         </div>
       </nav>
+
+      {(() => {
+        const aktif = kategoriler.find((k) => k.id === aktifKategori);
+        if (!aktif) return null;
+        const hikaye = KATEGORI_HIKAYE[aktif.ad];
+        return (
+          <div
+            key={`baslik-${aktif.id}`}
+            className="anim-fade-in space-y-2 pt-2 text-center"
+          >
+            <div className="flex items-baseline justify-center gap-2">
+              <h2 className="font-serif text-3xl leading-none">{aktif.ad}</h2>
+              <span className="micro-caps text-muted-foreground tabular-nums">
+                {String(goruntulenenUrunler.length).padStart(2, '0')}
+              </span>
+            </div>
+            {hikaye && (
+              <p className="text-xs italic text-muted-foreground">
+                {hikaye}
+              </p>
+            )}
+            <Ornament />
+          </div>
+        );
+      })()}
 
       <div
         key={aktifKategori ?? 'all'}

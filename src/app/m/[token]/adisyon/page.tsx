@@ -93,6 +93,23 @@ export default async function AdisyonSayfasi({ params, searchParams }: Props) {
 
       {adisyonSnap.empty ? (
         <div className="rounded-2xl border bg-card p-10 text-center shadow-soft">
+          <svg
+            aria-hidden
+            viewBox="0 0 120 100"
+            className="mx-auto mb-4 h-24 w-28 text-primary/35"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {/* Fiş kağıdı */}
+            <path d="M30 14 L90 14 L90 78 L84 84 L78 78 L72 84 L66 78 L60 84 L54 78 L48 84 L42 78 L36 84 L30 78 Z" />
+            <path d="M40 30 L80 30" opacity="0.5" />
+            <path d="M40 42 L72 42" opacity="0.5" />
+            <path d="M40 54 L76 54" opacity="0.5" />
+            <path d="M40 66 L66 66" opacity="0.5" />
+          </svg>
           <p className="font-serif text-2xl">Henüz açık adisyon yok</p>
           <p className="mt-1 text-sm text-muted-foreground">
             Menüden ürün seçerek ilk siparişinizi verin.

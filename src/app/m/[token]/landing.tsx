@@ -189,6 +189,26 @@ export function Landing({ onEnter }: { onEnter: () => void }) {
         </div>
       </div>
 
+      {/* Bilgi şeridi: kafe özellikleri */}
+      <div className="anim-rise anim-rise-5 relative mx-auto mb-2 flex max-w-[320px] items-center justify-around gap-1 px-4">
+        {[
+          { ad: 'Wi-Fi', ikon: '📶' },
+          { ad: 'Tütünsüz', ikon: '🚭' },
+          { ad: 'Kart', ikon: '💳' },
+          { ad: 'Çıkış', ikon: '🅿️' },
+        ].map((o) => (
+          <div
+            key={o.ad}
+            className="flex flex-col items-center gap-0.5 text-muted-foreground"
+          >
+            <span className="text-base leading-none">{o.ikon}</span>
+            <span className="text-[9px] uppercase tracking-wider">
+              {o.ad}
+            </span>
+          </div>
+        ))}
+      </div>
+
       {/* Alt dipnot */}
       <div className="anim-rise anim-rise-5 relative micro-caps flex items-center justify-center gap-2 pb-7 text-muted-foreground">
         <span>EST. 2024</span>

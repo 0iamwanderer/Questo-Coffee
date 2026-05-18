@@ -51,7 +51,7 @@ export default function RootLayout({
       suppressHydrationWarning
       className={cn(manrope.variable, serif.variable)}
     >
-      <body className="min-h-screen bg-background text-foreground antialiased font-sans">
+      <body className="min-h-screen bg-background bg-paper text-foreground antialiased font-sans">
         {children}
         <Toaster richColors position="top-center" closeButton />
         <SwRegister />

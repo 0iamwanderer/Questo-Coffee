@@ -128,7 +128,7 @@ export function SepetIcerik() {
 
   if (kalemler.length === 0) {
     return (
-      <div className="space-y-6 anim-fade-in">
+      <div className="space-y-6 anim-fade-in px-4 pt-4">
         <Link
           href={`/m/${masaToken}`}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
@@ -137,10 +137,47 @@ export function SepetIcerik() {
           Menüye dön
         </Link>
         <div className="rounded-2xl border bg-card p-10 text-center shadow-soft">
+          <svg
+            aria-hidden
+            viewBox="0 0 120 100"
+            className="mx-auto mb-4 h-24 w-28 text-primary/35"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path
+              d="M40 18 Q42 12 38 8"
+              className="anim-pulse-soft"
+              opacity="0.7"
+            />
+            <path
+              d="M52 18 Q54 10 50 6"
+              className="anim-pulse-soft"
+              opacity="0.5"
+              style={{ animationDelay: '0.6s' }}
+            />
+            <path
+              d="M64 18 Q66 12 62 8"
+              className="anim-pulse-soft"
+              opacity="0.7"
+              style={{ animationDelay: '1.1s' }}
+            />
+            <path d="M22 34 L82 34 L78 78 Q78 84 72 84 L32 84 Q26 84 26 78 Z" />
+            <path d="M82 44 Q98 44 98 58 Q98 72 82 72" />
+            <ellipse cx="52" cy="92" rx="42" ry="4" />
+          </svg>
           <p className="font-serif text-2xl">Sepetiniz boş</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Menüden ürün ekleyerek başlayın.
+            Menüden bir şeyler eklemeye ne dersiniz?
           </p>
+          <Link
+            href={`/m/${masaToken}`}
+            className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-soft"
+          >
+            Menüye git
+          </Link>
         </div>
       </div>
     );
@@ -162,7 +199,7 @@ export function SepetIcerik() {
         </div>
       </div>
 
-      <ul className="divide-y divide-border">
+      <ul className="space-y-2">
         {kalemler.map((k, i) => {
           const u = urunler.get(k.urunId);
           const yok = !u;
@@ -171,7 +208,7 @@ export function SepetIcerik() {
           return (
             <li
               key={k.satirId}
-              className="anim-rise py-4 space-y-2"
+              className="anim-rise rounded-2xl border bg-card p-4 space-y-2 shadow-soft"
               style={{ animationDelay: `${i * 60}ms` }}
             >
               <div className="flex items-start gap-2">
