@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { formatTL } from '@/lib/utils/para';
+import { AdisyonYenile } from '@/components/musteri/adisyon-yenile';
 import type {
   Adisyon,
   Siparis,
@@ -67,13 +68,16 @@ export default async function AdisyonSayfasi({ params, searchParams }: Props) {
   return (
     <main className="mx-auto max-w-md px-4 py-4 space-y-5 anim-fade-in">
       <div className="space-y-2">
-        <Link
-          href={`/m/${token}`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Menü
-        </Link>
+        <div className="flex items-center justify-between gap-2">
+          <Link
+            href={`/m/${token}`}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Menü
+          </Link>
+          {!adisyonSnap.empty && <AdisyonYenile />}
+        </div>
         <div className="space-y-0.5">
           <p className="micro-caps text-muted-foreground">{masaAd}</p>
           <h1 className="font-serif text-3xl leading-none">Adisyon</h1>
