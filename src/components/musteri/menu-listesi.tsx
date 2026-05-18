@@ -16,6 +16,7 @@ import {
 import type { Kategori, Urun } from '@/types/model';
 import { UrunKarti } from './urun-karti';
 import { UrunDetaySheet } from './urun-detay-sheet';
+import { MenuSkeleton } from './urun-karti-skeleton';
 import { cn } from '@/lib/utils';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
@@ -76,11 +77,7 @@ export function MenuListesi() {
   );
 
   if (yukleniyor) {
-    return (
-      <div className="p-10 text-center text-sm text-muted-foreground">
-        Menü yükleniyor…
-      </div>
-    );
+    return <MenuSkeleton />;
   }
 
   if (kategoriler.length === 0) {

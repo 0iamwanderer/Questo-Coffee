@@ -22,7 +22,13 @@ const saatFmt = (d: Date | undefined) =>
       })
     : '—';
 
-export function SiparisKarti({ siparis }: { siparis: Siparis }) {
+export function SiparisKarti({
+  siparis,
+  flash = false,
+}: {
+  siparis: Siparis;
+  flash?: boolean;
+}) {
   const [calisiyor, setCalisiyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
@@ -51,8 +57,9 @@ export function SiparisKarti({ siparis }: { siparis: Siparis }) {
   return (
     <div
       className={cn(
-        'rounded-lg border bg-card p-3 space-y-2 shadow-sm',
+        'rounded-lg border bg-card p-3 space-y-2 shadow-sm transition',
         siparis.slaUyari && 'border-destructive/60 ring-1 ring-destructive/30',
+        flash && 'anim-flash-new',
       )}
     >
       <div className="flex items-center justify-between text-xs text-muted-foreground">

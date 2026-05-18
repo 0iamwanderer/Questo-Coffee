@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { ArrowRight, Clock } from 'lucide-react';
 import { useMasa } from './masa-provider';
+import { CanliSaat } from '@/components/musteri/canli-saat';
 
 // Dekoratif yaprak motifi (köşeler için)
 function YaprakSvg({ className = '' }: { className?: string }) {
@@ -177,11 +178,13 @@ export function Landing({ onEnter }: { onEnter: () => void }) {
           </span>
         </button>
 
-        {/* Servis bilgisi — kart */}
+        {/* Servis bilgisi — canlı saat + servis aralığı */}
         <div className="anim-rise anim-rise-5 mt-6 inline-flex items-center gap-2 rounded-full border bg-card/70 px-4 py-1.5 backdrop-blur">
           <Clock className="size-3.5 text-muted-foreground" />
           <span className="micro-caps text-muted-foreground">
-            Servis · 08:00 – 23:00
+            <CanliSaat />
+            <span className="mx-1.5">·</span>
+            Servis 08:00 – 23:00
           </span>
         </div>
       </div>

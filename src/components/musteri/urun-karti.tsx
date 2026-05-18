@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import { Minus, Plus, Sliders } from 'lucide-react';
+import { Minus, Plus, Sliders, Sparkles } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet } from '@/stores/sepet';
@@ -102,6 +102,12 @@ export function UrunKarti({ urun, onDetay }: Props) {
           <span className="text-sm font-semibold tabular-nums">
             {formatTL(urun.fiyatKurus)}
           </span>
+          {urun.sira <= 1 && !stokYok && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+              <Sparkles className="size-2.5" />
+              Şefin önerisi
+            </span>
+          )}
           {opsiyonlu && (
             <span className="inline-flex items-center gap-0.5 rounded-full border bg-card px-2 py-0.5 text-[10px] text-muted-foreground">
               <Sliders className="size-2.5" />

@@ -15,10 +15,12 @@ export function KanbanKolon({
   baslik,
   durum,
   siparisler,
+  flashIds,
 }: {
   baslik: string;
   durum: SiparisDurumu;
   siparisler: Siparis[];
+  flashIds?: Set<string>;
 }) {
   return (
     <section className="space-y-3">
@@ -36,7 +38,10 @@ export function KanbanKolon({
         ) : (
           siparisler.map((s) => (
             <li key={s.id}>
-              <SiparisKarti siparis={s} />
+              <SiparisKarti
+                siparis={s}
+                flash={flashIds?.has(s.id) ?? false}
+              />
             </li>
           ))
         )}

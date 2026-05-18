@@ -16,10 +16,12 @@ import { KanbanKolon } from './kanban-kolon';
 
 const AKTIF: SiparisDurumu[] = ['yeni', 'hazirlaniyor', 'hazir'];
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
+const FLASH_SURE_MS = 1400;
 
 export function KanbanPanosu() {
   const [siparisler, setSiparisler] = useState<Siparis[]>([]);
   const [hata, setHata] = useState<string | null>(null);
+  const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
   const ilkYuk = useRef(true);
   const gorulen = useRef<Set<string>>(new Set());
 
@@ -36,19 +38,35 @@ export function KanbanPanosu() {
       q,
       (snap) => {
         const liste: Siparis[] = [];
-        // Yalnız bu restoranın siparişleri (collectionGroup geneldir)
         snap.docs.forEach((d) => {
-          // path: restoranlar/{R}/adisyonlar/{aId}/siparisler/{sId}
           if (d.ref.path.startsWith(`restoranlar/${RESTORAN}/`)) {
             liste.push(d.data());
           }
         });
 
         if (!ilkYuk.current) {
-          const yeniGelen = liste.find(
-            (s) => s.durum === 'yeni' && !gorulen.current.has(s.id),
-          );
-          if (yeniGelen) yeniSiparisSesi();
+          // Bu batch'te yeni gelen siparişler (henüz görülmemiş)
+          const yeniIdler = liste
+            .filter((s) => !gorulen.current.has(s.id))
+            .map((s) => s.id);
+
+          if (yeniIdler.length > 0) {
+            yeniSiparisSesi();
+            // Flash ekle
+            setFlashIds((prev) => {
+              const yeni = new Set(prev);
+              yeniIdler.forEach((id) => yeni.add(id));
+              return yeni;
+            });
+            // Flash süresi sonunda temizle
+            setTimeout(() => {
+              setFlashIds((prev) => {
+                const yeni = new Set(prev);
+                yeniIdler.forEach((id) => yeni.delete(id));
+                return yeni;
+              });
+            }, FLASH_SURE_MS);
+          }
         }
         liste.forEach((s) => gorulen.current.add(s.id));
         ilkYuk.current = false;
@@ -82,13 +100,24 @@ export function KanbanPanosu() {
         </p>
       )}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <KanbanKolon baslik="Yeni" durum="yeni" siparisler={grup('yeni')} />
+        <KanbanKolon
+          baslik="Yeni"
+          durum="yeni"
+          siparisler={grup('yeni')}
+          flashIds={flashIds}
+        />
         <KanbanKolon
           baslik="Hazırlanıyor"
           durum="hazirlaniyor"
           siparisler={grup('hazirlaniyor')}
+          flashIds={flashIds}
         />
-        <KanbanKolon baslik="Hazır" durum="hazir" siparisler={grup('hazir')} />
+        <KanbanKolon
+          baslik="Hazır"
+          durum="hazir"
+          siparisler={grup('hazir')}
+          flashIds={flashIds}
+        />
       </div>
     </div>
   );

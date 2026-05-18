@@ -12,6 +12,8 @@ import { formatTL } from '@/lib/utils/para';
 import { useSepet, type SepetKalemi } from '@/stores/sepet';
 import { useMasa } from '../masa-provider';
 import { anonGirisiSagla } from '@/lib/auth/anon';
+import { Konfeti } from '@/components/musteri/konfeti';
+import { Tamamlayicilar } from '@/components/musteri/tamamlayicilar';
 import type { Urun } from '@/types/model';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
@@ -44,6 +46,7 @@ export function SepetIcerik() {
 
   const [urunler, setUrunler] = useState<Map<string, Urun>>(new Map());
   const [gonderiliyor, setGonderiliyor] = useState(false);
+  const [konfetiAktif, setKonfetiAktif] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
   const [idempotencyKey] = useState(() =>
     typeof crypto !== 'undefined' && crypto.randomUUID
@@ -107,9 +110,13 @@ export function SepetIcerik() {
         throw new Error(j.mesaj ?? 'Sipariş gönderilemedi.');
       }
 
-      temizle();
+      // Konfetiyi göster, kısa süre bekle, sonra adisyona git
+      setKonfetiAktif(true);
       toast.success('Siparişiniz alındı.');
-      router.replace(`/m/${masaToken}/adisyon?yeni=1`);
+      setTimeout(() => {
+        temizle();
+        router.replace(`/m/${masaToken}/adisyon?yeni=1`);
+      }, 1400);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Sipariş gönderilemedi.';
       setHata(msg);
@@ -156,13 +163,17 @@ export function SepetIcerik() {
       </div>
 
       <ul className="divide-y divide-border">
-        {kalemler.map((k) => {
+        {kalemler.map((k, i) => {
           const u = urunler.get(k.urunId);
           const yok = !u;
           const tukenmis = u && !u.stoktaMi;
           const birimFiyat = kalemBirimFiyat(u, k);
           return (
-            <li key={k.satirId} className="py-4 space-y-2">
+            <li
+              key={k.satirId}
+              className="anim-rise py-4 space-y-2"
+              style={{ animationDelay: `${i * 60}ms` }}
+            >
               <div className="flex items-start gap-2">
                 <div className="flex-1 min-w-0">
                   <div className="font-serif text-lg leading-tight">
@@ -257,6 +268,12 @@ export function SepetIcerik() {
         })}
       </ul>
 
+      {/* Cross-sell: sepete eklemediği ürünlerden öneri */}
+      <Tamamlayicilar
+        urunler={Array.from(urunler.values())}
+        sepetUrunIds={new Set(kalemler.map((k) => k.urunId))}
+      />
+
       {hata && (
         <p
           role="alert"
@@ -265,6 +282,8 @@ export function SepetIcerik() {
           {hata}
         </p>
       )}
+
+      <Konfeti aktif={konfetiAktif} />
 
       {/* Sticky alt CTA */}
       <div className="fixed inset-x-0 bottom-0 z-20 p-3 pb-[max(env(safe-area-inset-bottom),0.75rem)]">

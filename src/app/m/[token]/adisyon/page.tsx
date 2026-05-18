@@ -138,10 +138,11 @@ async function AdisyonGosterici({
   return (
     <div className="space-y-4">
       <ul className="space-y-3">
-        {siparisler.map((s) => (
+        {siparisler.map((s, i) => (
           <li
             key={s.id}
-            className="rounded-2xl border bg-card p-4 shadow-soft"
+            className="anim-rise rounded-2xl border bg-card p-4 shadow-soft"
+            style={{ animationDelay: `${i * 80}ms` }}
           >
             <div className="flex items-center justify-between text-sm">
               <span className="font-medium tabular-nums">#{s.gunlukNo}</span>
