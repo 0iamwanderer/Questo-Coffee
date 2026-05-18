@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import { Minus, Plus, Sliders, Sparkles } from 'lucide-react';
+import { Minus, Plus, Sliders } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet } from '@/stores/sepet';
@@ -21,7 +21,7 @@ function UrunGorseli({ urun }: { urun: Urun }) {
         src={urun.gorselUrl}
         alt={urun.ad}
         fill
-        sizes="84px"
+        sizes="96px"
         className="object-cover"
       />
     );
@@ -80,7 +80,7 @@ export function UrunKarti({ urun, onDetay }: Props) {
         ref={gorselRef}
         type="button"
         onClick={() => onDetay?.(urun)}
-        className="relative size-20 shrink-0 overflow-hidden rounded-2xl border bg-muted/40 shadow-soft transition active:scale-[0.97] group-hover:shadow-md"
+        className="relative size-24 shrink-0 overflow-hidden rounded-2xl border bg-muted/40 shadow-soft transition active:scale-[0.97] group-hover:shadow-md"
         aria-label={`${urun.ad} detayı`}
         disabled={!onDetay}
       >
@@ -102,12 +102,20 @@ export function UrunKarti({ urun, onDetay }: Props) {
           <span className="text-sm font-semibold tabular-nums">
             {formatTL(urun.fiyatKurus)}
           </span>
-          {urun.sira <= 1 && !stokYok && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
-              <Sparkles className="size-2.5" />
-              Şefin önerisi
-            </span>
-          )}
+          {(() => {
+            // Son 7 gün içinde eklenen ürün için "Yeni" rozeti
+            const olusturma =
+              (urun as Urun & { olusturulduAt?: Date }).olusturulduAt;
+            const yedi = 7 * 24 * 60 * 60 * 1000;
+            const yeniMi =
+              olusturma instanceof Date &&
+              Date.now() - olusturma.getTime() < yedi;
+            return yeniMi ? (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-medium text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-200">
+                Yeni
+              </span>
+            ) : null;
+          })()}
           {opsiyonlu && (
             <span className="inline-flex items-center gap-0.5 rounded-full border bg-card px-2 py-0.5 text-[10px] text-muted-foreground">
               <Sliders className="size-2.5" />

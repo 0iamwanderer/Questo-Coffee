@@ -17,6 +17,7 @@ import type { Kategori, Urun } from '@/types/model';
 import { UrunKarti } from './urun-karti';
 import { UrunDetaySheet } from './urun-detay-sheet';
 import { MenuSkeleton } from './urun-karti-skeleton';
+import { VitrinKarti } from './vitrin-karti';
 import { cn } from '@/lib/utils';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
@@ -183,16 +184,33 @@ export function MenuListesi() {
 
       <div
         key={aktifKategori ?? 'all'}
-        className="anim-fade-in divide-y divide-border"
+        className="anim-fade-in"
       >
         {goruntulenenUrunler.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             Bu kategoride ürün yok.
           </p>
         ) : (
-          goruntulenenUrunler.map((u) => (
-            <UrunKarti key={u.id} urun={u} onDetay={setDetayUrun} />
-          ))
+          <>
+            {/* Kategorinin vitrin ürünü (en düşük sira'lı) */}
+            {goruntulenenUrunler[0] && (
+              <VitrinKarti
+                urun={goruntulenenUrunler[0]}
+                onDetay={setDetayUrun}
+              />
+            )}
+            {goruntulenenUrunler.length > 1 && (
+              <div className="divide-y divide-border">
+                {goruntulenenUrunler.slice(1).map((u) => (
+                  <UrunKarti
+                    key={u.id}
+                    urun={u}
+                    onDetay={setDetayUrun}
+                  />
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
 
