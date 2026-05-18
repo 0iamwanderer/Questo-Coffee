@@ -14,3 +14,6 @@ dist
 coverage
 service-account*.json
 *-firebase-adminsdk-*.json
+
+# Yerel kullanım batch dosyaları
+*.bat
