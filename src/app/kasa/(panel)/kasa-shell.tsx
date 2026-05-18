@@ -39,7 +39,7 @@ export function KasaShell({ kullanici, children }: Props) {
             <Link href="/kasa" className="flex items-center gap-2 font-semibold">
               <span className="relative size-7 overflow-hidden rounded-full">
                 <Image
-                  src="/logo.png"
+                  src="/logo.jpg"
                   alt="Questo"
                   fill
                   sizes="28px"

@@ -22,14 +22,6 @@ import { cn } from '@/lib/utils';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 
-// Kategori başlığına ek karakter — kategorinin "hikâyesi"
-const KATEGORI_HIKAYE: Record<string, string> = {
-  'Sıcak İçecekler': 'Tek menşeli çekirdek, taze kavrum',
-  'Soğuk İçecekler': 'Yaza, molalara, ferahlığa dair',
-  'Tatlılar': 'Şefin günlük seçkisi',
-  'Atıştırmalıklar': 'Hafif öğünler ve ekşi maya',
-};
-
 // Dekoratif "ornament" SVG — bölüm ayraçları için
 function Ornament() {
   return (
@@ -160,21 +152,25 @@ export function MenuListesi() {
       {(() => {
         const aktif = kategoriler.find((k) => k.id === aktifKategori);
         if (!aktif) return null;
-        const hikaye = KATEGORI_HIKAYE[aktif.ad];
         return (
           <div
             key={`baslik-${aktif.id}`}
             className="anim-fade-in space-y-2 pt-2 text-center"
           >
+            {aktif.roman && (
+              <div className="font-serif italic text-5xl text-primary/85 leading-none">
+                {aktif.roman}
+              </div>
+            )}
             <div className="flex items-baseline justify-center gap-2">
               <h2 className="font-serif text-3xl leading-none">{aktif.ad}</h2>
               <span className="micro-caps text-muted-foreground tabular-nums">
                 {String(goruntulenenUrunler.length).padStart(2, '0')}
               </span>
             </div>
-            {hikaye && (
-              <p className="text-xs italic text-muted-foreground">
-                {hikaye}
+            {aktif.tagline && (
+              <p className="font-serif text-base italic text-muted-foreground">
+                {aktif.tagline}
               </p>
             )}
             <Ornament />
@@ -192,24 +188,55 @@ export function MenuListesi() {
           </p>
         ) : (
           <>
-            {/* Kategorinin vitrin ürünü (en düşük sira'lı) */}
-            {goruntulenenUrunler[0] && (
-              <VitrinKarti
-                urun={goruntulenenUrunler[0]}
-                onDetay={setDetayUrun}
-              />
-            )}
-            {goruntulenenUrunler.length > 1 && (
-              <div className="divide-y divide-border">
-                {goruntulenenUrunler.slice(1).map((u) => (
-                  <UrunKarti
-                    key={u.id}
-                    urun={u}
-                    onDetay={setDetayUrun}
-                  />
-                ))}
-              </div>
-            )}
+            {/* Vitrin: sefOnerisi=true varsa o, yoksa ilk ürün */}
+            {(() => {
+              const sef = goruntulenenUrunler.find((u) => u.sefOnerisi);
+              const vitrin = sef ?? goruntulenenUrunler[0];
+              if (!vitrin) return null;
+              return (
+                <>
+                  <VitrinKarti urun={vitrin} onDetay={setDetayUrun} />
+                  <div className="divide-y divide-border">
+                    {goruntulenenUrunler
+                      .filter((u) => u.id !== vitrin.id)
+                      .map((u) => (
+                        <UrunKarti
+                          key={u.id}
+                          urun={u}
+                          onDetay={setDetayUrun}
+                        />
+                      ))}
+                  </div>
+                </>
+              );
+            })()}
+
+            {/* Kategorinin hikâye paneli (story) — spec'ten */}
+            {(() => {
+              const aktif = kategoriler.find((k) => k.id === aktifKategori);
+              if (!aktif?.story) return null;
+              const { kicker, title, body, sign } = aktif.story;
+              return (
+                <aside className="mt-8 rounded-2xl border bg-card/60 p-6 text-center space-y-2 shadow-soft">
+                  {kicker && (
+                    <p className="micro-caps text-accent">{kicker}</p>
+                  )}
+                  {title && (
+                    <h3 className="font-serif italic text-2xl leading-tight">
+                      {title}
+                    </h3>
+                  )}
+                  <p className="font-serif italic text-lg leading-relaxed text-foreground/80">
+                    &ldquo;{body}&rdquo;
+                  </p>
+                  {sign && (
+                    <p className="font-mono text-xs text-muted-foreground">
+                      {sign}
+                    </p>
+                  )}
+                </aside>
+              );
+            })()}
           </>
         )}
       </div>

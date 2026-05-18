@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Instrument_Serif, Manrope } from 'next/font/google';
+import { JetBrains_Mono, Manrope, Playfair_Display } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
 import { SwRegister } from './sw-register';
@@ -12,15 +12,25 @@ const manrope = Manrope({
   weight: ['300', '400', '500', '600', '700'],
 });
 
-const serif = Instrument_Serif({
+// Spec: Playfair Display başlıklar (regular + medium + semibold + italic)
+const serif = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-serif',
   display: 'swap',
-  weight: '400',
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+});
+
+// Spec: JetBrains Mono küçük eyebrow'lar (micro-caps)
+const mono = JetBrains_Mono({
+  subsets: ['latin'],
+  variable: '--font-mono',
+  display: 'swap',
+  weight: ['400', '500'],
 });
 
 export const metadata: Metadata = {
-  title: 'Questo — QR Sipariş',
+  title: 'Questo Coffea Co. — Manisa',
   description: 'QR Kodlu Sipariş ve Adisyon Sistemi',
   applicationName: 'Questo',
   appleWebApp: {
@@ -37,7 +47,7 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: '#f1ead8',
+  themeColor: '#F4ECD3',
 };
 
 export default function RootLayout({
@@ -49,7 +59,7 @@ export default function RootLayout({
     <html
       lang="tr"
       suppressHydrationWarning
-      className={cn(manrope.variable, serif.variable)}
+      className={cn(manrope.variable, serif.variable, mono.variable)}
     >
       <body className="min-h-screen bg-background bg-paper text-foreground antialiased font-sans">
         {children}

@@ -126,7 +126,7 @@ export function Landing({ onEnter }: { onEnter: () => void }) {
             style={{ boxShadow: 'var(--shadow-floating)' }}
           >
             <Image
-              src="/logo.png"
+              src="/logo.jpg"
               alt={`${restoranAd} logo`}
               fill
               sizes="224px"

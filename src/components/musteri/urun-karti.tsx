@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import { Minus, Plus, Sliders } from 'lucide-react';
+import { Minus, Plus, Sliders, Sparkles } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet } from '@/stores/sepet';
@@ -102,6 +102,12 @@ export function UrunKarti({ urun, onDetay }: Props) {
           <span className="text-sm font-semibold tabular-nums">
             {formatTL(urun.fiyatKurus)}
           </span>
+          {urun.sefOnerisi && (
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-accent/15 px-2 py-0.5 text-[10px] font-medium text-accent">
+              <Sparkles className="size-2.5" />
+              şefin önerisi
+            </span>
+          )}
           {(() => {
             // Son 7 gün içinde eklenen ürün için "Yeni" rozeti
             const olusturma =

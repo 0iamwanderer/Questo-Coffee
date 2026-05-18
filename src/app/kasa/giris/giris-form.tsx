@@ -62,7 +62,7 @@ export function GirisForm() {
       <div className="flex items-center gap-3">
         <div className="relative size-12 overflow-hidden rounded-full shadow-soft">
           <Image
-            src="/logo.png"
+            src="/logo.jpg"
             alt="Questo"
             fill
             sizes="48px"

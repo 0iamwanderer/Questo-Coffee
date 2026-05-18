@@ -114,7 +114,7 @@ function MenuEkrani({
         <div className="flex flex-col items-center gap-1 leading-tight">
           <div className="relative size-9 overflow-hidden rounded-full shadow-soft">
             <Image
-              src="/logo.png"
+              src="/logo.jpg"
               alt={restoranAd}
               fill
               sizes="36px"

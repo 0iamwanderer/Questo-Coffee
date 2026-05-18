@@ -68,7 +68,7 @@ export default async function HomePage() {
             style={{ boxShadow: 'var(--shadow-floating)' }}
           >
             <Image
-              src="/logo.png"
+              src="/logo.jpg"
               alt="Questo Coffea Co."
               fill
               sizes="128px"

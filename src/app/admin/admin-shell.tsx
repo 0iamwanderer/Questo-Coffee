@@ -32,7 +32,7 @@ export function AdminShell({
             >
               <span className="relative size-7 overflow-hidden rounded-full">
                 <Image
-                  src="/logo.png"
+                  src="/logo.jpg"
                   alt="Questo"
                   fill
                   sizes="28px"

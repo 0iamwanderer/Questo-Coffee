@@ -28,11 +28,28 @@ export interface PersonelClaims {
   restoranId: string;
 }
 
+export interface KategoriStory {
+  /** Üst etiket — örn. 'Mevsim notu', 'Mutfaktan' */
+  kicker?: string;
+  /** Başlık — örn. 'Sıcağa karşı, sabırla.' */
+  title?: string;
+  /** Gövde metni */
+  body: string;
+  /** İmza — örn. '— Barista ekibi' */
+  sign?: string;
+}
+
 export interface Kategori {
   id: string;
   ad: string;
   sira: number;
   aktifMi: boolean;
+  /** Roma rakamı — I, II, III, IV (menü kitabı stili) */
+  roman?: 'I' | 'II' | 'III' | 'IV';
+  /** Kategorinin alt sloganı — 'Tek menşeli çekirdek, taze kavrum.' */
+  tagline?: string;
+  /** Kategorinin hikâye paneli (varsa) */
+  story?: KategoriStory;
 }
 
 export interface UrunOpsiyonSecenek {
@@ -64,6 +81,8 @@ export interface Urun {
   gorselUrl?: string;
   sira: number;
   opsiyonGruplari?: UrunOpsiyonGrubu[];
+  /** Spec rozeti — admin/seed atar ('şefin önerisi') */
+  sefOnerisi?: boolean;
 }
 
 export interface Masa {

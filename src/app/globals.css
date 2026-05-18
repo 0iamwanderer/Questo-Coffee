@@ -8,38 +8,40 @@
    ────────────────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Yüzey — logoyla uyumlu sıcak krem */
-    --background: 40 34% 94%;
-    --foreground: 22 35% 16%;       /* daha derin kahve mürekkep */
+    /* SPEC: paper #F4ECD3 → background, ink #2A1B11 → foreground */
+    --background: 46 56% 89%;       /* #F4ECD3 paper */
+    --foreground: 22 42% 12%;       /* #2A1B11 ink */
 
-    /* Kart & popover */
-    --card: 42 55% 98%;
-    --card-foreground: 22 35% 16%;
-    --popover: 42 55% 98%;
-    --popover-foreground: 22 35% 16%;
+    /* Kart: cream #FCF5E2 */
+    --card: 45 75% 95%;
+    --card-foreground: 22 42% 12%;
+    --popover: 45 75% 95%;
+    --popover-foreground: 22 42% 12%;
 
-    /* Birincil — logo kahvesi (Questo Coffea Co.) */
-    --primary: 14 50% 30%;          /* derin terracotta-kahve */
-    --primary-foreground: 42 55% 96%;
+    /* SPEC: brand-brown #5B2818 → primary */
+    --primary: 13 58% 23%;
+    --primary-foreground: 46 56% 89%; /* paper, ters kontrast */
 
-    /* İkincil & nötrler */
-    --secondary: 40 30% 88%;
-    --secondary-foreground: 22 35% 18%;
-    --muted: 40 25% 88%;
-    --muted-foreground: 26 14% 38%;
+    /* SPEC: paper-2 #ECE0BE → secondary */
+    --secondary: 44 49% 83%;
+    --secondary-foreground: 22 42% 12%;
 
-    /* Aksan — krem (logo arka planı tonu) */
-    --accent: 38 50% 86%;
-    --accent-foreground: 14 50% 28%;
+    /* muted: paper-3 #E2D2A8 */
+    --muted: 42 45% 78%;
+    --muted-foreground: 26 30% 33%;  /* ink-3 #6A4F3A */
 
-    /* Tehlike */
-    --destructive: 0 70% 45%;
-    --destructive-foreground: 48 50% 97%;
+    /* SPEC: accent #8C3D24 (kahveli kırmızı), accent-2 #5B2818 */
+    --accent: 13 60% 35%;
+    --accent-foreground: 46 56% 89%;
 
-    /* Hairline border */
-    --border: 36 20% 82%;
-    --input: 36 20% 82%;
-    --ring: 14 50% 30%;
+    /* Tehlike — kahveli kırmızı (palette ile uyum) */
+    --destructive: 8 65% 42%;
+    --destructive-foreground: 46 56% 89%;
+
+    /* SPEC: paper-edge #D4BE8C cilt kenarı tonu */
+    --border: 38 42% 69%;
+    --input: 38 42% 69%;
+    --ring: 13 58% 23%;
 
     /* Geometri */
     --radius: 0.9rem;
@@ -105,10 +107,11 @@
     box-shadow: var(--shadow-floating);
   }
   .micro-caps {
+    font-family: var(--font-mono), ui-monospace, monospace;
     font-size: 0.625rem;
     letter-spacing: 0.18em;
     text-transform: uppercase;
-    font-weight: 600;
+    font-weight: 500;
   }
   .hairline {
     border-color: hsl(var(--border));
