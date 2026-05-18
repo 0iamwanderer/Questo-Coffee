@@ -83,6 +83,8 @@ export interface Urun {
   opsiyonGruplari?: UrunOpsiyonGrubu[];
   /** Spec rozeti — admin/seed atar ('şefin önerisi') */
   sefOnerisi?: boolean;
+  /** Kitap menü sayfa içi alt grup başlığı — örn. 'Espresso Bazlı', 'Türk Usulü' */
+  altKategori?: string;
 }
 
 export interface Masa {

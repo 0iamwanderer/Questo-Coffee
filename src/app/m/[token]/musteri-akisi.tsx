@@ -1,11 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
-import { ArrowLeft, Receipt } from 'lucide-react';
 import { MenuListesi } from '@/components/musteri/menu-listesi';
-import { SepetCekmecesi } from '@/components/musteri/sepet-cekmecesi';
 import { KvkkBildirim } from '@/components/musteri/kvkk-bildirim';
 import { cn } from '@/lib/utils';
 import { useMasa } from './masa-provider';
@@ -17,7 +13,7 @@ const KAPAK_SURE_MS = 700;
 const ziyaretAnahtar = (token: string) => `questo-landing-gorulmus-${token}`;
 
 export function MusteriAkisi() {
-  const { masaToken, restoranAd, masaAd } = useMasa();
+  const { masaToken } = useMasa();
   const [durum, setDurum] = useState<AkisDurumu>('landing');
 
   // İlk ziyarette landing'i göster; sonraki ziyaretlerde direkt menüye geç.
@@ -55,7 +51,7 @@ export function MusteriAkisi() {
       {/* Menü — kapak açıkken altta görünür */}
       {menuGoruluyor && (
         <div className="absolute inset-0">
-          <MenuEkrani onBack={landingeDon} restoranAd={restoranAd} masaAd={masaAd} masaToken={masaToken} />
+          <MenuListesi onBack={landingeDon} />
         </div>
       )}
 
@@ -83,62 +79,6 @@ export function MusteriAkisi() {
       )}
 
       <KvkkBildirim masaToken={masaToken} />
-    </div>
-  );
-}
-
-function MenuEkrani({
-  onBack,
-  restoranAd,
-  masaAd,
-  masaToken,
-}: {
-  onBack: () => void;
-  restoranAd: string;
-  masaAd: string;
-  masaToken: string;
-}) {
-  return (
-    <div className="flex h-full flex-col bg-background">
-      {/* Üst nav: back / orta logo / adisyon */}
-      <header className="flex items-center justify-between gap-2 px-4 pt-11 pb-3">
-        <button
-          type="button"
-          onClick={onBack}
-          aria-label="Ana sayfaya dön"
-          className="inline-flex size-10 items-center justify-center rounded-full bg-card shadow-soft transition active:scale-95"
-        >
-          <ArrowLeft className="size-[18px]" />
-        </button>
-
-        <div className="flex flex-col items-center gap-1 leading-tight">
-          <div className="relative size-9 overflow-hidden rounded-full shadow-soft">
-            <Image
-              src="/logo.jpg"
-              alt={restoranAd}
-              fill
-              sizes="36px"
-              className="object-cover"
-            />
-          </div>
-          <div className="micro-caps text-muted-foreground">{masaAd}</div>
-        </div>
-
-        <Link
-          href={`/m/${masaToken}/adisyon`}
-          aria-label="Adisyonum"
-          className="inline-flex size-10 items-center justify-center rounded-full bg-card shadow-soft transition active:scale-95"
-        >
-          <Receipt className="size-[18px]" />
-        </Link>
-      </header>
-
-      {/* Menü içerik (kategoriler + ürünler) */}
-      <div className="flex-1 overflow-y-auto px-4 pb-28">
-        <MenuListesi />
-      </div>
-
-      <SepetCekmecesi />
     </div>
   );
 }
