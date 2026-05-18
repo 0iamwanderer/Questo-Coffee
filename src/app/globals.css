@@ -8,47 +8,47 @@
    ────────────────────────────────────────────────────────────────────── */
 @layer base {
   :root {
-    /* Yüzey */
-    --background: 48 32% 95%;      /* krem */
-    --foreground: 25 30% 18%;      /* koyu kahve mürekkep */
+    /* Yüzey — logoyla uyumlu sıcak krem */
+    --background: 40 34% 94%;
+    --foreground: 22 35% 16%;       /* daha derin kahve mürekkep */
 
     /* Kart & popover */
-    --card: 48 50% 99%;
-    --card-foreground: 25 30% 18%;
-    --popover: 48 50% 99%;
-    --popover-foreground: 25 30% 18%;
+    --card: 42 55% 98%;
+    --card-foreground: 22 35% 16%;
+    --popover: 42 55% 98%;
+    --popover-foreground: 22 35% 16%;
 
-    /* Birincil — terracotta */
-    --primary: 14 38% 48%;
-    --primary-foreground: 48 50% 97%;
+    /* Birincil — logo kahvesi (Questo Coffea Co.) */
+    --primary: 14 50% 30%;          /* derin terracotta-kahve */
+    --primary-foreground: 42 55% 96%;
 
     /* İkincil & nötrler */
-    --secondary: 48 28% 90%;
-    --secondary-foreground: 25 30% 22%;
-    --muted: 48 22% 90%;
-    --muted-foreground: 28 12% 42%;
+    --secondary: 40 30% 88%;
+    --secondary-foreground: 22 35% 18%;
+    --muted: 40 25% 88%;
+    --muted-foreground: 26 14% 38%;
 
-    /* Aksan (terracotta yumuşak) */
-    --accent: 18 45% 90%;
-    --accent-foreground: 14 50% 32%;
+    /* Aksan — krem (logo arka planı tonu) */
+    --accent: 38 50% 86%;
+    --accent-foreground: 14 50% 28%;
 
     /* Tehlike */
     --destructive: 0 70% 45%;
     --destructive-foreground: 48 50% 97%;
 
     /* Hairline border */
-    --border: 38 22% 84%;
-    --input: 38 22% 84%;
-    --ring: 14 38% 48%;
+    --border: 36 20% 82%;
+    --input: 36 20% 82%;
+    --ring: 14 50% 30%;
 
     /* Geometri */
     --radius: 0.9rem;
 
-    /* Yumuşak gölge tokenları (kahve tonlu) */
-    --shadow-soft: 0 1px 2px -1px hsl(25 30% 18% / 0.06),
-                   0 4px 12px -4px hsl(25 30% 18% / 0.08);
-    --shadow-floating: 0 18px 48px -18px hsl(25 35% 20% / 0.35),
-                       0 4px 12px -4px hsl(25 35% 20% / 0.18);
+    /* Yumuşak gölge tokenları (logo kahvesi tonlu) */
+    --shadow-soft: 0 1px 2px -1px hsl(22 35% 16% / 0.07),
+                   0 4px 12px -4px hsl(22 35% 16% / 0.10);
+    --shadow-floating: 0 24px 56px -22px hsl(22 35% 16% / 0.40),
+                       0 6px 16px -6px hsl(22 35% 16% / 0.20);
   }
 
   .dark {

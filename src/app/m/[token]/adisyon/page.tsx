@@ -78,9 +78,9 @@ export default async function AdisyonSayfasi({ params, searchParams }: Props) {
           </Link>
           {!adisyonSnap.empty && <AdisyonYenile />}
         </div>
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           <p className="micro-caps text-muted-foreground">{masaAd}</p>
-          <h1 className="font-serif text-3xl leading-none">Adisyon</h1>
+          <h1 className="font-serif text-4xl leading-none">Adisyon</h1>
         </div>
       </div>
 

@@ -2,7 +2,7 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Questo — QR Sipariş',
+    name: 'Questo Coffea Co.',
     short_name: 'Questo',
     description:
       'Kafe ve restoran için QR kodlu sipariş ve adisyon sistemi',
@@ -10,9 +10,17 @@ export default function manifest(): MetadataRoute.Manifest {
     scope: '/',
     display: 'standalone',
     orientation: 'portrait',
-    background_color: '#f7f3e8',
-    theme_color: '#f7f3e8',
+    background_color: '#f1ead8',
+    theme_color: '#f1ead8',
     lang: 'tr',
     categories: ['food', 'business'],
+    icons: [
+      {
+        src: '/logo.png',
+        sizes: 'any',
+        type: 'image/png',
+        purpose: 'any',
+      },
+    ],
   };
 }

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, FlaskConical } from 'lucide-react';
 import { getAdminDb } from '@/lib/firebase/admin';
@@ -51,13 +52,39 @@ export default async function HomePage() {
   const masalar = await masalariYukle();
 
   return (
-    <main className="min-h-screen flex items-center justify-center p-6">
-      <div className="max-w-md w-full space-y-8 text-center anim-fade-in">
-        <div className="space-y-2">
-          <p className="micro-caps text-muted-foreground">QR Sipariş</p>
-          <h1 className="font-serif text-5xl">Questo</h1>
+    <main className="relative min-h-screen flex items-center justify-center p-6 overflow-hidden">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(80% 50% at 50% 25%, hsl(var(--accent) / 0.55) 0%, transparent 70%)',
+        }}
+      />
+      <div className="relative max-w-md w-full space-y-8 text-center anim-fade-in">
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="relative size-32 overflow-hidden rounded-full"
+            style={{ boxShadow: 'var(--shadow-floating)' }}
+          >
+            <Image
+              src="/logo.png"
+              alt="Questo Coffea Co."
+              fill
+              sizes="128px"
+              priority
+              className="object-cover"
+            />
+          </div>
+          <div className="space-y-1">
+            <p className="micro-caps text-muted-foreground">QR Sipariş</p>
+            <p className="font-serif text-sm text-muted-foreground">
+              kahve &amp; mola
+            </p>
+          </div>
         </div>
-        <p className="text-sm text-muted-foreground">
+
+        <p className="text-sm leading-relaxed text-muted-foreground">
           Masadaki QR kodu okutarak siparişinizi vermek için bu sayfa
           yerine telefonunuzla menüye girin.
         </p>
@@ -65,7 +92,7 @@ export default async function HomePage() {
         <div className="text-sm">
           <Link
             href="/kasa/giris"
-            className="inline-flex items-center rounded-full border bg-card px-4 py-2 shadow-soft transition active:scale-[0.98]"
+            className="inline-flex items-center gap-1.5 rounded-full border bg-card px-5 py-2.5 shadow-soft transition active:scale-[0.98]"
           >
             Personel girişi
           </Link>

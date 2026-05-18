@@ -141,7 +141,7 @@ export function SepetIcerik() {
 
   return (
     <div className="space-y-5 anim-fade-in pb-32 pt-4 px-4">
-      <div className="space-y-2">
+      <div className="space-y-3">
         <Link
           href={`/m/${masaToken}`}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
@@ -149,9 +149,9 @@ export function SepetIcerik() {
           <ArrowLeft className="size-4" />
           Menü
         </Link>
-        <div className="space-y-0.5">
+        <div className="space-y-1">
           <p className="micro-caps text-muted-foreground">{masaAd}</p>
-          <h1 className="font-serif text-3xl leading-none">Sepetim</h1>
+          <h1 className="font-serif text-4xl leading-none">Sepetim</h1>
         </div>
       </div>
 

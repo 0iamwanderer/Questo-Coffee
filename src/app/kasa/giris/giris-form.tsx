@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { toast } from 'sonner';
@@ -56,13 +57,24 @@ export function GirisForm() {
   return (
     <form
       onSubmit={onGiris}
-      className="w-full max-w-sm space-y-4 rounded-lg border bg-card p-6 shadow-sm"
+      className="w-full max-w-sm space-y-5 rounded-2xl border bg-card p-6 shadow-soft"
     >
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold">Kasa girişi</h1>
-        <p className="text-sm text-muted-foreground">
-          Personel hesabınızla oturum açın.
-        </p>
+      <div className="flex items-center gap-3">
+        <div className="relative size-12 overflow-hidden rounded-full shadow-soft">
+          <Image
+            src="/logo.png"
+            alt="Questo"
+            fill
+            sizes="48px"
+            className="object-cover"
+          />
+        </div>
+        <div className="space-y-0.5">
+          <h1 className="font-serif text-xl leading-none">Kasa girişi</h1>
+          <p className="text-xs text-muted-foreground">
+            Personel hesabınızla oturum açın.
+          </p>
+        </div>
       </div>
 
       <div className="space-y-2">

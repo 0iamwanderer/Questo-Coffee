@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowLeft, Receipt } from 'lucide-react';
 import { MenuListesi } from '@/components/musteri/menu-listesi';
@@ -99,8 +100,8 @@ function MenuEkrani({
 }) {
   return (
     <div className="flex h-full flex-col bg-background">
-      {/* Üst nav: back / orta marka / adisyon */}
-      <header className="flex items-center justify-between gap-2 px-4 pt-11 pb-2">
+      {/* Üst nav: back / orta logo / adisyon */}
+      <header className="flex items-center justify-between gap-2 px-4 pt-11 pb-3">
         <button
           type="button"
           onClick={onBack}
@@ -110,11 +111,17 @@ function MenuEkrani({
           <ArrowLeft className="size-[18px]" />
         </button>
 
-        <div className="flex flex-col items-center leading-tight">
-          <div className="font-serif text-[20px]">{restoranAd}</div>
-          <div className="micro-caps text-muted-foreground">
-            Menü · {masaAd}
+        <div className="flex flex-col items-center gap-1 leading-tight">
+          <div className="relative size-9 overflow-hidden rounded-full shadow-soft">
+            <Image
+              src="/logo.png"
+              alt={restoranAd}
+              fill
+              sizes="36px"
+              className="object-cover"
+            />
           </div>
+          <div className="micro-caps text-muted-foreground">{masaAd}</div>
         </div>
 
         <Link
