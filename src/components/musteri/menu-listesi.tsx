@@ -721,33 +721,31 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               {flip?.yon === 'backward' && oncekiKategori && (
                 <div
                   key={`flip-bw-${flip.oncekiId}`}
-                  className="hidden md:block absolute inset-0 anim-page-shade"
+                  className="hidden md:block absolute inset-0 anim-page-flip-backward"
                   style={{ pointerEvents: 'none' }}
                 >
-                  <div className="absolute inset-0 anim-page-flip-backward">
-                    {/* Ön yüz — eski sol yarım */}
-                    <div className="flip-on">
-                      <KitapYarim
-                        taraf="sol"
-                        kategori={oncekiKategori}
-                        indeks={oncekiIndeks}
-                        urunler={oncekiUrunler}
-                        onDetay={setDetayUrun}
-                        roman={roman}
-                      />
-                      <div className="page-curl backward" />
-                    </div>
-                    {/* Arka yüz — yeni SAĞ yarımı (kâğıdın diğer tarafı) */}
-                    <div className="flip-arka">
-                      <KitapYarim
-                        taraf="sag"
-                        kategori={aktifKategori}
-                        indeks={aktifIndeks}
-                        urunler={goruntulenenUrunler}
-                        onDetay={setDetayUrun}
-                        roman={roman}
-                      />
-                    </div>
+                  {/* Ön yüz — eski sol yarım */}
+                  <div className="flip-on">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={oncekiKategori}
+                      indeks={oncekiIndeks}
+                      urunler={oncekiUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                    <div className="page-curl backward" />
+                  </div>
+                  {/* Arka yüz — yeni SAĞ yarımı (kâğıdın diğer tarafı) */}
+                  <div className="flip-arka">
+                    <KitapYarim
+                      taraf="sag"
+                      kategori={aktifKategori}
+                      indeks={aktifIndeks}
+                      urunler={goruntulenenUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
                   </div>
                 </div>
               )}
@@ -779,33 +777,31 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               {flip?.yon === 'forward' && oncekiKategori && (
                 <div
                   key={`flip-fw-${flip.oncekiId}`}
-                  className="absolute inset-0 anim-page-shade"
+                  className="absolute inset-0 anim-page-flip-forward"
                   style={{ pointerEvents: 'none' }}
                 >
-                  <div className="absolute inset-0 anim-page-flip-forward">
-                    {/* Ön yüz — eski sağ yarım */}
-                    <div className="flip-on">
-                      <KitapYarim
-                        taraf="sag"
-                        kategori={oncekiKategori}
-                        indeks={oncekiIndeks}
-                        urunler={oncekiUrunler}
-                        onDetay={setDetayUrun}
-                        roman={roman}
-                      />
-                      <div className="page-curl forward" />
-                    </div>
-                    {/* Arka yüz — yeni SOL yarımı */}
-                    <div className="flip-arka">
-                      <KitapYarim
-                        taraf="sol"
-                        kategori={aktifKategori}
-                        indeks={aktifIndeks}
-                        urunler={goruntulenenUrunler}
-                        onDetay={setDetayUrun}
-                        roman={roman}
-                      />
-                    </div>
+                  {/* Ön yüz — eski sağ yarım */}
+                  <div className="flip-on">
+                    <KitapYarim
+                      taraf="sag"
+                      kategori={oncekiKategori}
+                      indeks={oncekiIndeks}
+                      urunler={oncekiUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                    <div className="page-curl forward" />
+                  </div>
+                  {/* Arka yüz — yeni SOL yarımı */}
+                  <div className="flip-arka">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={aktifKategori}
+                      indeks={aktifIndeks}
+                      urunler={goruntulenenUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
                   </div>
                 </div>
               )}
