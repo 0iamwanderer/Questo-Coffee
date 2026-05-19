@@ -293,7 +293,148 @@ function SayfaIcerik({
   );
 }
 
+/* ─── KitapSpread — tek kategorinin sol+sağ sayfa görünümü (ciltsiz) ─── */
+function KitapSpread({
+  kategori,
+  indeks,
+  urunler,
+  onDetay,
+  roman,
+  interaktif = true,
+}: {
+  kategori: Kategori | null;
+  indeks: number;
+  urunler: Urun[];
+  onDetay: (u: Urun) => void;
+  roman: (k: Kategori | null, idx: number) => string;
+  interaktif?: boolean;
+}) {
+  const gruplar = useMemo(() => grupla(urunler), [urunler]);
+  const { sol: solGruplar, sag: sagGruplar } = useMemo(
+    () => sayfayaBol(gruplar),
+    [gruplar],
+  );
+  const tumGruplar = useMemo(
+    () => [...solGruplar, ...sagGruplar],
+    [solGruplar, sagGruplar],
+  );
+  const kAdAbbr = kategori?.ad?.toUpperCase() ?? '';
+
+  return (
+    <div
+      className="h-full w-full flex overflow-hidden rounded-r-xl"
+      style={{
+        pointerEvents: interaktif ? 'auto' : 'none',
+        boxShadow:
+          '0 32px 80px -16px rgba(0,0,0,0.75), 0 8px 20px -6px rgba(0,0,0,0.45)',
+      }}
+    >
+      {/* Left page */}
+      <div
+        className="flex-1 flex flex-col overflow-hidden"
+        style={{ background: 'hsl(46 56% 91%)' }}
+      >
+        <div className="flex-1 overflow-y-auto px-6 md:px-10 pt-6 md:pt-9 pb-4 flex flex-col">
+          <div className="mb-6 flex-shrink-0">
+            <div className="flex items-start gap-4">
+              {kategori && (
+                <span
+                  className="font-serif italic text-primary/70 leading-none shrink-0"
+                  style={{ fontSize: 'clamp(64px, 7vw, 88px)', lineHeight: 0.86 }}
+                >
+                  {roman(kategori, indeks)}
+                </span>
+              )}
+              <div className="pt-1">
+                <h2
+                  className="font-serif text-foreground leading-tight"
+                  style={{ fontSize: 'clamp(28px, 4vw, 42px)' }}
+                >
+                  {kategori?.ad}
+                </h2>
+                {kategori?.tagline && (
+                  <p
+                    className="font-serif italic text-foreground/55 mt-1.5"
+                    style={{ fontSize: 'clamp(13px, 1.1vw, 15px)' }}
+                  >
+                    {kategori.tagline}
+                  </p>
+                )}
+              </div>
+            </div>
+            <div className="mt-5 h-px bg-foreground/15" />
+          </div>
+
+          {urunler.length === 0 ? (
+            <p
+              className="text-center text-foreground/30 py-10 font-serif italic"
+              style={{ fontSize: '13px' }}
+            >
+              Bu kategoride ürün yok.
+            </p>
+          ) : (
+            <>
+              <div className="md:hidden min-h-full flex flex-col justify-evenly">
+                <SayfaIcerik gruplar={tumGruplar} onDetay={onDetay} />
+              </div>
+              <div className="hidden md:flex flex-col flex-1 justify-evenly">
+                <SayfaIcerik gruplar={solGruplar} onDetay={onDetay} />
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="px-6 md:px-10 py-2.5 border-t border-foreground/10">
+          <span className="micro-caps text-foreground/30 text-[9px]">
+            {kAdAbbr} · SOL
+          </span>
+        </div>
+      </div>
+
+      <div
+        className="hidden md:block w-px flex-shrink-0"
+        style={{ background: 'hsl(38 42% 72%)' }}
+      />
+
+      <div
+        className="hidden md:flex flex-col flex-1 overflow-hidden"
+        style={{ background: 'hsl(46 56% 93%)' }}
+      >
+        <div className="flex-1 overflow-y-auto px-10 pt-10 pb-4 flex flex-col">
+          {sagGruplar.length > 0 ? (
+            <div className="flex-1 flex flex-col justify-evenly">
+              <SayfaIcerik gruplar={sagGruplar} onDetay={onDetay} />
+            </div>
+          ) : (
+            <div className="h-full flex flex-col items-center justify-center gap-3 opacity-25 select-none">
+              <span
+                className="font-serif italic text-foreground/70"
+                style={{ fontSize: '38px', letterSpacing: '0.4em' }}
+              >
+                ❦
+              </span>
+              <span
+                className="font-serif italic text-foreground/50"
+                style={{ fontSize: '13px' }}
+              >
+                {kategori?.ad ? `${kategori.ad} · devamı yok` : ''}
+              </span>
+            </div>
+          )}
+        </div>
+        <div className="px-10 py-2.5 border-t border-foreground/10">
+          <span className="micro-caps text-foreground/30 text-[9px]">
+            {kAdAbbr} · SAĞ
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ─── Main export ─── */
+const FLIP_SURE_MS = 820;
+
 export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
   const { masaToken, restoranAd } = useMasa();
   const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
@@ -301,19 +442,24 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
   const [aktifId, setAktifId] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [detayUrun, setDetayUrun] = useState<Urun | null>(null);
-  const [sayfaYonu, setSayfaYonu] = useState<SayfaYonu>('none');
+  // Flip durumu: yön + çevrilen önceki kategori snapshot'ı.
+  // null değilse, üstteki overlay yön etrafında 180° döner.
+  const [flip, setFlip] = useState<{
+    yon: Exclude<SayfaYonu, 'none'>;
+    oncekiId: string;
+  } | null>(null);
   const [sepetAcik, setSepetAcik] = useState(false);
   const toplamAdet = useSepet((s) => s.toplamAdet());
 
   // Swipe gesture refs
   const swipeBas = useRef({ x: 0, y: 0 });
 
-  // Sayfa çevirme bittiğinde yön state'ini sıfırla (overlay kalkar)
+  // Flip animasyonu bittiğinde overlay'i kaldır
   useEffect(() => {
-    if (sayfaYonu === 'none') return;
-    const t = setTimeout(() => setSayfaYonu('none'), 750);
+    if (!flip) return;
+    const t = setTimeout(() => setFlip(null), FLIP_SURE_MS + 30);
     return () => clearTimeout(t);
-  }, [sayfaYonu, aktifId]);
+  }, [flip]);
 
   useEffect(() => {
     const db = getClientDb();
@@ -361,38 +507,48 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
     [urunler, aktifId],
   );
 
-  const gruplar = useMemo(
-    () => grupla(goruntulenenUrunler),
-    [goruntulenenUrunler],
+  // Flip için önceki spread snapshot'ı
+  const oncekiKategori = useMemo(
+    () =>
+      flip ? kategoriler.find((k) => k.id === flip.oncekiId) ?? null : null,
+    [flip, kategoriler],
   );
-
-  const { sol: solGruplar, sag: sagGruplar } = useMemo(
-    () => sayfayaBol(gruplar),
-    [gruplar],
+  const oncekiIndeks = useMemo(
+    () =>
+      flip ? kategoriler.findIndex((k) => k.id === flip.oncekiId) : -1,
+    [flip, kategoriler],
   );
-
-  const tumGruplar = useMemo(
-    () => [...solGruplar, ...sagGruplar],
-    [solGruplar, sagGruplar],
+  const oncekiUrunler = useMemo(
+    () =>
+      flip ? urunler.filter((u) => u.kategoriId === flip.oncekiId) : [],
+    [flip, urunler],
   );
 
   const roman = (k: Kategori | null, idx: number) =>
     k?.roman ?? ROMAN_SAYILAR[idx] ?? `${idx + 1}`;
 
+  const kategoriDegistir = (yeniId: string) => {
+    if (yeniId === aktifId || flip) return; // çift tıkı / üst üste flip engelle
+    const yeniIdx = kategoriler.findIndex((k) => k.id === yeniId);
+    if (yeniIdx === -1 || aktifId == null) {
+      setAktifId(yeniId);
+      return;
+    }
+    const yon: Exclude<SayfaYonu, 'none'> =
+      yeniIdx > aktifIndeks ? 'forward' : 'backward';
+    setFlip({ yon, oncekiId: aktifId });
+    setAktifId(yeniId);
+  };
+
   const onceki = () => {
     const prev = kategoriler[aktifIndeks - 1];
-    if (aktifIndeks > 0 && prev) {
-      setSayfaYonu('backward');
-      setAktifId(prev.id);
-    }
+    if (aktifIndeks > 0 && prev) kategoriDegistir(prev.id);
   };
 
   const sonraki = () => {
     const next = kategoriler[aktifIndeks + 1];
-    if (aktifIndeks < kategoriler.length - 1 && next) {
-      setSayfaYonu('forward');
-      setAktifId(next.id);
-    }
+    if (aktifIndeks < kategoriler.length - 1 && next)
+      kategoriDegistir(next.id);
   };
 
   const handleSwipeBas = (e: React.TouchEvent) => {
@@ -424,8 +580,6 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
       </div>
     );
   }
-
-  const kAdAbbr = aktifKategori?.ad?.toUpperCase() ?? '';
 
   return (
     <div
@@ -485,11 +639,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               <button
                 key={k.id}
                 type="button"
-                onClick={() => {
-                  const newIdx = kategoriler.findIndex((k2) => k2.id === k.id);
-                  setSayfaYonu(newIdx > aktifIndeks ? 'forward' : newIdx < aktifIndeks ? 'backward' : 'none');
-                  setAktifId(k.id);
-                }}
+                onClick={() => kategoriDegistir(k.id)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all whitespace-nowrap',
                   isActive
@@ -544,154 +694,72 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         </button>
       </header>
 
-      {/* ── Book area ── */}
+      {/* ── Book area — spiral sabit, spread'ler flip eder ── */}
       <div
         className="flex-1 flex items-center justify-center px-3 md:px-8 pb-3 overflow-hidden"
         onTouchStart={handleSwipeBas}
         onTouchEnd={handleSwipeBirak}
-        style={{ perspective: '2400px', perspectiveOrigin: '50% 55%' }}
       >
-        <div
-          key={aktifId ?? 'empty'}
-          className={cn(
-            'relative h-full max-w-5xl w-full flex overflow-hidden rounded-r-xl',
-            sayfaYonu === 'forward' && 'anim-page-turn-forward',
-            sayfaYonu === 'backward' && 'anim-page-turn-backward',
-            sayfaYonu === 'none' && 'anim-fade-in',
-          )}
-          style={{
-            boxShadow:
-              '0 32px 80px -16px rgba(0,0,0,0.75), 0 8px 20px -6px rgba(0,0,0,0.45)',
-            transformStyle: 'preserve-3d',
-          }}
-        >
-          {/* Kıvrılma gölgesi — yalnızca çevirme sırasında */}
-          {sayfaYonu !== 'none' && (
-            <div
-              className={cn(
-                'page-curl-overlay',
-                sayfaYonu === 'forward' ? 'forward' : 'backward',
-              )}
-            />
-          )}
-
-          {/* Spiral binding */}
+        <div className="h-full max-w-5xl w-full flex">
+          {/* Spiral cilt — animasyondan etkilenmez */}
           <SarmalCilt />
 
-          {/* Left page */}
+          {/* Sayfalar bölgesi — perspective burada, böylece sadece spread döner */}
           <div
-            className="flex-1 flex flex-col overflow-hidden bg-paper"
-            style={{ background: 'hsl(46 56% 91%)' }}
+            className="relative flex-1"
+            style={{
+              perspective: '2400px',
+              perspectiveOrigin: '50% 55%',
+              transformStyle: 'preserve-3d',
+            }}
           >
-            <div className="flex-1 overflow-y-auto px-6 md:px-10 pt-6 md:pt-9 pb-4 flex flex-col">
-              {/* Category header */}
-              <div className="mb-6 flex-shrink-0">
-                <div className="flex items-start gap-4">
-                  {aktifKategori && (
-                    <span
-                      className="font-serif italic text-primary/70 leading-none shrink-0"
-                      style={{ fontSize: 'clamp(64px, 7vw, 88px)', lineHeight: 0.86 }}
-                    >
-                      {roman(aktifKategori, aktifIndeks)}
-                    </span>
+            {/* ALT: yeni (aktif) spread — sabit */}
+            <div
+              className={cn(
+                'absolute inset-0',
+                flip ? 'anim-underlay-fade' : 'anim-fade-in',
+              )}
+            >
+              <KitapSpread
+                kategori={aktifKategori}
+                indeks={aktifIndeks}
+                urunler={goruntulenenUrunler}
+                onDetay={setDetayUrun}
+                roman={roman}
+                interaktif={!flip}
+              />
+            </div>
+
+            {/* ÜST: eski spread — overlay, omurga etrafında 180° döner.
+                backface-visibility: hidden → 90°'yi geçince görünmez olur, alt açığa çıkar. */}
+            {flip && oncekiKategori && (
+              <div
+                key={`flip-${flip.oncekiId}-${flip.yon}`}
+                className={cn(
+                  'absolute inset-0',
+                  flip.yon === 'forward'
+                    ? 'anim-page-flip-forward'
+                    : 'anim-page-flip-backward',
+                )}
+                style={{ pointerEvents: 'none' }}
+              >
+                <KitapSpread
+                  kategori={oncekiKategori}
+                  indeks={oncekiIndeks}
+                  urunler={oncekiUrunler}
+                  onDetay={setDetayUrun}
+                  roman={roman}
+                  interaktif={false}
+                />
+                {/* Kıvrılma gölgesi flipping page üzerinde */}
+                <div
+                  className={cn(
+                    'page-curl-overlay',
+                    flip.yon === 'forward' ? 'forward' : 'backward',
                   )}
-                  <div className="pt-1">
-                    <h2
-                      className="font-serif text-foreground leading-tight"
-                      style={{ fontSize: 'clamp(28px, 4vw, 42px)' }}
-                    >
-                      {aktifKategori?.ad}
-                    </h2>
-                    {aktifKategori?.tagline && (
-                      <p
-                        className="font-serif italic text-foreground/55 mt-1.5"
-                        style={{ fontSize: 'clamp(13px, 1.1vw, 15px)' }}
-                      >
-                        {aktifKategori.tagline}
-                      </p>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-5 h-px bg-foreground/15" />
+                />
               </div>
-
-              {goruntulenenUrunler.length === 0 ? (
-                <p
-                  className="text-center text-foreground/30 py-10 font-serif italic"
-                  style={{ fontSize: '13px' }}
-                >
-                  Bu kategoride ürün yok.
-                </p>
-              ) : (
-                <>
-                  {/* Mobile: all items — min-h-full so items spread evenly */}
-                  <div className="md:hidden min-h-full flex flex-col justify-evenly">
-                    <SayfaIcerik
-                      gruplar={tumGruplar}
-                      onDetay={setDetayUrun}
-                    />
-                  </div>
-                  {/* Desktop: left half */}
-                  <div className="hidden md:flex flex-col flex-1 justify-evenly">
-                    <SayfaIcerik
-                      gruplar={solGruplar}
-                      onDetay={setDetayUrun}
-                    />
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Page label */}
-            <div className="px-6 md:px-10 py-2.5 border-t border-foreground/10">
-              <span className="micro-caps text-foreground/30 text-[9px]">
-                {kAdAbbr} · SOL
-              </span>
-            </div>
-          </div>
-
-          {/* Page divider */}
-          <div
-            className="hidden md:block w-px flex-shrink-0"
-            style={{ background: 'hsl(38 42% 72%)' }}
-          />
-
-          {/* Right page — desktop only */}
-          <div
-            className="hidden md:flex flex-col flex-1 overflow-hidden bg-paper"
-            style={{ background: 'hsl(46 56% 93%)' }}
-          >
-            <div className="flex-1 overflow-y-auto px-10 pt-10 pb-4 flex flex-col">
-              {sagGruplar.length > 0 ? (
-                <div className="flex-1 flex flex-col justify-evenly">
-                  <SayfaIcerik
-                    gruplar={sagGruplar}
-                    onDetay={setDetayUrun}
-                  />
-                </div>
-              ) : (
-                <div className="h-full flex flex-col items-center justify-center gap-3 opacity-25 select-none">
-                  <span
-                    className="font-serif italic text-foreground/70"
-                    style={{ fontSize: '38px', letterSpacing: '0.4em' }}
-                  >
-                    ❦
-                  </span>
-                  <span
-                    className="font-serif italic text-foreground/50"
-                    style={{ fontSize: '13px' }}
-                  >
-                    {aktifKategori?.ad ? `${aktifKategori.ad} · devamı yok` : ''}
-                  </span>
-                </div>
-              )}
-            </div>
-            {/* Page label */}
-            <div className="px-10 py-2.5 border-t border-foreground/10">
-              <span className="micro-caps text-foreground/30 text-[9px]">
-                {kAdAbbr} · SAĞ
-              </span>
-            </div>
+            )}
           </div>
         </div>
       </div>
