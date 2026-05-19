@@ -277,37 +277,106 @@
   animation: flash-new 1.4s ease-out;
 }
 
-/* Kitap sayfa çevirme — ileri: yeni sayfa sağ kenarden açılır (sola doğru) */
+/* ── Kitap sayfa çevirme — gerçekçi kıvrılma + perspektif ──
+   İleri: sayfa sağdan gelir, sol kenardan açılır (sağ kenar sabit, sayfa cilte doğru kapanır).
+   Geri:  sayfa soldan gelir, sağ kenardan açılır (sol kenar sabit).
+   `filter: brightness` ve box-shadow değişimi, sayfanın eğri kenarındaki gölge etkisini taklit eder. */
 @keyframes page-turn-forward {
-  from {
-    transform: perspective(1800px) rotateY(-82deg);
-    opacity: 0.15;
+  0% {
+    transform: perspective(2200px) rotateY(-95deg) scaleX(0.96);
+    filter: brightness(0.62);
+    opacity: 0.35;
+    box-shadow:
+      -28px 0 48px -10px rgba(0, 0, 0, 0.55),
+      0 32px 80px -16px rgba(0, 0, 0, 0.75);
   }
-  to {
-    transform: perspective(1800px) rotateY(0deg);
+  55% {
+    filter: brightness(0.88);
     opacity: 1;
   }
+  100% {
+    transform: perspective(2200px) rotateY(0deg) scaleX(1);
+    filter: brightness(1);
+    opacity: 1;
+    box-shadow:
+      0 32px 80px -16px rgba(0, 0, 0, 0.75),
+      0 8px 20px -6px rgba(0, 0, 0, 0.45);
+  }
 }
-/* Kitap sayfa çevirme — geri: yeni sayfa sol kenarden açılır (sağa doğru) */
 @keyframes page-turn-backward {
-  from {
-    transform: perspective(1800px) rotateY(82deg);
-    opacity: 0.15;
+  0% {
+    transform: perspective(2200px) rotateY(95deg) scaleX(0.96);
+    filter: brightness(0.62);
+    opacity: 0.35;
+    box-shadow:
+      28px 0 48px -10px rgba(0, 0, 0, 0.55),
+      0 32px 80px -16px rgba(0, 0, 0, 0.75);
   }
-  to {
-    transform: perspective(1800px) rotateY(0deg);
+  55% {
+    filter: brightness(0.88);
     opacity: 1;
   }
+  100% {
+    transform: perspective(2200px) rotateY(0deg) scaleX(1);
+    filter: brightness(1);
+    opacity: 1;
+    box-shadow:
+      0 32px 80px -16px rgba(0, 0, 0, 0.75),
+      0 8px 20px -6px rgba(0, 0, 0, 0.45);
+  }
 }
-/* İleri: sağ kenar sabit, sol taraf öne döner → sayfa sağdan gelir */
 .anim-page-turn-forward {
   transform-origin: right center;
-  animation: page-turn-forward 0.48s cubic-bezier(0.35, 0.1, 0.2, 1) both;
+  animation: page-turn-forward 720ms cubic-bezier(0.42, 0.08, 0.22, 1) both;
+  backface-visibility: hidden;
 }
-/* Geri: sol kenar sabit, sağ taraf öne döner → sayfa soldan gelir */
 .anim-page-turn-backward {
   transform-origin: left center;
-  animation: page-turn-backward 0.48s cubic-bezier(0.35, 0.1, 0.2, 1) both;
+  animation: page-turn-backward 720ms cubic-bezier(0.42, 0.08, 0.22, 1) both;
+  backface-visibility: hidden;
+}
+
+/* Kıvrılma gölgesi — çevrilen sayfanın üstünde süpürülen yumuşak gradient.
+   Yumuşak yarım-disk hâlinde gölge soldan/sağdan içeri kayar ve kâğıt katlanırken
+   oluşan iç gölgeyi taklit eder. */
+@keyframes page-curl-sweep-forward {
+  0%   { opacity: 0; transform: translateX(-12%); }
+  20%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateX(108%); }
+}
+@keyframes page-curl-sweep-backward {
+  0%   { opacity: 0; transform: translateX(112%); }
+  20%  { opacity: 0.8; }
+  100% { opacity: 0; transform: translateX(-8%); }
+}
+.page-curl-overlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: multiply;
+}
+.page-curl-overlay.forward {
+  background: linear-gradient(
+    100deg,
+    transparent 0%,
+    rgba(40, 22, 8, 0.0) 38%,
+    rgba(40, 22, 8, 0.32) 50%,
+    rgba(40, 22, 8, 0.05) 62%,
+    transparent 100%
+  );
+  animation: page-curl-sweep-forward 720ms cubic-bezier(0.42, 0.08, 0.22, 1) both;
+}
+.page-curl-overlay.backward {
+  background: linear-gradient(
+    260deg,
+    transparent 0%,
+    rgba(40, 22, 8, 0.0) 38%,
+    rgba(40, 22, 8, 0.32) 50%,
+    rgba(40, 22, 8, 0.05) 62%,
+    transparent 100%
+  );
+  animation: page-curl-sweep-backward 720ms cubic-bezier(0.42, 0.08, 0.22, 1) both;
 }
 
 /* Sepet sheet — aşağıdan yukarı açılır */

@@ -57,10 +57,28 @@ function SarmalCilt() {
 /* ─── Subcategory header within a page ─── */
 function AltGrupBaslik({ baslik }: { baslik: string }) {
   return (
-    <div className="flex items-center gap-2 my-3">
+    <div className="flex items-center gap-3 my-4">
       <span className="flex-1 h-px bg-foreground/10" />
-      <span className="micro-caps text-foreground/35 text-[9px]">{baslik}</span>
+      <span
+        className="micro-caps text-foreground/40"
+        style={{ fontSize: '10px', letterSpacing: '0.22em' }}
+      >
+        {baslik}
+      </span>
       <span className="flex-1 h-px bg-foreground/10" />
+    </div>
+  );
+}
+
+/* ─── Ornament — sparse page'lerde kâğıdı doldurur ─── */
+function SayfaFleron() {
+  return (
+    <div
+      aria-hidden
+      className="flex items-center justify-center py-4 text-foreground/20 select-none"
+      style={{ fontFamily: 'var(--font-serif), Georgia, serif', fontSize: '22px', letterSpacing: '0.4em' }}
+    >
+      ❦
     </div>
   );
 }
@@ -100,25 +118,26 @@ function KalemSatiri({
   };
 
   return (
-    <div className={cn('py-2', stokYok && 'opacity-40')}>
+    <div className={cn('py-3', stokYok && 'opacity-40')}>
       {/* Name · dotted leader · price · button — all on one flex row */}
-      <div className="flex items-end gap-1.5">
+      <div className="flex items-end gap-2">
         <button
           type="button"
           onClick={() => !stokYok && onDetay(urun)}
-          className="font-serif text-[15px] leading-snug shrink-0 text-left hover:text-primary transition-colors"
+          className="font-serif leading-snug shrink-0 text-left hover:text-primary transition-colors"
+          style={{ fontSize: 'clamp(17px, 1.55vw, 22px)' }}
         >
           {urun.ad}
         </button>
 
         {urun.sefOnerisi && (
           <span
-            className="shrink-0 rounded px-1.5 py-0.5 text-primary leading-none mb-[3px]"
+            className="shrink-0 rounded px-1.5 py-0.5 text-primary leading-none mb-[5px]"
             style={{
               border: '1px solid hsl(13 58% 23% / 0.45)',
               fontFamily: 'var(--font-mono), ui-monospace, monospace',
-              fontSize: '8px',
-              letterSpacing: '0.12em',
+              fontSize: '9px',
+              letterSpacing: '0.14em',
               textTransform: 'uppercase',
             }}
           >
@@ -129,11 +148,14 @@ function KalemSatiri({
         {/* dotted leader */}
         <span
           aria-hidden
-          className="flex-1 border-b border-dotted border-foreground/20 mb-[4px] min-w-2"
+          className="flex-1 border-b border-dotted border-foreground/25 mb-[6px] min-w-3"
         />
 
         {/* price */}
-        <span className="font-serif text-[15px] shrink-0 tabular-nums">
+        <span
+          className="font-serif shrink-0 tabular-nums"
+          style={{ fontSize: 'clamp(17px, 1.55vw, 22px)' }}
+        >
           {fiyatYaz(urun.fiyatKurus)}
         </span>
 
@@ -141,10 +163,10 @@ function KalemSatiri({
         <div className="shrink-0" onClick={(e) => e.stopPropagation()}>
           {stokYok ? (
             <span
-              className="w-7 h-7 rounded-full flex items-center justify-center text-foreground/25"
+              className="w-9 h-9 rounded-full flex items-center justify-center text-foreground/25"
               style={{ border: '1px solid hsl(22 42% 12% / 0.15)' }}
             >
-              <span className="text-[10px]">—</span>
+              <span className="text-[11px]">—</span>
             </span>
           ) : adet > 0 ? (
             <button
@@ -154,14 +176,14 @@ function KalemSatiri({
                   ? guncelle(tekSatir.satirId, adet - 1)
                   : onDetay(urun)
               }
-              className="w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90"
+              className="w-9 h-9 rounded-full flex items-center justify-center transition active:scale-90"
               style={{
                 border: '1px solid hsl(13 58% 23% / 0.35)',
                 backgroundColor: 'hsl(13 58% 23% / 0.08)',
               }}
               aria-label={`${urun.ad} sepetten çıkar`}
             >
-              <span className="font-mono text-[11px] text-primary tabular-nums font-medium">
+              <span className="font-mono text-[13px] text-primary tabular-nums font-medium">
                 {adet}
               </span>
             </button>
@@ -170,10 +192,10 @@ function KalemSatiri({
               ref={btnRef}
               type="button"
               onClick={handleEkle}
-              className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition active:scale-90 shadow-soft"
+              className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition active:scale-90 shadow-soft"
               aria-label={`${urun.ad} sepete ekle`}
             >
-              <Plus className="size-3" />
+              <Plus className="size-4" />
             </button>
           )}
         </div>
@@ -181,8 +203,8 @@ function KalemSatiri({
 
       {urun.aciklama && (
         <p
-          className="leading-snug mt-0.5 text-foreground/45"
-          style={{ fontSize: '11px' }}
+          className="leading-snug mt-1 text-foreground/50"
+          style={{ fontSize: '13px' }}
         >
           {urun.aciklama}
         </p>
@@ -244,14 +266,18 @@ function sayfayaBol(gruplar: ItemGrup[]): {
   return { sol: gruplar, sag: [] };
 }
 
-/* ─── Page content renderer ─── */
+/* ─── Page content renderer — az kalem varsa fleron ile dengele ─── */
 function SayfaIcerik({
   gruplar,
   onDetay,
+  fleronEsiği = 4,
 }: {
   gruplar: ItemGrup[];
   onDetay: (u: Urun) => void;
+  fleronEsiği?: number;
 }) {
+  const toplamUrun = gruplar.reduce((t, g) => t + g.urunler.length, 0);
+  const seyrek = toplamUrun > 0 && toplamUrun < fleronEsiği;
   return (
     <>
       {gruplar.map((g, i) => (
@@ -262,6 +288,7 @@ function SayfaIcerik({
           ))}
         </div>
       ))}
+      {seyrek && <SayfaFleron />}
     </>
   );
 }
@@ -280,6 +307,13 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
 
   // Swipe gesture refs
   const swipeBas = useRef({ x: 0, y: 0 });
+
+  // Sayfa çevirme bittiğinde yön state'ini sıfırla (overlay kalkar)
+  useEffect(() => {
+    if (sayfaYonu === 'none') return;
+    const t = setTimeout(() => setSayfaYonu('none'), 750);
+    return () => clearTimeout(t);
+  }, [sayfaYonu, aktifId]);
 
   useEffect(() => {
     const db = getClientDb();
@@ -515,11 +549,12 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         className="flex-1 flex items-center justify-center px-3 md:px-8 pb-3 overflow-hidden"
         onTouchStart={handleSwipeBas}
         onTouchEnd={handleSwipeBirak}
+        style={{ perspective: '2400px', perspectiveOrigin: '50% 55%' }}
       >
         <div
           key={aktifId ?? 'empty'}
           className={cn(
-            'h-full max-w-5xl w-full flex overflow-hidden rounded-r-xl',
+            'relative h-full max-w-5xl w-full flex overflow-hidden rounded-r-xl',
             sayfaYonu === 'forward' && 'anim-page-turn-forward',
             sayfaYonu === 'backward' && 'anim-page-turn-backward',
             sayfaYonu === 'none' && 'anim-fade-in',
@@ -527,8 +562,19 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
           style={{
             boxShadow:
               '0 32px 80px -16px rgba(0,0,0,0.75), 0 8px 20px -6px rgba(0,0,0,0.45)',
+            transformStyle: 'preserve-3d',
           }}
         >
+          {/* Kıvrılma gölgesi — yalnızca çevirme sırasında */}
+          {sayfaYonu !== 'none' && (
+            <div
+              className={cn(
+                'page-curl-overlay',
+                sayfaYonu === 'forward' ? 'forward' : 'backward',
+              )}
+            />
+          )}
+
           {/* Spiral binding */}
           <SarmalCilt />
 
@@ -537,36 +583,36 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
             className="flex-1 flex flex-col overflow-hidden bg-paper"
             style={{ background: 'hsl(46 56% 91%)' }}
           >
-            <div className="flex-1 overflow-y-auto px-5 md:px-8 pt-5 md:pt-7 pb-3 flex flex-col">
+            <div className="flex-1 overflow-y-auto px-6 md:px-10 pt-6 md:pt-9 pb-4 flex flex-col">
               {/* Category header */}
-              <div className="mb-5 flex-shrink-0">
-                <div className="flex items-start gap-3">
+              <div className="mb-6 flex-shrink-0">
+                <div className="flex items-start gap-4">
                   {aktifKategori && (
                     <span
                       className="font-serif italic text-primary/70 leading-none shrink-0"
-                      style={{ fontSize: 'clamp(52px, 6vw, 72px)', lineHeight: 0.88 }}
+                      style={{ fontSize: 'clamp(64px, 7vw, 88px)', lineHeight: 0.86 }}
                     >
                       {roman(aktifKategori, aktifIndeks)}
                     </span>
                   )}
-                  <div className="pt-0.5">
+                  <div className="pt-1">
                     <h2
                       className="font-serif text-foreground leading-tight"
-                      style={{ fontSize: 'clamp(24px, 3.5vw, 34px)' }}
+                      style={{ fontSize: 'clamp(28px, 4vw, 42px)' }}
                     >
                       {aktifKategori?.ad}
                     </h2>
                     {aktifKategori?.tagline && (
                       <p
-                        className="font-serif italic text-foreground/50 mt-1"
-                        style={{ fontSize: '13px' }}
+                        className="font-serif italic text-foreground/55 mt-1.5"
+                        style={{ fontSize: 'clamp(13px, 1.1vw, 15px)' }}
                       >
                         {aktifKategori.tagline}
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="mt-4 h-px bg-foreground/15" />
+                <div className="mt-5 h-px bg-foreground/15" />
               </div>
 
               {goruntulenenUrunler.length === 0 ? (
@@ -597,8 +643,8 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
             </div>
 
             {/* Page label */}
-            <div className="px-5 md:px-8 py-2 border-t border-foreground/10">
-              <span className="micro-caps text-foreground/30 text-[8px]">
+            <div className="px-6 md:px-10 py-2.5 border-t border-foreground/10">
+              <span className="micro-caps text-foreground/30 text-[9px]">
                 {kAdAbbr} · SOL
               </span>
             </div>
@@ -615,7 +661,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
             className="hidden md:flex flex-col flex-1 overflow-hidden bg-paper"
             style={{ background: 'hsl(46 56% 93%)' }}
           >
-            <div className="flex-1 overflow-y-auto px-8 pt-8 pb-3 flex flex-col">
+            <div className="flex-1 overflow-y-auto px-10 pt-10 pb-4 flex flex-col">
               {sagGruplar.length > 0 ? (
                 <div className="flex-1 flex flex-col justify-evenly">
                   <SayfaIcerik
@@ -624,19 +670,25 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                   />
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center opacity-20">
+                <div className="h-full flex flex-col items-center justify-center gap-3 opacity-25 select-none">
                   <span
-                    className="font-serif italic text-foreground"
-                    style={{ fontSize: '20px' }}
+                    className="font-serif italic text-foreground/70"
+                    style={{ fontSize: '38px', letterSpacing: '0.4em' }}
                   >
-                    —
+                    ❦
+                  </span>
+                  <span
+                    className="font-serif italic text-foreground/50"
+                    style={{ fontSize: '13px' }}
+                  >
+                    {aktifKategori?.ad ? `${aktifKategori.ad} · devamı yok` : ''}
                   </span>
                 </div>
               )}
             </div>
             {/* Page label */}
-            <div className="px-8 py-2 border-t border-foreground/10">
-              <span className="micro-caps text-foreground/30 text-[8px]">
+            <div className="px-10 py-2.5 border-t border-foreground/10">
+              <span className="micro-caps text-foreground/30 text-[9px]">
                 {kAdAbbr} · SAĞ
               </span>
             </div>
