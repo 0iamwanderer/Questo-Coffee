@@ -293,21 +293,21 @@ function SayfaIcerik({
   );
 }
 
-/* ─── KitapSpread — tek kategorinin sol+sağ sayfa görünümü (ciltsiz) ─── */
-function KitapSpread({
+/* ─── KitapYarim — tek bir yarım sayfa (sol VEYA sağ) ─── */
+function KitapYarim({
+  taraf,
   kategori,
   indeks,
   urunler,
   onDetay,
   roman,
-  interaktif = true,
 }: {
+  taraf: 'sol' | 'sag';
   kategori: Kategori | null;
   indeks: number;
   urunler: Urun[];
   onDetay: (u: Urun) => void;
   roman: (k: Kategori | null, idx: number) => string;
-  interaktif?: boolean;
 }) {
   const gruplar = useMemo(() => grupla(urunler), [urunler]);
   const { sol: solGruplar, sag: sagGruplar } = useMemo(
@@ -319,22 +319,17 @@ function KitapSpread({
     [solGruplar, sagGruplar],
   );
   const kAdAbbr = kategori?.ad?.toUpperCase() ?? '';
+  const isLeft = taraf === 'sol';
+  const aktifGruplar = isLeft ? solGruplar : sagGruplar;
 
   return (
     <div
-      className="h-full w-full flex overflow-hidden rounded-r-xl"
-      style={{
-        pointerEvents: interaktif ? 'auto' : 'none',
-        boxShadow:
-          '0 32px 80px -16px rgba(0,0,0,0.75), 0 8px 20px -6px rgba(0,0,0,0.45)',
-      }}
+      className="h-full w-full flex flex-col overflow-hidden"
+      style={{ background: isLeft ? 'hsl(46 56% 91%)' : 'hsl(46 56% 93%)' }}
     >
-      {/* Left page */}
-      <div
-        className="flex-1 flex flex-col overflow-hidden"
-        style={{ background: 'hsl(46 56% 91%)' }}
-      >
-        <div className="flex-1 overflow-y-auto px-6 md:px-10 pt-6 md:pt-9 pb-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-6 md:px-10 pt-6 md:pt-9 pb-4 flex flex-col">
+        {/* Kategori başlığı yalnız sol yarımda */}
+        {isLeft && (
           <div className="mb-6 flex-shrink-0">
             <div className="flex items-start gap-4">
               {kategori && (
@@ -364,69 +359,52 @@ function KitapSpread({
             </div>
             <div className="mt-5 h-px bg-foreground/15" />
           </div>
+        )}
 
-          {urunler.length === 0 ? (
-            <p
-              className="text-center text-foreground/30 py-10 font-serif italic"
+        {urunler.length === 0 && isLeft ? (
+          <p
+            className="text-center text-foreground/30 py-10 font-serif italic"
+            style={{ fontSize: '13px' }}
+          >
+            Bu kategoride ürün yok.
+          </p>
+        ) : isLeft ? (
+          <>
+            {/* Mobile: tüm grupları sol yarım gösterir */}
+            <div className="md:hidden min-h-full flex flex-col justify-evenly">
+              <SayfaIcerik gruplar={tumGruplar} onDetay={onDetay} />
+            </div>
+            {/* Desktop: sol yarım grupları */}
+            <div className="hidden md:flex flex-col flex-1 justify-evenly">
+              <SayfaIcerik gruplar={solGruplar} onDetay={onDetay} />
+            </div>
+          </>
+        ) : aktifGruplar.length > 0 ? (
+          <div className="flex-1 flex flex-col justify-evenly">
+            <SayfaIcerik gruplar={aktifGruplar} onDetay={onDetay} />
+          </div>
+        ) : (
+          <div className="h-full flex flex-col items-center justify-center gap-3 opacity-25 select-none">
+            <span
+              className="font-serif italic text-foreground/70"
+              style={{ fontSize: '38px', letterSpacing: '0.4em' }}
+            >
+              ❦
+            </span>
+            <span
+              className="font-serif italic text-foreground/50"
               style={{ fontSize: '13px' }}
             >
-              Bu kategoride ürün yok.
-            </p>
-          ) : (
-            <>
-              <div className="md:hidden min-h-full flex flex-col justify-evenly">
-                <SayfaIcerik gruplar={tumGruplar} onDetay={onDetay} />
-              </div>
-              <div className="hidden md:flex flex-col flex-1 justify-evenly">
-                <SayfaIcerik gruplar={solGruplar} onDetay={onDetay} />
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="px-6 md:px-10 py-2.5 border-t border-foreground/10">
-          <span className="micro-caps text-foreground/30 text-[9px]">
-            {kAdAbbr} · SOL
-          </span>
-        </div>
+              {kategori?.ad ? `${kategori.ad} · devamı yok` : ''}
+            </span>
+          </div>
+        )}
       </div>
 
-      <div
-        className="hidden md:block w-px flex-shrink-0"
-        style={{ background: 'hsl(38 42% 72%)' }}
-      />
-
-      <div
-        className="hidden md:flex flex-col flex-1 overflow-hidden"
-        style={{ background: 'hsl(46 56% 93%)' }}
-      >
-        <div className="flex-1 overflow-y-auto px-10 pt-10 pb-4 flex flex-col">
-          {sagGruplar.length > 0 ? (
-            <div className="flex-1 flex flex-col justify-evenly">
-              <SayfaIcerik gruplar={sagGruplar} onDetay={onDetay} />
-            </div>
-          ) : (
-            <div className="h-full flex flex-col items-center justify-center gap-3 opacity-25 select-none">
-              <span
-                className="font-serif italic text-foreground/70"
-                style={{ fontSize: '38px', letterSpacing: '0.4em' }}
-              >
-                ❦
-              </span>
-              <span
-                className="font-serif italic text-foreground/50"
-                style={{ fontSize: '13px' }}
-              >
-                {kategori?.ad ? `${kategori.ad} · devamı yok` : ''}
-              </span>
-            </div>
-          )}
-        </div>
-        <div className="px-10 py-2.5 border-t border-foreground/10">
-          <span className="micro-caps text-foreground/30 text-[9px]">
-            {kAdAbbr} · SAĞ
-          </span>
-        </div>
+      <div className="px-6 md:px-10 py-2.5 border-t border-foreground/10">
+        <span className="micro-caps text-foreground/30 text-[9px]">
+          {kAdAbbr} · {isLeft ? 'SOL' : 'SAĞ'}
+        </span>
       </div>
     </div>
   );
@@ -694,71 +672,140 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         </button>
       </header>
 
-      {/* ── Book area — spiral sabit, sayfalar 3D flip ── */}
+      {/* ── Book area — cilt sabit, tek yarım sayfa cilt etrafında 3D döner ──
+           Forward: SAĞ yarım sola devrilir; pivot sağ yarımın sol kenarı.
+                    Ön yüz=eski sağ içerik, arka yüz=yeni sol içerik.
+           Backward: SOL yarım sağa devrilir; pivot sol yarımın sağ kenarı.
+                    Ön yüz=eski sol içerik, arka yüz=yeni sağ içerik.
+           Sabit kalan diğer yarım underlay'de zaten yeni içerikle gösterilir.  */}
       <div
         className="flex-1 flex items-center justify-center px-3 md:px-8 pb-3 overflow-hidden"
         onTouchStart={handleSwipeBas}
         onTouchEnd={handleSwipeBirak}
       >
-        <div className="h-full max-w-5xl w-full flex">
+        <div
+          className="h-full max-w-5xl w-full flex rounded-r-xl overflow-hidden"
+          style={{
+            boxShadow:
+              '0 32px 80px -16px rgba(0,0,0,0.75), 0 8px 20px -6px rgba(0,0,0,0.45)',
+          }}
+        >
           {/* Spiral cilt — sabit */}
           <SarmalCilt />
 
-          {/* Sayfalar bölgesi — perspective burada (yalnız spread'ler 3D'de döner) */}
+          {/* Sayfalar bölgesi — perspective ortak ebeveynde */}
           <div
-            className="relative flex-1"
+            className="flex-1 flex"
             style={{
-              perspective: '2200px',
+              perspective: '2400px',
               perspectiveOrigin: '50% 50%',
             }}
           >
-            {/* ALT: yeni (aktif) spread — her zaman tam opak.
-                Flipping overlay üstünde dönerken alt görünmez; arka yüze geçince açığa çıkar. */}
-            <div className={cn('absolute inset-0', !flip && 'anim-fade-in')}>
-              <KitapSpread
-                kategori={aktifKategori}
-                indeks={aktifIndeks}
-                urunler={goruntulenenUrunler}
-                onDetay={setDetayUrun}
-                roman={roman}
-                interaktif={!flip}
-              />
+            {/* ─ SOL YARIM bölgesi ─ */}
+            <div className="flex-1 relative">
+              {/* Underlay — yeni sol yarım, hep opak */}
+              <div
+                className={cn('absolute inset-0', !flip && 'anim-fade-in')}
+              >
+                <KitapYarim
+                  taraf="sol"
+                  kategori={aktifKategori}
+                  indeks={aktifIndeks}
+                  urunler={goruntulenenUrunler}
+                  onDetay={setDetayUrun}
+                  roman={roman}
+                />
+              </div>
+
+              {/* Backward flip: sol yarım sağa devrilir (desktop only) */}
+              {flip?.yon === 'backward' && oncekiKategori && (
+                <div
+                  key={`flip-bw-${flip.oncekiId}`}
+                  className="hidden md:block absolute inset-0 anim-page-flip-backward"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {/* Ön yüz — eski sol yarım */}
+                  <div className="flip-on">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={oncekiKategori}
+                      indeks={oncekiIndeks}
+                      urunler={oncekiUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                    <div className="page-curl backward" />
+                  </div>
+                  {/* Arka yüz — yeni SAĞ yarımı (kâğıdın diğer tarafı) */}
+                  <div className="flip-arka">
+                    <KitapYarim
+                      taraf="sag"
+                      kategori={aktifKategori}
+                      indeks={aktifIndeks}
+                      urunler={goruntulenenUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* ÜST: flipping page. Ön yüzde eski içerik, arka yüzde boş kâğıt. */}
-            {flip && oncekiKategori && (
+            {/* Sayfa ortası ayrıcı — desktop */}
+            <div
+              className="hidden md:block w-px flex-shrink-0 z-10"
+              style={{ background: 'hsl(38 42% 72%)' }}
+            />
+
+            {/* ─ SAĞ YARIM bölgesi — desktop only ─ */}
+            <div className="hidden md:block flex-1 relative">
+              {/* Underlay — yeni sağ yarım */}
               <div
-                key={`flip-${flip.oncekiId}-${flip.yon}`}
-                className={cn(
-                  'absolute inset-0',
-                  flip.yon === 'forward'
-                    ? 'anim-page-flip-forward'
-                    : 'anim-page-flip-backward',
-                )}
-                style={{ pointerEvents: 'none' }}
+                className={cn('absolute inset-0', !flip && 'anim-fade-in')}
               >
-                {/* Ön yüz — eski spread */}
-                <div className="flip-on">
-                  <KitapSpread
-                    kategori={oncekiKategori}
-                    indeks={oncekiIndeks}
-                    urunler={oncekiUrunler}
-                    onDetay={setDetayUrun}
-                    roman={roman}
-                    interaktif={false}
-                  />
-                  {/* Kıvrım gölgesi — yalnız ön yüzde, kalkan kenara doğru yoğunlaşır */}
-                  <div
-                    className={cn(
-                      'page-curl',
-                      flip.yon === 'forward' ? 'forward' : 'backward',
-                    )}
-                  />
-                </div>
-                {/* Arka yüz — kâğıdın boş ters tarafı (180° döndürülmüş) */}
-                <div className="flip-arka" />
+                <KitapYarim
+                  taraf="sag"
+                  kategori={aktifKategori}
+                  indeks={aktifIndeks}
+                  urunler={goruntulenenUrunler}
+                  onDetay={setDetayUrun}
+                  roman={roman}
+                />
               </div>
-            )}
+
+              {/* Forward flip: sağ yarım sola devrilir */}
+              {flip?.yon === 'forward' && oncekiKategori && (
+                <div
+                  key={`flip-fw-${flip.oncekiId}`}
+                  className="absolute inset-0 anim-page-flip-forward"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {/* Ön yüz — eski sağ yarım */}
+                  <div className="flip-on">
+                    <KitapYarim
+                      taraf="sag"
+                      kategori={oncekiKategori}
+                      indeks={oncekiIndeks}
+                      urunler={oncekiUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                    <div className="page-curl forward" />
+                  </div>
+                  {/* Arka yüz — yeni SOL yarımı */}
+                  <div className="flip-arka">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={aktifKategori}
+                      indeks={aktifIndeks}
+                      urunler={goruntulenenUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
