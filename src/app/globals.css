@@ -277,69 +277,78 @@
   animation: flash-new 1.4s ease-out;
 }
 
-/* ── Sayfa flip — gerçek kitap sayfası hissi ──
-   Mimari: alttaki sayfa yeni içerik (sabit, hep opak). Üstteki overlay eski içerik.
-   Overlay omurga etrafında 180° döner; 90°'yi geçince `transform: rotateY(...)` ile
-   bize "arka yüz" gelir. Arka yüz boş kâğıt rengiyle dolar (KitapSpread içinde
-   .flip-arka div'i). Sayfa dönerken `brightness` rampası ışık kaybını taklit eder.
+/* ── Sayfa flip — sade, akıcı, gerçek 3D ──
+   Mimari: alttaki sayfa yeni içerik (sabit, opak). Üstteki overlay = çevrilen yarım.
+   Ön yüz (flip-on): eski içerik. Arka yüz (flip-arka): yeni karşı yarım, rotateY(180) ile pre-rotated.
+   backface-visibility: hidden → 90°'yi geçince ön yüz gizlenir, arka yüz açığa çıkar.
 
-   İleri (forward): pivot sol kenar, rotateY 0 → -180 (sağ kenar yukarı kalkıp sola devrilir)
-   Geri  (backward): pivot sağ kenar, rotateY 0 → +180
+   KRITIK: 3D rendering doğru çalışsın diye tüm ata zincirinde transform-style: preserve-3d olmalı.
+   Bu sınıf, perspective'ten flipping overlay'e kadar her ara katmanda kullanılır (.kitap-3d).
 
-   Easing: cubic-bezier(0.55, 0.05, 0.35, 1) — başta ve sonda yumuşak, ortada hız (gerçek el hareketi)
+   Transform tek bir interpolation (0 → ±180), filter ve gölge ayrı ritimde — orta-takılma olmaz.
 */
+.kitap-3d {
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
 @keyframes page-flip-forward {
-  0%   { transform: rotateY(0deg);    filter: brightness(1);     box-shadow: 0 0 0 rgba(0,0,0,0); }
-  35%  {                              filter: brightness(0.78);  box-shadow: 18px 12px 32px rgba(0,0,0,0.32); }
-  50%  { transform: rotateY(-90deg);  filter: brightness(0.62);  box-shadow: 0 16px 38px rgba(0,0,0,0.32); }
-  65%  {                              filter: brightness(0.78);  box-shadow: -18px 12px 32px rgba(0,0,0,0.32); }
-  100% { transform: rotateY(-180deg); filter: brightness(1);     box-shadow: 0 0 0 rgba(0,0,0,0); }
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(-180deg); }
 }
 @keyframes page-flip-backward {
-  0%   { transform: rotateY(0deg);    filter: brightness(1);     box-shadow: 0 0 0 rgba(0,0,0,0); }
-  35%  {                              filter: brightness(0.78);  box-shadow: -18px 12px 32px rgba(0,0,0,0.32); }
-  50%  { transform: rotateY(90deg);   filter: brightness(0.62);  box-shadow: 0 16px 38px rgba(0,0,0,0.32); }
-  65%  {                              filter: brightness(0.78);  box-shadow: 18px 12px 32px rgba(0,0,0,0.32); }
-  100% { transform: rotateY(180deg);  filter: brightness(1);     box-shadow: 0 0 0 rgba(0,0,0,0); }
+  from { transform: rotateY(0deg); }
+  to   { transform: rotateY(180deg); }
 }
 .anim-page-flip-forward {
   transform-origin: left center;
-  animation: page-flip-forward 900ms cubic-bezier(0.55, 0.05, 0.35, 1) both;
+  animation: page-flip-forward 850ms cubic-bezier(0.45, 0.05, 0.3, 1) both;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  will-change: transform, filter;
+  will-change: transform;
 }
 .anim-page-flip-backward {
   transform-origin: right center;
-  animation: page-flip-backward 900ms cubic-bezier(0.55, 0.05, 0.35, 1) both;
+  animation: page-flip-backward 850ms cubic-bezier(0.45, 0.05, 0.3, 1) both;
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-  will-change: transform, filter;
+  will-change: transform;
 }
 
-/* Flipping page'in ÖN yüzü — eski içerik, dönerken görünür */
+/* Flipping page'in iki yüzü */
 .flip-on {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
-/* Flipping page'in ARKA yüzü — bir sonraki spread'in karşı yarımı, 180° döndürülmüş şekilde basılır */
 .flip-arka {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   transform: rotateY(180deg);
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
-/* Kıvrım gölgesi — KALKAN KENARA doğru yoğunlaşan yumuşak gradient.
-   Forward: pivot sol, kalkan sağ kenar → gölge sağda yoğun.
-   Backward: pivot sağ, kalkan sol kenar → gölge solda yoğun.
-   Sadece flip'in ilk yarısında görünür (sayfa ön yüzdeyken). */
+/* Işık rampası — flipping overlay'in BAĞIMSIZ bir wrapper'ında animasyona alınır,
+   transform animasyonuyla aynı element üzerinde çakışmaz, takılma yaratmaz. */
+@keyframes page-shade {
+  0%   { filter: brightness(1); }
+  50%  { filter: brightness(0.7); }
+  100% { filter: brightness(1); }
+}
+.anim-page-shade {
+  animation: page-shade 850ms cubic-bezier(0.45, 0.05, 0.3, 1) both;
+}
+
+/* Kıvrım gölgesi — kalkan kenara doğru koyu gradient. Yalnız ön yüz görünürken yoğun. */
 @keyframes page-curl-shadow {
   0%   { opacity: 0; }
-  25%  { opacity: 0.75; }
+  30%  { opacity: 0.7; }
   50%  { opacity: 0; }
   100% { opacity: 0; }
 }
@@ -348,21 +357,21 @@
   inset: 0;
   pointer-events: none;
   mix-blend-mode: multiply;
-  animation: page-curl-shadow 900ms cubic-bezier(0.55, 0.05, 0.35, 1) both;
+  animation: page-curl-shadow 850ms cubic-bezier(0.45, 0.05, 0.3, 1) both;
 }
 .page-curl.forward {
   background: linear-gradient(
     270deg,
-    rgba(30, 15, 5, 0.55) 0%,
-    rgba(30, 15, 5, 0.18) 35%,
+    rgba(30, 15, 5, 0.5) 0%,
+    rgba(30, 15, 5, 0.16) 35%,
     transparent 65%
   );
 }
 .page-curl.backward {
   background: linear-gradient(
     90deg,
-    rgba(30, 15, 5, 0.55) 0%,
-    rgba(30, 15, 5, 0.18) 35%,
+    rgba(30, 15, 5, 0.5) 0%,
+    rgba(30, 15, 5, 0.16) 35%,
     transparent 65%
   );
 }
