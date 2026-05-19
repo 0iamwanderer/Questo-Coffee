@@ -277,6 +277,48 @@
   animation: flash-new 1.4s ease-out;
 }
 
+/* Kitap sayfa çevirme — ileri (sağdan sola) */
+@keyframes page-turn-forward {
+  0% {
+    transform: perspective(1400px) rotateY(20deg) translateX(52px);
+    opacity: 0;
+  }
+  55% { opacity: 1; }
+  100% {
+    transform: perspective(1400px) rotateY(0deg) translateX(0);
+    opacity: 1;
+  }
+}
+/* Kitap sayfa çevirme — geri (soldan sağa) */
+@keyframes page-turn-backward {
+  0% {
+    transform: perspective(1400px) rotateY(-20deg) translateX(-52px);
+    opacity: 0;
+  }
+  55% { opacity: 1; }
+  100% {
+    transform: perspective(1400px) rotateY(0deg) translateX(0);
+    opacity: 1;
+  }
+}
+.anim-page-turn-forward {
+  animation: page-turn-forward 0.44s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: left center;
+}
+.anim-page-turn-backward {
+  animation: page-turn-backward 0.44s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  transform-origin: right center;
+}
+
+/* Sepet sheet — aşağıdan yukarı açılır */
+@keyframes sheet-up {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+.anim-sheet-up {
+  animation: sheet-up 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
 /* Sepete uçma — kavisli yörünge (ortada yukarı, sonra hedefe) */
 @keyframes fly-to-cart {
   0% {

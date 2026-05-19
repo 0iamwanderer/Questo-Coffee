@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import {
   collection,
@@ -10,7 +9,7 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { ChevronLeft, ChevronRight, Plus, ShoppingBag } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, ShoppingBag, X } from 'lucide-react';
 import { getClientDb } from '@/lib/firebase/client';
 import {
   kategoriConverter,
@@ -22,6 +21,9 @@ import { useSepet } from '@/stores/sepet';
 import { flyToCart } from './sepete-uc';
 import { useMasa } from '@/app/m/[token]/masa-provider';
 import { cn } from '@/lib/utils';
+import { SepetIcerik } from '@/app/m/[token]/sepet/sepet-icerik';
+
+type SayfaYonu = 'forward' | 'backward' | 'none';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 const ROMAN_SAYILAR = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
@@ -272,7 +274,12 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
   const [aktifId, setAktifId] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [detayUrun, setDetayUrun] = useState<Urun | null>(null);
+  const [sayfaYonu, setSayfaYonu] = useState<SayfaYonu>('none');
+  const [sepetAcik, setSepetAcik] = useState(false);
   const toplamAdet = useSepet((s) => s.toplamAdet());
+
+  // Swipe gesture refs
+  const swipeBas = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     const db = getClientDb();
@@ -340,13 +347,31 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
 
   const onceki = () => {
     const prev = kategoriler[aktifIndeks - 1];
-    if (aktifIndeks > 0 && prev) setAktifId(prev.id);
+    if (aktifIndeks > 0 && prev) {
+      setSayfaYonu('backward');
+      setAktifId(prev.id);
+    }
   };
 
   const sonraki = () => {
     const next = kategoriler[aktifIndeks + 1];
-    if (aktifIndeks < kategoriler.length - 1 && next)
+    if (aktifIndeks < kategoriler.length - 1 && next) {
+      setSayfaYonu('forward');
       setAktifId(next.id);
+    }
+  };
+
+  const handleSwipeBas = (e: React.TouchEvent) => {
+    swipeBas.current = { x: e.touches[0]!.clientX, y: e.touches[0]!.clientY };
+  };
+
+  const handleSwipeBirak = (e: React.TouchEvent) => {
+    const dx = e.changedTouches[0]!.clientX - swipeBas.current.x;
+    const dy = e.changedTouches[0]!.clientY - swipeBas.current.y;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) {
+      if (dx < 0) sonraki();
+      else onceki();
+    }
   };
 
   if (yukleniyor) {
@@ -426,7 +451,11 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               <button
                 key={k.id}
                 type="button"
-                onClick={() => setAktifId(k.id)}
+                onClick={() => {
+                  const newIdx = kategoriler.findIndex((k2) => k2.id === k.id);
+                  setSayfaYonu(newIdx > aktifIndeks ? 'forward' : newIdx < aktifIndeks ? 'backward' : 'none');
+                  setAktifId(k.id);
+                }}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all whitespace-nowrap',
                   isActive
@@ -459,8 +488,10 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         </nav>
 
         {/* Cart button */}
-        <Link
-          href={`/m/${masaToken}/sepet`}
+        <button
+          type="button"
+          data-sepet-target
+          onClick={() => setSepetAcik(true)}
           className="flex items-center gap-2 px-3.5 py-2 rounded-full border border-white/15 text-white/65 hover:text-white transition shrink-0 text-sm"
         >
           <ShoppingBag className="size-4" />
@@ -476,14 +507,23 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               {toplamAdet}
             </span>
           )}
-        </Link>
+        </button>
       </header>
 
       {/* ── Book area ── */}
-      <div className="flex-1 flex items-center justify-center px-3 md:px-8 pb-3 overflow-hidden">
+      <div
+        className="flex-1 flex items-center justify-center px-3 md:px-8 pb-3 overflow-hidden"
+        onTouchStart={handleSwipeBas}
+        onTouchEnd={handleSwipeBirak}
+      >
         <div
           key={aktifId ?? 'empty'}
-          className="h-full max-w-5xl w-full flex overflow-hidden rounded-r-xl anim-fade-in"
+          className={cn(
+            'h-full max-w-5xl w-full flex overflow-hidden rounded-r-xl',
+            sayfaYonu === 'forward' && 'anim-page-turn-forward',
+            sayfaYonu === 'backward' && 'anim-page-turn-backward',
+            sayfaYonu === 'none' && 'anim-fade-in',
+          )}
           style={{
             boxShadow:
               '0 32px 80px -16px rgba(0,0,0,0.75), 0 8px 20px -6px rgba(0,0,0,0.45)',
@@ -654,6 +694,37 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         acik={!!detayUrun}
         onKapat={() => setDetayUrun(null)}
       />
+
+      {/* ── Sepet Sheet ── */}
+      {sepetAcik && (
+        <div
+          className="absolute inset-0 z-50 flex flex-col anim-sheet-up"
+          style={{ background: 'hsl(46 56% 89%)' }}
+        >
+          <div
+            className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b"
+            style={{ borderColor: 'hsl(38 42% 72%)' }}
+          >
+            <h2
+              className="font-serif text-xl text-foreground"
+              style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}
+            >
+              Sepetim
+            </h2>
+            <button
+              type="button"
+              onClick={() => setSepetAcik(false)}
+              className="size-9 rounded-full flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-foreground/8 transition"
+              aria-label="Sepeti kapat"
+            >
+              <X className="size-5" />
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <SepetIcerik onKapat={() => setSepetAcik(false)} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

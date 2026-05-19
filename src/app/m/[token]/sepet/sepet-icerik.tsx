@@ -35,7 +35,7 @@ const kalemBirimFiyat = (
   return urun.fiyatKurus + ek;
 };
 
-export function SepetIcerik() {
+export function SepetIcerik({ onKapat }: { onKapat?: () => void } = {}) {
   const router = useRouter();
   const { masaToken, masaAd } = useMasa();
   const kalemler = useSepet((s) => s.kalemler);
@@ -129,13 +129,24 @@ export function SepetIcerik() {
   if (kalemler.length === 0) {
     return (
       <div className="space-y-6 anim-fade-in px-4 pt-4">
-        <Link
-          href={`/m/${masaToken}`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Menüye dön
-        </Link>
+        {onKapat ? (
+          <button
+            type="button"
+            onClick={onKapat}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Menüye dön
+          </button>
+        ) : (
+          <Link
+            href={`/m/${masaToken}`}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Menüye dön
+          </Link>
+        )}
         <div className="rounded-2xl border bg-card p-10 text-center shadow-soft">
           <svg
             aria-hidden
@@ -186,13 +197,24 @@ export function SepetIcerik() {
   return (
     <div className="space-y-5 anim-fade-in pb-32 pt-4 px-4">
       <div className="space-y-3">
-        <Link
-          href={`/m/${masaToken}`}
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
-        >
-          <ArrowLeft className="size-4" />
-          Menü
-        </Link>
+        {onKapat ? (
+          <button
+            type="button"
+            onClick={onKapat}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Menü
+          </button>
+        ) : (
+          <Link
+            href={`/m/${masaToken}`}
+            className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+          >
+            <ArrowLeft className="size-4" />
+            Menü
+          </Link>
+        )}
         <div className="space-y-1">
           <p className="micro-caps text-muted-foreground">{masaAd}</p>
           <h1 className="font-serif text-4xl leading-none">Sepetim</h1>
