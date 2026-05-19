@@ -277,37 +277,37 @@
   animation: flash-new 1.4s ease-out;
 }
 
-/* Kitap sayfa çevirme — ileri (sağdan sola) */
+/* Kitap sayfa çevirme — ileri: yeni sayfa sağ kenarden açılır (sola doğru) */
 @keyframes page-turn-forward {
-  0% {
-    transform: perspective(1400px) rotateY(20deg) translateX(52px);
-    opacity: 0;
+  from {
+    transform: perspective(1800px) rotateY(-82deg);
+    opacity: 0.15;
   }
-  55% { opacity: 1; }
-  100% {
-    transform: perspective(1400px) rotateY(0deg) translateX(0);
+  to {
+    transform: perspective(1800px) rotateY(0deg);
     opacity: 1;
   }
 }
-/* Kitap sayfa çevirme — geri (soldan sağa) */
+/* Kitap sayfa çevirme — geri: yeni sayfa sol kenarden açılır (sağa doğru) */
 @keyframes page-turn-backward {
-  0% {
-    transform: perspective(1400px) rotateY(-20deg) translateX(-52px);
-    opacity: 0;
+  from {
+    transform: perspective(1800px) rotateY(82deg);
+    opacity: 0.15;
   }
-  55% { opacity: 1; }
-  100% {
-    transform: perspective(1400px) rotateY(0deg) translateX(0);
+  to {
+    transform: perspective(1800px) rotateY(0deg);
     opacity: 1;
   }
 }
+/* İleri: sağ kenar sabit, sol taraf öne döner → sayfa sağdan gelir */
 .anim-page-turn-forward {
-  animation: page-turn-forward 0.44s cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  transform-origin: left center;
-}
-.anim-page-turn-backward {
-  animation: page-turn-backward 0.44s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   transform-origin: right center;
+  animation: page-turn-forward 0.48s cubic-bezier(0.35, 0.1, 0.2, 1) both;
+}
+/* Geri: sol kenar sabit, sağ taraf öne döner → sayfa soldan gelir */
+.anim-page-turn-backward {
+  transform-origin: left center;
+  animation: page-turn-backward 0.48s cubic-bezier(0.35, 0.1, 0.2, 1) both;
 }
 
 /* Sepet sheet — aşağıdan yukarı açılır */

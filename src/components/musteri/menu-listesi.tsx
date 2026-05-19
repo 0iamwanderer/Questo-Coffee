@@ -537,9 +537,9 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
             className="flex-1 flex flex-col overflow-hidden bg-paper"
             style={{ background: 'hsl(46 56% 91%)' }}
           >
-            <div className="flex-1 overflow-y-auto px-5 md:px-8 pt-5 md:pt-7 pb-3">
+            <div className="flex-1 overflow-y-auto px-5 md:px-8 pt-5 md:pt-7 pb-3 flex flex-col">
               {/* Category header */}
-              <div className="mb-5">
+              <div className="mb-5 flex-shrink-0">
                 <div className="flex items-start gap-3">
                   {aktifKategori && (
                     <span
@@ -578,15 +578,15 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                 </p>
               ) : (
                 <>
-                  {/* Mobile: all items on one page */}
-                  <div className="md:hidden">
+                  {/* Mobile: all items — min-h-full so items spread evenly */}
+                  <div className="md:hidden min-h-full flex flex-col justify-evenly">
                     <SayfaIcerik
                       gruplar={tumGruplar}
                       onDetay={setDetayUrun}
                     />
                   </div>
                   {/* Desktop: left half */}
-                  <div className="hidden md:block">
+                  <div className="hidden md:flex flex-col flex-1 justify-evenly">
                     <SayfaIcerik
                       gruplar={solGruplar}
                       onDetay={setDetayUrun}
@@ -615,12 +615,14 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
             className="hidden md:flex flex-col flex-1 overflow-hidden bg-paper"
             style={{ background: 'hsl(46 56% 93%)' }}
           >
-            <div className="flex-1 overflow-y-auto px-8 pt-8 pb-3">
+            <div className="flex-1 overflow-y-auto px-8 pt-8 pb-3 flex flex-col">
               {sagGruplar.length > 0 ? (
-                <SayfaIcerik
-                  gruplar={sagGruplar}
-                  onDetay={setDetayUrun}
-                />
+                <div className="flex-1 flex flex-col justify-evenly">
+                  <SayfaIcerik
+                    gruplar={sagGruplar}
+                    onDetay={setDetayUrun}
+                  />
+                </div>
               ) : (
                 <div className="h-full flex items-center justify-center opacity-20">
                   <span
@@ -695,35 +697,57 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         onKapat={() => setDetayUrun(null)}
       />
 
-      {/* ── Sepet Sheet ── */}
+      {/* ── Sepet Sheet — partial bottom overlay ── */}
       {sepetAcik && (
-        <div
-          className="absolute inset-0 z-50 flex flex-col anim-sheet-up"
-          style={{ background: 'hsl(46 56% 89%)' }}
-        >
+        <>
+          {/* Backdrop */}
           <div
-            className="flex items-center justify-between px-4 py-3 flex-shrink-0 border-b"
-            style={{ borderColor: 'hsl(38 42% 72%)' }}
+            className="absolute inset-0 z-40"
+            style={{ background: 'rgba(18, 10, 5, 0.55)' }}
+            onClick={() => setSepetAcik(false)}
+          />
+          {/* Sheet */}
+          <div
+            className="absolute bottom-0 left-0 right-0 z-50 flex flex-col rounded-t-2xl anim-sheet-up"
+            style={{
+              background: 'hsl(46 56% 89%)',
+              maxHeight: '82%',
+              boxShadow: '0 -12px 48px -8px rgba(18,10,5,0.4)',
+            }}
           >
-            <h2
-              className="font-serif text-xl text-foreground"
-              style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
+              <div
+                className="w-10 h-1 rounded-full"
+                style={{ background: 'hsl(38 42% 62%)' }}
+              />
+            </div>
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-4 py-2 flex-shrink-0 border-b"
+              style={{ borderColor: 'hsl(38 42% 72%)' }}
             >
-              Sepetim
-            </h2>
-            <button
-              type="button"
-              onClick={() => setSepetAcik(false)}
-              className="size-9 rounded-full flex items-center justify-center text-foreground/50 hover:text-foreground hover:bg-foreground/8 transition"
-              aria-label="Sepeti kapat"
-            >
-              <X className="size-5" />
-            </button>
+              <h2
+                className="font-serif text-xl text-foreground"
+                style={{ fontFamily: 'var(--font-serif), Georgia, serif' }}
+              >
+                Sepetim
+              </h2>
+              <button
+                type="button"
+                onClick={() => setSepetAcik(false)}
+                className="size-9 rounded-full flex items-center justify-center text-foreground/50 hover:text-foreground transition"
+                aria-label="Sepeti kapat"
+              >
+                <X className="size-5" />
+              </button>
+            </div>
+            {/* Scrollable content */}
+            <div className="flex-1 overflow-y-auto">
+              <SepetIcerik onKapat={() => setSepetAcik(false)} />
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto">
-            <SepetIcerik onKapat={() => setSepetAcik(false)} />
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
