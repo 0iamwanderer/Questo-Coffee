@@ -433,7 +433,7 @@ function KitapSpread({
 }
 
 /* ─── Main export ─── */
-const FLIP_SURE_MS = 820;
+const FLIP_SURE_MS = 900;
 
 export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
   const { masaToken, restoranAd } = useMasa();
@@ -694,32 +694,27 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         </button>
       </header>
 
-      {/* ── Book area — spiral sabit, spread'ler flip eder ── */}
+      {/* ── Book area — spiral sabit, sayfalar 3D flip ── */}
       <div
         className="flex-1 flex items-center justify-center px-3 md:px-8 pb-3 overflow-hidden"
         onTouchStart={handleSwipeBas}
         onTouchEnd={handleSwipeBirak}
       >
         <div className="h-full max-w-5xl w-full flex">
-          {/* Spiral cilt — animasyondan etkilenmez */}
+          {/* Spiral cilt — sabit */}
           <SarmalCilt />
 
-          {/* Sayfalar bölgesi — perspective burada, böylece sadece spread döner */}
+          {/* Sayfalar bölgesi — perspective burada (yalnız spread'ler 3D'de döner) */}
           <div
             className="relative flex-1"
             style={{
-              perspective: '2400px',
-              perspectiveOrigin: '50% 55%',
-              transformStyle: 'preserve-3d',
+              perspective: '2200px',
+              perspectiveOrigin: '50% 50%',
             }}
           >
-            {/* ALT: yeni (aktif) spread — sabit */}
-            <div
-              className={cn(
-                'absolute inset-0',
-                flip ? 'anim-underlay-fade' : 'anim-fade-in',
-              )}
-            >
+            {/* ALT: yeni (aktif) spread — her zaman tam opak.
+                Flipping overlay üstünde dönerken alt görünmez; arka yüze geçince açığa çıkar. */}
+            <div className={cn('absolute inset-0', !flip && 'anim-fade-in')}>
               <KitapSpread
                 kategori={aktifKategori}
                 indeks={aktifIndeks}
@@ -730,8 +725,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               />
             </div>
 
-            {/* ÜST: eski spread — overlay, omurga etrafında 180° döner.
-                backface-visibility: hidden → 90°'yi geçince görünmez olur, alt açığa çıkar. */}
+            {/* ÜST: flipping page. Ön yüzde eski içerik, arka yüzde boş kâğıt. */}
             {flip && oncekiKategori && (
               <div
                 key={`flip-${flip.oncekiId}-${flip.yon}`}
@@ -743,21 +737,26 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                 )}
                 style={{ pointerEvents: 'none' }}
               >
-                <KitapSpread
-                  kategori={oncekiKategori}
-                  indeks={oncekiIndeks}
-                  urunler={oncekiUrunler}
-                  onDetay={setDetayUrun}
-                  roman={roman}
-                  interaktif={false}
-                />
-                {/* Kıvrılma gölgesi flipping page üzerinde */}
-                <div
-                  className={cn(
-                    'page-curl-overlay',
-                    flip.yon === 'forward' ? 'forward' : 'backward',
-                  )}
-                />
+                {/* Ön yüz — eski spread */}
+                <div className="flip-on">
+                  <KitapSpread
+                    kategori={oncekiKategori}
+                    indeks={oncekiIndeks}
+                    urunler={oncekiUrunler}
+                    onDetay={setDetayUrun}
+                    roman={roman}
+                    interaktif={false}
+                  />
+                  {/* Kıvrım gölgesi — yalnız ön yüzde, kalkan kenara doğru yoğunlaşır */}
+                  <div
+                    className={cn(
+                      'page-curl',
+                      flip.yon === 'forward' ? 'forward' : 'backward',
+                    )}
+                  />
+                </div>
+                {/* Arka yüz — kâğıdın boş ters tarafı (180° döndürülmüş) */}
+                <div className="flip-arka" />
               </div>
             )}
           </div>
