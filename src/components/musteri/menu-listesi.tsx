@@ -703,10 +703,8 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
           >
             {/* ─ SOL YARIM bölgesi ─ */}
             <div className="flex-1 relative kitap-3d">
-              {/* Underlay — yeni sol yarım, hep opak */}
-              <div
-                className={cn('absolute inset-0', !flip && 'anim-fade-in')}
-              >
+              {/* Underlay — yeni sol yarım, hep opak (fade-in YOK — flip bitiminde yeniden tetiklenip kararmaya yol açıyordu) */}
+              <div className="absolute inset-0">
                 <KitapYarim
                   taraf="sol"
                   kategori={aktifKategori}
@@ -759,10 +757,8 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
 
             {/* ─ SAĞ YARIM bölgesi — desktop only ─ */}
             <div className="hidden md:block flex-1 relative kitap-3d">
-              {/* Underlay — yeni sağ yarım */}
-              <div
-                className={cn('absolute inset-0', !flip && 'anim-fade-in')}
-              >
+              {/* Underlay — yeni sağ yarım, hep opak */}
+              <div className="absolute inset-0">
                 <KitapYarim
                   taraf="sag"
                   kategori={aktifKategori}
