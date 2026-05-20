@@ -670,7 +670,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
 
         {/* Category tabs */}
         <nav
-          className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-1 justify-center"
+          className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden flex-1 md:justify-center"
           aria-label="Kategoriler"
         >
           {kategoriler.map((k, i) => {
@@ -680,7 +680,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               <button
                 key={k.id}
                 type="button"
-                ref={isActive ? (el) => el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }) : undefined}
+                ref={isActive ? (el) => el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' }) : undefined}
                 onClick={() => kategoriDegistir(k.id)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all whitespace-nowrap',
