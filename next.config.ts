@@ -8,6 +8,16 @@ const config: NextConfig = {
       { protocol: 'https', hostname: '*.firebasestorage.app' },
     ],
   },
+  webpack: (webpackConfig, { isServer }) => {
+    if (isServer) {
+      webpackConfig.externals = [
+        ...(Array.isArray(webpackConfig.externals) ? webpackConfig.externals : []),
+        '@grpc/grpc-js',
+        '@grpc/proto-loader',
+      ];
+    }
+    return webpackConfig;
+  },
 };
 
 export default config;
