@@ -36,13 +36,13 @@ function fiyatYaz(kurus: number) {
 function SarmalCilt() {
   return (
     <div
-      className="w-8 flex-shrink-0 flex flex-col items-center justify-evenly self-stretch py-3 overflow-hidden"
+      className="w-6 md:w-8 flex-shrink-0 flex flex-col items-center justify-evenly self-stretch py-3 overflow-hidden"
       style={{ background: 'hsl(28 22% 14%)' }}
     >
       {Array.from({ length: 22 }).map((_, i) => (
         <div
           key={i}
-          className="w-5 h-5 rounded-full flex-shrink-0 border-2"
+          className="w-4 h-4 md:w-5 md:h-5 rounded-full flex-shrink-0 border-2"
           style={{
             borderColor: 'hsl(36 18% 28%)',
             backgroundColor: 'hsl(22 42% 10%)',
@@ -327,15 +327,15 @@ function KitapYarim({
       className="h-full w-full flex flex-col overflow-hidden"
       style={{ background: isLeft ? 'hsl(46 56% 91%)' : 'hsl(46 56% 93%)' }}
     >
-      <div className="flex-1 overflow-y-auto px-6 md:px-10 pt-6 md:pt-9 pb-4 flex flex-col">
+      <div className="flex-1 overflow-y-auto px-5 md:px-10 pt-4 md:pt-9 pb-4 flex flex-col">
         {/* Kategori başlığı yalnız sol yarımda */}
         {isLeft && (
-          <div className="mb-6 flex-shrink-0">
-            <div className="flex items-start gap-4">
+          <div className="mb-4 md:mb-6 flex-shrink-0">
+            <div className="flex items-start gap-3 md:gap-4">
               {kategori && (
                 <span
                   className="font-serif italic text-primary/70 leading-none shrink-0"
-                  style={{ fontSize: 'clamp(64px, 7vw, 88px)', lineHeight: 0.86 }}
+                  style={{ fontSize: 'clamp(36px, 9vw, 88px)', lineHeight: 0.86 }}
                 >
                   {roman(kategori, indeks)}
                 </span>
@@ -343,21 +343,21 @@ function KitapYarim({
               <div className="pt-1">
                 <h2
                   className="font-serif text-foreground leading-tight"
-                  style={{ fontSize: 'clamp(28px, 4vw, 42px)' }}
+                  style={{ fontSize: 'clamp(22px, 4.5vw, 42px)' }}
                 >
                   {kategori?.ad}
                 </h2>
                 {kategori?.tagline && (
                   <p
-                    className="font-serif italic text-foreground/55 mt-1.5"
-                    style={{ fontSize: 'clamp(13px, 1.1vw, 15px)' }}
+                    className="font-serif italic text-foreground/55 mt-1"
+                    style={{ fontSize: 'clamp(12px, 1.1vw, 15px)' }}
                   >
                     {kategori.tagline}
                   </p>
                 )}
               </div>
             </div>
-            <div className="mt-5 h-px bg-foreground/15" />
+            <div className="mt-3 md:mt-5 h-px bg-foreground/15" />
           </div>
         )}
 
@@ -370,8 +370,8 @@ function KitapYarim({
           </p>
         ) : isLeft ? (
           <>
-            {/* Mobile: tüm grupları sol yarım gösterir */}
-            <div className="md:hidden min-h-full flex flex-col justify-evenly">
+            {/* Mobile: tüm grupları natural flow ile listele */}
+            <div className="md:hidden">
               <SayfaIcerik gruplar={tumGruplar} onDetay={onDetay} />
             </div>
             {/* Desktop: sol yarım grupları */}
@@ -401,7 +401,7 @@ function KitapYarim({
         )}
       </div>
 
-      <div className="px-6 md:px-10 py-2.5 border-t border-foreground/10">
+      <div className="hidden md:block px-10 py-2.5 border-t border-foreground/10">
         <span className="micro-caps text-foreground/30 text-[9px]">
           {kAdAbbr} · {isLeft ? 'SOL' : 'SAĞ'}
         </span>
@@ -568,7 +568,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
       style={{ background: 'hsl(22 42% 9%)' }}
     >
       {/* ── Header ── */}
-      <header className="flex items-center justify-between gap-3 px-4 md:px-6 py-2.5 flex-shrink-0">
+      <header className="flex items-center justify-between gap-3 px-3 md:px-6 py-2 md:py-2.5 flex-shrink-0">
         {/* Logo + brand — clicking returns to landing */}
         <button
           type="button"
@@ -683,7 +683,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                     Ön yüz=eski sol içerik, arka yüz=yeni sağ içerik.
            Sabit kalan diğer yarım underlay'de zaten yeni içerikle gösterilir.  */}
       <div
-        className="flex-1 flex items-center justify-center px-3 md:px-8 pb-3 overflow-hidden"
+        className="flex-1 flex items-center justify-center px-2 md:px-8 pb-2 md:pb-3 overflow-hidden"
         onTouchStart={handleSwipeBas}
         onTouchEnd={handleSwipeBirak}
       >
@@ -873,7 +873,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
       </div>
 
       {/* ── Bottom navigation ── */}
-      <div className="flex items-center justify-center gap-6 py-3 flex-shrink-0">
+      <div className="flex items-center justify-center gap-6 py-2 md:py-3 flex-shrink-0">
         <button
           type="button"
           onClick={onceki}
