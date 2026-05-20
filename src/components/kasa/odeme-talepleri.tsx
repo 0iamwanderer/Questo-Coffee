@@ -71,9 +71,9 @@ function OdemeOnayla({
       type="button"
       onClick={onayla}
       disabled={yukleniyor}
-      className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
+      className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
     >
-      {yukleniyor ? '…' : 'Ödendi'}
+      {yukleniyor ? '…' : 'Ödeme al'}
     </button>
   );
 }
@@ -137,7 +137,7 @@ export function OdemeTalepleri({ adisyonId, talepler }: Props) {
                 <span className="text-sm font-semibold tabular-nums">
                   {formatTL(t.kisiPayi ?? t.toplamKurus)}
                 </span>
-                {t.durum === 'bekliyor' && (
+                {t.durum === 'bekliyor' && t.kaynak === 'musteri' && (
                   <OdemeOnayla adisyonId={adisyonId} talepId={t.id} />
                 )}
               </div>

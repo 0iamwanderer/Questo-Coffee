@@ -266,7 +266,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                     </span>
                     {odendi ? (
                       <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
-                        <Check className="size-3" /> Ödendi
+                        <Check className="size-3" /> Ödeme alındı
                       </span>
                     ) : !grup.teslimEdildi ? (
                       <span className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -277,9 +277,9 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                         type="button"
                         onClick={() => kisiOde(grup)}
                         disabled={yukleniyor === anahtar}
-                        className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
+                        className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
                       >
-                        {yukleniyor === anahtar ? '…' : 'Ödendi ✓'}
+                        {yukleniyor === anahtar ? '…' : 'Ödeme al'}
                       </button>
                     )}
                   </div>
@@ -357,9 +357,9 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                       type="button"
                       onClick={esitDilimOde}
                       disabled={!!yukleniyor}
-                      className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
+                      className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
                     >
-                      {yukleniyor ? '…' : 'Ödendi ✓'}
+                      {yukleniyor ? '…' : 'Ödeme al'}
                     </button>
                   ) : (
                     <span className="text-xs text-muted-foreground">
@@ -441,9 +441,9 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                     type="button"
                     onClick={urunOde}
                     disabled={!!yukleniyor}
-                    className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
+                    className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
                   >
-                    {yukleniyor ? '…' : 'Ödendi ✓'}
+                    {yukleniyor ? '…' : 'Ödeme al'}
                   </button>
                 </div>
               )}
