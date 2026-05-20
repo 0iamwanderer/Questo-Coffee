@@ -163,12 +163,10 @@ async function AdisyonGosterici({
             style={{ animationDelay: `${i * 80}ms` }}
           >
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <span className="font-medium tabular-nums">#{s.gunlukNo}</span>
                 {s.musteriAd && (
-                  <span className="text-xs text-muted-foreground">
-                    · {s.musteriAd}
-                  </span>
+                  <span className="font-semibold">{s.musteriAd}</span>
                 )}
               </div>
               <span
