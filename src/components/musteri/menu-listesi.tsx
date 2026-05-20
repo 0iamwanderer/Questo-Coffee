@@ -301,6 +301,7 @@ function KitapYarim({
   urunler,
   onDetay,
   roman,
+  mobilGoster,
 }: {
   taraf: 'sol' | 'sag';
   kategori: Kategori | null;
@@ -308,6 +309,7 @@ function KitapYarim({
   urunler: Urun[];
   onDetay: (u: Urun) => void;
   roman: (k: Kategori | null, idx: number) => string;
+  mobilGoster?: 'sol' | 'sag';
 }) {
   const gruplar = useMemo(() => grupla(urunler), [urunler]);
   const { sol: solGruplar, sag: sagGruplar } = useMemo(
@@ -331,33 +333,48 @@ function KitapYarim({
         {/* Kategori başlığı yalnız sol yarımda */}
         {isLeft && (
           <div className="mb-4 md:mb-6 flex-shrink-0">
-            <div className="flex items-start gap-3 md:gap-4">
-              {kategori && (
+            {/* Mobil sağ yarım: kompakt devam başlığı */}
+            <div className={mobilGoster === 'sag' ? 'block md:hidden' : 'hidden'}>
+              <div className="flex items-center gap-2">
                 <span
-                  className="font-serif italic text-primary/70 leading-none shrink-0"
-                  style={{ fontSize: 'clamp(36px, 9vw, 88px)', lineHeight: 0.86 }}
+                  className="font-serif italic text-foreground/40 shrink-0"
+                  style={{ fontSize: '13px' }}
                 >
-                  {roman(kategori, indeks)}
+                  {kategori?.ad} · devamı
                 </span>
-              )}
-              <div className="pt-1">
-                <h2
-                  className="font-serif text-foreground leading-tight"
-                  style={{ fontSize: 'clamp(22px, 4.5vw, 42px)' }}
-                >
-                  {kategori?.ad}
-                </h2>
-                {kategori?.tagline && (
-                  <p
-                    className="font-serif italic text-foreground/55 mt-1"
-                    style={{ fontSize: 'clamp(12px, 1.1vw, 15px)' }}
-                  >
-                    {kategori.tagline}
-                  </p>
-                )}
+                <span className="flex-1 h-px bg-foreground/15" />
               </div>
             </div>
-            <div className="mt-3 md:mt-5 h-px bg-foreground/15" />
+            {/* Normal başlık: masaüstünde her zaman, mobilde yalnızca sol yarım */}
+            <div className={mobilGoster === 'sag' ? 'hidden md:block' : 'block'}>
+              <div className="flex items-start gap-3 md:gap-4">
+                {kategori && (
+                  <span
+                    className="font-serif italic text-primary/70 leading-none shrink-0"
+                    style={{ fontSize: 'clamp(36px, 9vw, 88px)', lineHeight: 0.86 }}
+                  >
+                    {roman(kategori, indeks)}
+                  </span>
+                )}
+                <div className="pt-1">
+                  <h2
+                    className="font-serif text-foreground leading-tight"
+                    style={{ fontSize: 'clamp(22px, 4.5vw, 42px)' }}
+                  >
+                    {kategori?.ad}
+                  </h2>
+                  {kategori?.tagline && (
+                    <p
+                      className="font-serif italic text-foreground/55 mt-1"
+                      style={{ fontSize: 'clamp(12px, 1.1vw, 15px)' }}
+                    >
+                      {kategori.tagline}
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="mt-3 md:mt-5 h-px bg-foreground/15" />
+            </div>
           </div>
         )}
 
@@ -370,9 +387,16 @@ function KitapYarim({
           </p>
         ) : isLeft ? (
           <>
-            {/* Mobile: tüm grupları natural flow ile listele */}
+            {/* Mobile: mobilGoster'a göre sol veya sağ yarımı göster */}
             <div className="md:hidden">
-              <SayfaIcerik gruplar={tumGruplar} onDetay={onDetay} />
+              <SayfaIcerik
+                gruplar={
+                  mobilGoster === 'sag' ? sagGruplar
+                  : mobilGoster === 'sol' ? solGruplar
+                  : tumGruplar
+                }
+                onDetay={onDetay}
+              />
             </div>
             {/* Desktop: sol yarım grupları */}
             <div className="hidden md:flex flex-col flex-1 justify-evenly">
@@ -420,12 +444,14 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
   const [aktifId, setAktifId] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [detayUrun, setDetayUrun] = useState<Urun | null>(null);
-  // Flip durumu: yön + çevrilen önceki kategori snapshot'ı.
-  // null değilse, üstteki overlay yön etrafında 180° döner.
+  // Flip durumu: yön + çevrilen önceki sayfa snapshot'ı.
   const [flip, setFlip] = useState<{
     yon: Exclude<SayfaYonu, 'none'>;
     oncekiId: string;
+    oncekiTaraf: 'sol' | 'sag';
   } | null>(null);
+  // Mobilde hangi yarım sayfa gösteriliyor
+  const [mobilTaraf, setMobilTaraf] = useState<'sol' | 'sag'>('sol');
   const [sepetAcik, setSepetAcik] = useState(false);
   const toplamAdet = useSepet((s) => s.toplamAdet());
 
@@ -506,27 +532,61 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
     k?.roman ?? ROMAN_SAYILAR[idx] ?? `${idx + 1}`;
 
   const kategoriDegistir = (yeniId: string) => {
-    if (yeniId === aktifId || flip) return; // çift tıkı / üst üste flip engelle
+    if (yeniId === aktifId || flip) return;
     const yeniIdx = kategoriler.findIndex((k) => k.id === yeniId);
     if (yeniIdx === -1 || aktifId == null) {
       setAktifId(yeniId);
+      setMobilTaraf('sol');
       return;
     }
     const yon: Exclude<SayfaYonu, 'none'> =
       yeniIdx > aktifIndeks ? 'forward' : 'backward';
-    setFlip({ yon, oncekiId: aktifId });
+    setFlip({ yon, oncekiId: aktifId, oncekiTaraf: mobilTaraf });
     setAktifId(yeniId);
+    setMobilTaraf('sol');
   };
 
+  // Mevcut kategorinin sağ yarımı var mı?
+  const aktifSagGruplarVarMi = useMemo(() => {
+    const { sag } = sayfayaBol(grupla(goruntulenenUrunler));
+    return sag.length > 0;
+  }, [goruntulenenUrunler]);
+
+  const isMobil = () =>
+    typeof window !== 'undefined' && window.innerWidth < 768;
+
   const onceki = () => {
-    const prev = kategoriler[aktifIndeks - 1];
-    if (aktifIndeks > 0 && prev) kategoriDegistir(prev.id);
+    if (flip) return;
+    // Mobil: sağ yarımdaysak → sol yarıma dön
+    if (isMobil() && mobilTaraf === 'sag') {
+      setFlip({ yon: 'backward', oncekiId: aktifId!, oncekiTaraf: 'sag' });
+      setMobilTaraf('sol');
+      return;
+    }
+    if (aktifIndeks <= 0) return;
+    const prev = kategoriler[aktifIndeks - 1]!;
+    // Önceki kategorinin sağ yarımı var mı?
+    const prevUrunler = urunler.filter((u) => u.kategoriId === prev.id);
+    const { sag: prevSag } = sayfayaBol(grupla(prevUrunler));
+    const hedefTaraf: 'sol' | 'sag' = isMobil() && prevSag.length > 0 ? 'sag' : 'sol';
+    setFlip({ yon: 'backward', oncekiId: aktifId!, oncekiTaraf: mobilTaraf });
+    setAktifId(prev.id);
+    setMobilTaraf(hedefTaraf);
   };
 
   const sonraki = () => {
-    const next = kategoriler[aktifIndeks + 1];
-    if (aktifIndeks < kategoriler.length - 1 && next)
-      kategoriDegistir(next.id);
+    if (flip) return;
+    // Mobil: sol yarımdaysak ve sağ yarım varsa → sağ yarıma geç
+    if (isMobil() && mobilTaraf === 'sol' && aktifSagGruplarVarMi) {
+      setFlip({ yon: 'forward', oncekiId: aktifId!, oncekiTaraf: 'sol' });
+      setMobilTaraf('sag');
+      return;
+    }
+    if (aktifIndeks >= kategoriler.length - 1) return;
+    const next = kategoriler[aktifIndeks + 1]!;
+    setFlip({ yon: 'forward', oncekiId: aktifId!, oncekiTaraf: mobilTaraf });
+    setAktifId(next.id);
+    setMobilTaraf('sol');
   };
 
   const handleSwipeBas = (e: React.TouchEvent) => {
@@ -707,7 +767,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
           >
             {/* ─ SOL YARIM bölgesi ─ */}
             <div className="flex-1 relative kitap-3d">
-              {/* Underlay — yeni sol yarım, hep opak (fade-in YOK — flip bitiminde yeniden tetiklenip kararmaya yol açıyordu) */}
+              {/* Underlay — yeni sayfa, hep opak */}
               <div className="absolute inset-0">
                 <KitapYarim
                   taraf="sol"
@@ -716,13 +776,14 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                   urunler={goruntulenenUrunler}
                   onDetay={setDetayUrun}
                   roman={roman}
+                  mobilGoster={mobilTaraf}
                 />
               </div>
 
-              {/* Mobil ileri flip — tüm sayfa sola döner */}
+              {/* Mobil ileri flip — sayfa sola döner */}
               {flip?.yon === 'forward' && oncekiKategori && (
                 <div
-                  key={`flip-mob-fw-${flip.oncekiId}`}
+                  key={`flip-mob-fw-${flip.oncekiId}-${flip.oncekiTaraf}`}
                   className="md:hidden absolute inset-0 anim-page-flip-forward kitap-3d"
                   style={{ pointerEvents: 'none' }}
                 >
@@ -734,6 +795,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                       urunler={oncekiUrunler}
                       onDetay={setDetayUrun}
                       roman={roman}
+                      mobilGoster={flip.oncekiTaraf}
                     />
                     <div className="page-curl forward" />
                   </div>
@@ -745,15 +807,16 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                       urunler={goruntulenenUrunler}
                       onDetay={setDetayUrun}
                       roman={roman}
+                      mobilGoster={mobilTaraf}
                     />
                   </div>
                 </div>
               )}
 
-              {/* Mobil geri flip — tüm sayfa sağa döner */}
+              {/* Mobil geri flip — sayfa sağa döner */}
               {flip?.yon === 'backward' && oncekiKategori && (
                 <div
-                  key={`flip-mob-bw-${flip.oncekiId}`}
+                  key={`flip-mob-bw-${flip.oncekiId}-${flip.oncekiTaraf}`}
                   className="md:hidden absolute inset-0 anim-page-flip-backward kitap-3d"
                   style={{ pointerEvents: 'none' }}
                 >
@@ -765,6 +828,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                       urunler={oncekiUrunler}
                       onDetay={setDetayUrun}
                       roman={roman}
+                      mobilGoster={flip.oncekiTaraf}
                     />
                     <div className="page-curl backward" />
                   </div>
@@ -776,6 +840,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                       urunler={goruntulenenUrunler}
                       onDetay={setDetayUrun}
                       roman={roman}
+                      mobilGoster={mobilTaraf}
                     />
                   </div>
                 </div>
@@ -877,9 +942,9 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         <button
           type="button"
           onClick={onceki}
-          disabled={aktifIndeks <= 0}
+          disabled={aktifIndeks <= 0 && mobilTaraf === 'sol'}
           className="size-10 rounded-full border border-white/15 text-white/50 flex items-center justify-center disabled:opacity-20 hover:text-white hover:border-white/30 transition active:scale-95"
-          aria-label="Önceki kategori"
+          aria-label="Önceki"
         >
           <ChevronLeft className="size-5" />
         </button>
@@ -911,9 +976,9 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
         <button
           type="button"
           onClick={sonraki}
-          disabled={aktifIndeks >= kategoriler.length - 1}
+          disabled={aktifIndeks >= kategoriler.length - 1 && (mobilTaraf === 'sag' || !aktifSagGruplarVarMi)}
           className="size-10 rounded-full border border-white/15 text-white/50 flex items-center justify-center disabled:opacity-20 hover:text-white hover:border-white/30 transition active:scale-95"
-          aria-label="Sonraki kategori"
+          aria-label="Sonraki"
         >
           <ChevronRight className="size-5" />
         </button>
