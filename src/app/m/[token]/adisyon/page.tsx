@@ -142,16 +142,29 @@ async function AdisyonGosterici({
   adisyon: Adisyon;
 }) {
   const db = getAdminDb();
-  const siparisSnap = await db
-    .collection(
-      `restoranlar/${restoranId}/adisyonlar/${adisyonRefId}/siparisler`,
-    )
-    .orderBy('olusturulduAt', 'asc')
-    .get();
+  const aRef = db.collection(
+    `restoranlar/${restoranId}/adisyonlar/${adisyonRefId}/siparisler`,
+  );
+  const [siparisSnap, talepSnap] = await Promise.all([
+    aRef.orderBy('olusturulduAt', 'asc').get(),
+    db
+      .collection(
+        `restoranlar/${restoranId}/adisyonlar/${adisyonRefId}/odemeTalepleri`,
+      )
+      .where('durum', '==', 'odendi')
+      .get(),
+  ]);
 
   const siparisler = siparisSnap.docs.map(
     (d) => ({ id: d.id, ...d.data() }) as unknown as Siparis,
   );
+
+  const odenmisToplam = talepSnap.docs.reduce(
+    (acc, d) => acc + (((d.data() as { toplamKurus?: number }).toplamKurus) ?? 0),
+    0,
+  );
+  const kalanToplam = Math.max(0, (adisyon.toplamKurus as number) - odenmisToplam);
+  const tamamenOdendi = kalanToplam === 0 && odenmisToplam > 0;
 
   return (
     <div className="space-y-4">
@@ -221,33 +234,60 @@ async function AdisyonGosterici({
       </ul>
 
       <div className="rounded-2xl border bg-card p-4 shadow-soft">
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-muted-foreground">Toplam</span>
-          <span className="font-serif text-3xl">
-            {formatTL(adisyon.toplamKurus)}
-          </span>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Ödeme kasada yapılır.
-        </p>
+        {odenmisToplam > 0 ? (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <span>Toplam</span>
+              <span className="tabular-nums">{formatTL(adisyon.toplamKurus)}</span>
+            </div>
+            <div className="flex items-center justify-between text-sm text-emerald-700 dark:text-emerald-400">
+              <span>Ödenen</span>
+              <span className="tabular-nums">−{formatTL(odenmisToplam)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t pt-2">
+              <span className="text-sm text-muted-foreground">Kalan</span>
+              <span className="font-serif text-3xl tabular-nums">
+                {formatTL(kalanToplam)}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">Toplam</span>
+            <span className="font-serif text-3xl">
+              {formatTL(adisyon.toplamKurus)}
+            </span>
+          </div>
+        )}
+        {tamamenOdendi ? (
+          <p className="mt-2 text-xs font-medium text-emerald-700 dark:text-emerald-400">
+            Tüm ödemeler tamamlandı.
+          </p>
+        ) : (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Ödeme kasada yapılır.
+          </p>
+        )}
       </div>
 
-      <AyriOdeme
-        adisyonId={adisyonRefId}
-        toplamKurus={adisyon.toplamKurus as number}
-        siparisler={siparisler.map((s) => ({
-          id: s.id,
-          gunlukNo: s.gunlukNo,
-          durum: s.durum,
-          musteriAd: s.musteriAd,
-          kalemler: (s.kalemler as SiparisKalemi[]).map((k) => ({
-            ad: k.ad,
-            adet: k.adet,
-            araToplamKurus: k.araToplamKurus as number,
-            urunId: k.urunId,
-          })),
-        }))}
-      />
+      {!tamamenOdendi && (
+        <AyriOdeme
+          adisyonId={adisyonRefId}
+          toplamKurus={kalanToplam || (adisyon.toplamKurus as number)}
+          siparisler={siparisler.map((s) => ({
+            id: s.id,
+            gunlukNo: s.gunlukNo,
+            durum: s.durum,
+            musteriAd: s.musteriAd,
+            kalemler: (s.kalemler as SiparisKalemi[]).map((k) => ({
+              ad: k.ad,
+              adet: k.adet,
+              araToplamKurus: k.araToplamKurus as number,
+              urunId: k.urunId,
+            })),
+          }))}
+        />
+      )}
     </div>
   );
 }

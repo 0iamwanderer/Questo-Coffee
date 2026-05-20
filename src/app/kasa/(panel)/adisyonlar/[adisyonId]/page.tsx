@@ -84,6 +84,11 @@ export default async function AdisyonDetay({
 
   const acik = adisyon.durum === 'acik';
 
+  const odenmisToplam = talepler
+    .filter((t) => t.durum === 'odendi')
+    .reduce((acc, t) => acc + t.toplamKurus, 0);
+  const kalanToplam = Math.max(0, (adisyon.toplamKurus as number) - odenmisToplam);
+
   return (
     <div className="mx-auto max-w-3xl p-4 space-y-4">
       <Link
@@ -102,10 +107,32 @@ export default async function AdisyonDetay({
           </p>
         </div>
         <div className="text-right">
-          <p className="text-xs text-muted-foreground">Toplam</p>
-          <p className="text-2xl font-semibold">
-            {formatTL(adisyon.toplamKurus)}
-          </p>
+          {odenmisToplam > 0 ? (
+            <>
+              <p className="text-xs text-muted-foreground">
+                Toplam{' '}
+                <span className="line-through">
+                  {formatTL(adisyon.toplamKurus)}
+                </span>
+              </p>
+              <p className="text-2xl font-semibold tabular-nums">
+                {formatTL(kalanToplam)}
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  kalan
+                </span>
+              </p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-400">
+                {formatTL(odenmisToplam)} ödendi
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-muted-foreground">Toplam</p>
+              <p className="text-2xl font-semibold">
+                {formatTL(adisyon.toplamKurus)}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
