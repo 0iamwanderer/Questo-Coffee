@@ -8,7 +8,8 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { getClientDb } from '@/lib/firebase/client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getClientAuth, getClientDb } from '@/lib/firebase/client';
 import { siparisConverter } from '@/lib/firebase/converters';
 import { yeniSiparisSesi } from '@/lib/ses/audio-unlock';
 import type { Siparis, SiparisDurumu } from '@/types/model';
@@ -22,10 +23,19 @@ export function KanbanPanosu() {
   const [siparisler, setSiparisler] = useState<Siparis[]>([]);
   const [hata, setHata] = useState<string | null>(null);
   const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
+  const [authHazir, setAuthHazir] = useState(false);
   const ilkYuk = useRef(true);
   const gorulen = useRef<Set<string>>(new Set());
 
   useEffect(() => {
+    const unsub = onAuthStateChanged(getClientAuth(), (u) => {
+      setAuthHazir(!!u);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!authHazir) return;
     const q = query(
       collectionGroup(getClientDb(), 'siparisler').withConverter(
         siparisConverter,
@@ -84,7 +94,7 @@ export function KanbanPanosu() {
     );
 
     return () => unsub();
-  }, []);
+  }, [authHazir]);
 
   const grup = (durum: SiparisDurumu) =>
     siparisler.filter((s) => s.durum === durum);

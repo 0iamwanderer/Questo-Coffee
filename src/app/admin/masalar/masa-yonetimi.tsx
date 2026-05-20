@@ -10,7 +10,8 @@ import {
   Trash2,
 } from 'lucide-react';
 import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
-import { getClientDb } from '@/lib/firebase/client';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getClientAuth, getClientDb } from '@/lib/firebase/client';
 import { masaConverter } from '@/lib/firebase/converters';
 import type { Masa } from '@/types/model';
 import { cn } from '@/lib/utils';
@@ -24,8 +25,15 @@ export function MasaYonetimi() {
   const [duzenleAd, setDuzenleAd] = useState('');
   const [hata, setHata] = useState<string | null>(null);
   const [calisan, setCalisan] = useState<string | null>(null);
+  const [authHazir, setAuthHazir] = useState(false);
 
   useEffect(() => {
+    const unsub = onAuthStateChanged(getClientAuth(), (u) => setAuthHazir(!!u));
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!authHazir) return;
     const q = query(
       collection(getClientDb(), `restoranlar/${RESTORAN}/masalar`).withConverter(
         masaConverter,
@@ -36,7 +44,7 @@ export function MasaYonetimi() {
       setMasalar(s.docs.map((d) => d.data())),
     );
     return () => unsub();
-  }, []);
+  }, [authHazir]);
 
   const istek = async (
     yol: string,
