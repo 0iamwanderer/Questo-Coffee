@@ -50,6 +50,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   const [odenenler, setOdenenler] = useState<Set<string>>(new Set());
   const [odenenSayisi, setOdenenSayisi] = useState(0);
   const [yukleniyor, setYukleniyor] = useState<string | null>(null);
+  const [hata, setHata] = useState<string | null>(null);
 
   const aktifSiparisler = siparisler.filter((s) => s.durum !== 'iptal');
 
@@ -125,18 +126,22 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
     onSuccess?: () => void,
   ) => {
     setYukleniyor(anahtarId);
+    setHata(null);
     try {
       const res = await fetch(`/api/adisyon/${adisyonId}/kasiyer-talep`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
       });
-      if (!res.ok) throw new Error();
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { mesaj?: string };
+        throw new Error(j.mesaj ?? `HTTP ${res.status}`);
+      }
       setOdenenler((prev) => new Set([...prev, anahtarId]));
       onSuccess?.();
       router.refresh();
-    } catch {
-      // sessiz hata
+    } catch (e) {
+      setHata(e instanceof Error ? e.message : 'Hata oluştu.');
     } finally {
       setYukleniyor(null);
     }
@@ -213,6 +218,12 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
           Kapat
         </button>
       </div>
+
+      {hata && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive">
+          {hata}
+        </p>
+      )}
 
       {/* Sekme seçici */}
       <div className="flex gap-1 rounded-lg bg-muted p-0.5">

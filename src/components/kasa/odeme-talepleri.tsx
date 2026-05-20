@@ -59,6 +59,7 @@ function OdemeOnayla({
         `/api/adisyon/${adisyonId}/odeme-talebi/${talepId}/onayla`,
         { method: 'POST' },
       );
+      // URL: [id]/odeme-talebi/[talepId]/onayla
       if (!res.ok) throw new Error();
       router.refresh();
     } catch {
