@@ -246,9 +246,21 @@ const main = async () => {
   console.log(`+ ${MASALAR.length} masa eklendi (M1-M${MASALAR.length})`);
 
   const email = process.env.SEED_SAHIP_EMAIL;
+  const VARSAYILAN_SIFRE = 'questo123';
   if (email) {
     try {
-      const user = await auth.getUserByEmail(email);
+      let user;
+      try {
+        user = await auth.getUserByEmail(email);
+      } catch {
+        // Kullanıcı yok — oluştur
+        user = await auth.createUser({
+          email,
+          password: VARSAYILAN_SIFRE,
+          emailVerified: true,
+        });
+        console.log(`+ kullanıcı oluşturuldu: ${email}  şifre: ${VARSAYILAN_SIFRE}`);
+      }
       await auth.setCustomUserClaims(user.uid, {
         rol: 'kasiyer',
         sahip: true,
@@ -257,7 +269,7 @@ const main = async () => {
       console.log(`+ claim: ${email} → kasiyer + sahip`);
     } catch (e) {
       console.warn(
-        `! ${email} için claim atanamadı: ${
+        `! ${email} için işlem başarısız: ${
           e instanceof Error ? e.message : e
         }`,
       );
