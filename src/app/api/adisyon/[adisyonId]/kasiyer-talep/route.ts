@@ -1,4 +1,2 @@
-// Bu dosya [id] klasörüne taşındı. Buraya ulaşılmamalı.
-export async function POST() {
-  return Response.json({ kod: 'tasinmis' }, { status: 410 });
-}
+// Taşındı: api/adisyon/[id]/kasiyer-talep/route.ts
+export {};
