@@ -78,3 +78,24 @@ export const DurumGirdi = z.object({
   durum: z.enum(['hazirlaniyor', 'hazir', 'teslim', 'iptal']),
 });
 export type DurumGirdiT = z.infer<typeof DurumGirdi>;
+
+// ── Müşteri: ayrı ödeme talebi ─────────────────────────────────────────
+const OdemeTalebiKalemiGirdi = z.object({
+  siparisId: z.string().min(1).max(128),
+  siparisNo: z.number().int().min(1),
+  ad: z.string().trim().min(1).max(120),
+  adet: z.number().int().min(1).max(99),
+  araToplamKurus: z.number().int().min(0).max(100_000_000),
+});
+
+export const OdemeTalebiIstegi = z.discriminatedUnion('yontem', [
+  z.object({
+    yontem: z.literal('esit'),
+    kisiSayisi: z.number().int().min(2).max(20),
+  }),
+  z.object({
+    yontem: z.literal('urun'),
+    secilenKalemler: z.array(OdemeTalebiKalemiGirdi).min(1).max(100),
+  }),
+]);
+export type OdemeTalebiIstegiT = z.infer<typeof OdemeTalebiIstegi>;

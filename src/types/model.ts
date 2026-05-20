@@ -143,3 +143,27 @@ export interface Adisyon {
   kapanisAt?: Date;
   siparisSayisi: number;
 }
+
+export type OdemeTalebiDurumu = 'bekliyor' | 'odendi' | 'iptal';
+export type OdemeTalebiYontemi = 'esit' | 'urun';
+
+export interface OdemeTalebiKalemi {
+  siparisId: string;
+  siparisNo: number;
+  ad: string;
+  adet: number;
+  araToplamKurus: Kurus;
+}
+
+export interface OdemeTalebi {
+  id: string;
+  adisyonId: string;
+  musteriUid: string;
+  yontem: OdemeTalebiYontemi;
+  toplamKurus: Kurus;
+  kisiSayisi?: number;
+  kisiPayi?: Kurus;
+  secilenKalemler?: OdemeTalebiKalemi[];
+  durum: OdemeTalebiDurumu;
+  olusturulduAt: Date;
+}

@@ -8,8 +8,10 @@ import type {
   Siparis,
   SiparisDurumu,
   SiparisKalemi,
+  OdemeTalebi,
 } from '@/types/model';
 import { AdisyonuKapatBtn } from './kapat-btn';
+import { OdemeTalepleri } from '@/components/kasa/odeme-talepleri';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -42,9 +44,10 @@ export default async function AdisyonDetay({
   if (!aSnap.exists) notFound();
   const adisyon = { id: aSnap.id, ...aSnap.data() } as unknown as Adisyon;
 
-  const [masaSnap, siparisSnap] = await Promise.all([
+  const [masaSnap, siparisSnap, talepSnap] = await Promise.all([
     db.doc(`restoranlar/${restoranId}/masalar/${adisyon.masaId}`).get(),
     aRef.collection('siparisler').orderBy('olusturulduAt', 'asc').get(),
+    aRef.collection('odemeTalepleri').orderBy('olusturulduAt', 'asc').get(),
   ]);
 
   const masaAd = masaSnap.exists
@@ -54,6 +57,27 @@ export default async function AdisyonDetay({
   const siparisler = siparisSnap.docs.map(
     (d) => ({ id: d.id, ...d.data() }) as unknown as Siparis,
   );
+
+  const talepler = talepSnap.docs.map((d) => {
+    const data = d.data() as Omit<OdemeTalebi, 'id' | 'olusturulduAt'> & {
+      olusturulduAt?: { toMillis?: () => number };
+    };
+    return {
+      id: d.id,
+      yontem: data.yontem,
+      toplamKurus: data.toplamKurus as number,
+      kisiSayisi: data.kisiSayisi,
+      kisiPayi: data.kisiPayi as number | undefined,
+      secilenKalemler: data.secilenKalemler?.map((k) => ({
+        siparisId: k.siparisId,
+        siparisNo: k.siparisNo,
+        ad: k.ad,
+        adet: k.adet,
+        araToplamKurus: k.araToplamKurus as number,
+      })),
+      durum: data.durum,
+    };
+  });
 
   const acik = adisyon.durum === 'acik';
 
@@ -133,6 +157,8 @@ export default async function AdisyonDetay({
           </li>
         ))}
       </ul>
+
+      <OdemeTalepleri adisyonId={adisyonId} talepler={talepler} />
 
       {acik && <AdisyonuKapatBtn adisyonId={adisyonId} />}
     </div>

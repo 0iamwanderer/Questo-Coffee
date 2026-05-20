@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { formatTL } from '@/lib/utils/para';
 import { AdisyonYenile } from '@/components/musteri/adisyon-yenile';
+import { AyriOdeme } from '@/components/musteri/ayri-odeme';
 import type {
   Adisyon,
   Siparis,
@@ -225,6 +226,22 @@ async function AdisyonGosterici({
           Ödeme kasada yapılır.
         </p>
       </div>
+
+      <AyriOdeme
+        adisyonId={adisyonRefId}
+        toplamKurus={adisyon.toplamKurus as number}
+        siparisler={siparisler.map((s) => ({
+          id: s.id,
+          gunlukNo: s.gunlukNo,
+          durum: s.durum,
+          kalemler: (s.kalemler as SiparisKalemi[]).map((k) => ({
+            ad: k.ad,
+            adet: k.adet,
+            araToplamKurus: k.araToplamKurus as number,
+            urunId: k.urunId,
+          })),
+        }))}
+      />
     </div>
   );
 }

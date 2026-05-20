@@ -58,6 +58,12 @@ service cloud.firestore {
           allow read: if kasiyerMi();
           allow write: if false;
         }
+
+        // Ödeme talepleri — yazma Admin SDK üzerinden, okuma kasiyer paneli için
+        match /odemeTalepleri/{talepId} {
+          allow read: if kasiyerMi();
+          allow write: if false;
+        }
       }
 
       // ── Günlük sipariş sayaçları — sadece sunucu ───────────────────
