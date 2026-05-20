@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { Menu, X } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getClientAuth } from '@/lib/firebase/client';
 import { BaglantiRozeti } from '@/components/kasa/baglanti-rozeti';
@@ -23,6 +24,7 @@ const NAV = [
 export function KasaShell({ kullanici, children }: Props) {
   const yol = usePathname();
   const [authHazir, setAuthHazir] = useState(false);
+  const [menuAcik, setMenuAcik] = useState(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(getClientAuth(), (u) => {
@@ -48,7 +50,7 @@ export function KasaShell({ kullanici, children }: Props) {
               </span>
               <span className="font-serif">Questo · Kasa</span>
             </Link>
-            <nav className="flex items-center gap-1 text-sm">
+            <nav className="hidden items-center gap-1 text-sm sm:flex">
               {NAV.map((n) => (
                 <Link
                   key={n.yol}
@@ -88,8 +90,45 @@ export function KasaShell({ kullanici, children }: Props) {
                 Çıkış
               </button>
             </form>
+            <button
+              type="button"
+              className="rounded-md p-1 text-muted-foreground sm:hidden"
+              onClick={() => setMenuAcik((v) => !v)}
+              aria-label="Menüyü aç/kapat"
+            >
+              {menuAcik ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
           </div>
         </div>
+
+        {menuAcik && (
+          <nav className="flex flex-col gap-1 border-t bg-background px-4 py-2 text-sm sm:hidden">
+            {NAV.map((n) => (
+              <Link
+                key={n.yol}
+                href={n.yol}
+                onClick={() => setMenuAcik(false)}
+                className={cn(
+                  'rounded-md px-3 py-2',
+                  yol === n.yol
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {n.etiket}
+              </Link>
+            ))}
+            {kullanici.sahip && (
+              <Link
+                href="/admin/menu"
+                onClick={() => setMenuAcik(false)}
+                className="rounded-md px-3 py-2 text-muted-foreground hover:text-foreground"
+              >
+                Yönetim
+              </Link>
+            )}
+          </nav>
+        )}
       </header>
 
       <VardiyaBaslat />

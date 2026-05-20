@@ -3,6 +3,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -21,6 +23,8 @@ export function AdminShell({
   children: React.ReactNode;
 }) {
   const yol = usePathname();
+  const [menuAcik, setMenuAcik] = useState(false);
+
   return (
     <div className="min-h-screen">
       <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
@@ -41,7 +45,7 @@ export function AdminShell({
               </span>
               <span className="font-serif">Questo · Yönetim</span>
             </Link>
-            <nav className="flex items-center gap-1 text-sm">
+            <nav className="hidden items-center gap-1 text-sm sm:flex">
               {NAV.map((n) => (
                 <Link
                   key={n.yol}
@@ -78,8 +82,43 @@ export function AdminShell({
                 Çıkış
               </button>
             </form>
+            <button
+              type="button"
+              className="rounded-md p-1 text-muted-foreground sm:hidden"
+              onClick={() => setMenuAcik((v) => !v)}
+              aria-label="Menüyü aç/kapat"
+            >
+              {menuAcik ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
           </div>
         </div>
+
+        {menuAcik && (
+          <nav className="flex flex-col gap-1 border-t bg-background px-4 py-2 text-sm sm:hidden">
+            {NAV.map((n) => (
+              <Link
+                key={n.yol}
+                href={n.yol}
+                onClick={() => setMenuAcik(false)}
+                className={cn(
+                  'rounded-md px-3 py-2',
+                  yol === n.yol
+                    ? 'bg-secondary text-secondary-foreground'
+                    : 'text-muted-foreground hover:text-foreground',
+                )}
+              >
+                {n.etiket}
+              </Link>
+            ))}
+            <Link
+              href="/kasa"
+              onClick={() => setMenuAcik(false)}
+              className="rounded-md px-3 py-2 text-muted-foreground hover:text-foreground"
+            >
+              Kasaya dön
+            </Link>
+          </nav>
+        )}
       </header>
       {children}
     </div>
