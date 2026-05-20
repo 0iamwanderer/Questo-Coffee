@@ -36,7 +36,7 @@ function fiyatYaz(kurus: number) {
 function SarmalCilt() {
   return (
     <div
-      className="w-6 md:w-8 flex-shrink-0 flex flex-col items-center justify-evenly self-stretch py-3 overflow-hidden"
+      className="w-6 md:w-8 flex-shrink-0 flex flex-col items-center justify-evenly self-stretch py-3 overflow-hidden relative z-10"
       style={{ background: 'hsl(28 22% 14%)' }}
     >
       {Array.from({ length: 22 }).map((_, i) => (
