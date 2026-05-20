@@ -113,12 +113,10 @@ export default async function AdisyonDetay({
         {siparisler.map((s) => (
           <li key={s.id} className="rounded-lg border bg-card p-3">
             <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <span className="font-medium">#{s.gunlukNo}</span>
                 {s.musteriAd && (
-                  <span className="text-xs text-muted-foreground">
-                    · {s.musteriAd}
-                  </span>
+                  <span className="font-semibold">{s.musteriAd}</span>
                 )}
               </div>
               <span className="rounded-md border px-2 py-0.5 text-xs">
