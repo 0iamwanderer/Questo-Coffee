@@ -87,79 +87,145 @@ const OPT_SEKER = {
   ],
 };
 
-// ── Kategoriler (spec'ten) ─────────────────────────────────────────────
+// ── Kategoriler ───────────────────────────────────────────────────────
 const KATEGORILER = [
-  {
-    ad: 'Sıcak İçecekler',
-    sira: 1,
-    roman: 'I',
-    tagline: 'Tek menşeli çekirdek, taze kavrum.',
-  },
-  {
-    ad: 'Soğuk İçecekler',
-    sira: 2,
-    roman: 'II',
-    tagline: 'Yavaş demleme, buzun üzerinde.',
-    story: {
-      kicker: 'Mevsim notu',
-      title: 'Sıcağa karşı, sabırla.',
-      body: 'Soğuk demlememizi geceden hazırlıyoruz. Sabah ilk filtre, bekleyenin hakkı.',
-      sign: '— Barista ekibi',
-    },
-  },
-  {
-    ad: 'Tatlılar',
-    sira: 3,
-    roman: 'III',
-    tagline: 'El yapımı, günlük taze.',
-    story: {
-      kicker: 'Mutfaktan',
-      body: 'Tatlıyı hak edenin günü iyi geçer.',
-      sign: '— Türk atasözü',
-    },
-  },
-  {
-    ad: 'Atıştırmalıklar',
-    sira: 4,
-    roman: 'IV',
-    tagline: 'Sabah taze fırından.',
-    story: {
-      kicker: 'Fırın',
-      title: 'Her sabah 06:30.',
-      body: 'Hamurlar gece yoğrulur, sabah taze pişer. Yanında bir Türk kahvesi tam yakışır.',
-      sign: '— Manisa şubesi',
-    },
-  },
+  { ad: 'Patso',                 sira: 1  },
+  { ad: 'Tostlar',               sira: 2  },
+  { ad: 'Burger',                sira: 3  },
+  { ad: 'Yarım Ekmek & Kumru',   sira: 4  },
+  { ad: 'Sepetler',              sira: 5  },
+  { ad: 'Çıtır',                 sira: 6  },
+  { ad: 'Makarnalar',            sira: 7  },
+  { ad: 'Kahve',                 sira: 8  },
+  { ad: 'Aromatik Latte',        sira: 9  },
+  { ad: 'Mocha',                 sira: 10 },
+  { ad: 'Sıcak İçecekler',       sira: 11 },
+  { ad: 'Fresh',                 sira: 12 },
+  { ad: 'Çay',                   sira: 13 },
+  { ad: 'Soğuk İçecekler',       sira: 14 },
 ];
 
-// ── Ürünler (spec'ten, fiyatlar TRY→kuruş) ────────────────────────────
+// ── Ürünler (fiyatlar TRY → kuruş) ────────────────────────────────────
 const URUNLER = [
-  // Sıcak İçecekler
-  { ad: 'Espresso', kat: 'Sıcak İçecekler', fiyatKurus: 5500, sira: 1, aciklama: 'Tek shot, koyu kavrum.', sefOnerisi: true },
-  { ad: 'Americano', kat: 'Sıcak İçecekler', fiyatKurus: 7500, sira: 2, aciklama: 'Çift shot, üzerine sıcak su.' },
-  { ad: 'Cappuccino', kat: 'Sıcak İçecekler', fiyatKurus: 9500, sira: 3, aciklama: 'Klasik İtalyan oranı, ipeksi köpük.', opsiyonGruplari: [OPT_SUT] },
-  { ad: 'Latte', kat: 'Sıcak İçecekler', fiyatKurus: 9500, sira: 4, aciklama: 'Espresso + buharlı süt.', opsiyonGruplari: [OPT_SUT] },
-  { ad: 'Flat White', kat: 'Sıcak İçecekler', fiyatKurus: 9500, sira: 5, aciklama: 'Mikro köpüklü süt, Avustralya tarzı.' },
-  { ad: 'Mocha', kat: 'Sıcak İçecekler', fiyatKurus: 10500, sira: 6, aciklama: 'Espresso + bitter çikolata + süt.' },
-  { ad: 'Türk Kahvesi', kat: 'Sıcak İçecekler', fiyatKurus: 6000, sira: 7, aciklama: 'Bakır cezve, közde pişirim. Yanında lokum.', opsiyonGruplari: [OPT_SEKER] },
-  { ad: 'Filtre Kahve', kat: 'Sıcak İçecekler', fiyatKurus: 7500, sira: 8, aciklama: 'Etiyopya Yirgacheffe, V60 demleme.' },
-  { ad: 'Sıcak Çikolata', kat: 'Sıcak İçecekler', fiyatKurus: 9000, sira: 9, aciklama: 'Belçika bitter, tam yağlı süt.' },
-  { ad: 'Salep', kat: 'Sıcak İçecekler', fiyatKurus: 8500, sira: 10, aciklama: 'Anadolu salebi, taze tarçın.' },
+  // ── Patso ─────────────────────────────────────────────────────────
+  { ad: 'Sade Patso',     kat: 'Patso', fiyatKurus:  9500, sira: 1, aciklama: 'Çıtır patates kızartması ve özel baharatlı karışım.' },
+  { ad: 'Sucuklu Patso',  kat: 'Patso', fiyatKurus: 11000, sira: 2, aciklama: 'Patates ve soğanın üzerinde sucuk ve sos uyumu.' },
+  { ad: 'Sosisli Patso',  kat: 'Patso', fiyatKurus: 11000, sira: 3, aciklama: 'Çıtır patates ve sosisle doyurucu birleşim.' },
+  { ad: 'Salamlı Patso',  kat: 'Patso', fiyatKurus: 11000, sira: 4, aciklama: 'Patates kızartması ve salam ile klasik lezzetler.' },
+  { ad: 'Karışık Patso',  kat: 'Patso', fiyatKurus: 12500, sira: 5, aciklama: 'Sucuk, sosis ve salamın harmonik bir araya gelişi.', sefOnerisi: true },
+  { ad: 'Mega Patso',     kat: 'Patso', fiyatKurus: 14500, sira: 6, aciklama: '1 porsiyon ekstra patates ile büyük patso keyfi.' },
 
-  // Soğuk İçecekler
-  { ad: 'Soğuk Demleme', kat: 'Soğuk İçecekler', fiyatKurus: 8500, sira: 1, aciklama: '12 saatlik yavaş demleme.', sefOnerisi: true },
-  { ad: 'Buzlu Americano', kat: 'Soğuk İçecekler', fiyatKurus: 8000, sira: 2, aciklama: 'Çift espresso + buz + soğuk su.' },
-  { ad: 'Buzlu Latte', kat: 'Soğuk İçecekler', fiyatKurus: 9500, sira: 3, aciklama: 'Espresso + soğuk süt + buz.', opsiyonGruplari: [OPT_SUT] },
+  // ── Tostlar ───────────────────────────────────────────────────────
+  { ad: 'Kaşarlı Tost',           kat: 'Tostlar', fiyatKurus: 12000, sira: 1  },
+  { ad: 'Sucuk Kaşar Tost',       kat: 'Tostlar', fiyatKurus: 13500, sira: 2  },
+  { ad: 'Salamlı Tost',           kat: 'Tostlar', fiyatKurus: 13000, sira: 3  },
+  { ad: 'Karışık Tost',           kat: 'Tostlar', fiyatKurus: 14500, sira: 4  },
+  { ad: 'Double Karışık Tost',    kat: 'Tostlar', fiyatKurus: 16500, sira: 5  },
+  { ad: 'Triple Tost',            kat: 'Tostlar', fiyatKurus: 19000, sira: 6  },
+  { ad: 'Cheddarlı Tost',         kat: 'Tostlar', fiyatKurus: 12000, sira: 7  },
+  { ad: 'Cheddarlı Karışık Tost', kat: 'Tostlar', fiyatKurus: 14500, sira: 8  },
+  { ad: 'Triple Cheddar',         kat: 'Tostlar', fiyatKurus: 18000, sira: 9  },
+  { ad: 'Bazlama Tost',           kat: 'Tostlar', fiyatKurus: 16000, sira: 10, aciklama: 'Tiftikli, kaşarlı, bal-mayonezli.' },
 
-  // Tatlılar
-  { ad: 'Künefe', kat: 'Tatlılar', fiyatKurus: 14500, sira: 1, aciklama: 'Antep peyniri, kadayıf, fıstık.', sefOnerisi: true },
-  { ad: 'Çikolatalı Sufle', kat: 'Tatlılar', fiyatKurus: 13000, sira: 2, aciklama: 'Akıcı merkezli, vanilya dondurma.' },
-  { ad: 'San Sebastian', kat: 'Tatlılar', fiyatKurus: 12000, sira: 3, aciklama: 'Karamelize üst, kremamsı iç.' },
+  // ── Burger ────────────────────────────────────────────────────────
+  { ad: 'Tavuk Burger',        kat: 'Burger', fiyatKurus: 16000, sira: 1 },
+  { ad: 'Double Tavuk Burger', kat: 'Burger', fiyatKurus: 20000, sira: 2 },
+  { ad: 'Crispy Burger',       kat: 'Burger', fiyatKurus: 21000, sira: 3 },
+  { ad: 'Hamburger',           kat: 'Burger', fiyatKurus: 24500, sira: 4 },
+  { ad: 'Cheeseburger',        kat: 'Burger', fiyatKurus: 25500, sira: 5, aciklama: 'Dana köfte ile bol peynirli çıtır burger.' },
+  { ad: 'Barbekü Burger',      kat: 'Burger', fiyatKurus: 25500, sira: 6, aciklama: 'Barbekü soslu dana köfte, soğan, turşu.' },
+  { ad: 'Double Crispy Burger',kat: 'Burger', fiyatKurus: 25500, sira: 7 },
+  { ad: 'Double Cheese Burger',kat: 'Burger', fiyatKurus: 34000, sira: 8, aciklama: 'Çift dana köfte, çift peynir.', sefOnerisi: true },
 
-  // Atıştırmalıklar
-  { ad: 'Simit', kat: 'Atıştırmalıklar', fiyatKurus: 2500, sira: 1, aciklama: 'Susam kaplı, taze fırın.' },
-  { ad: 'Peynirli Poğaça', kat: 'Atıştırmalıklar', fiyatKurus: 3500, sira: 2, aciklama: 'Beyaz peynir, maydanoz.', sefOnerisi: true },
-  { ad: 'Tereyağlı Croissant', kat: 'Atıştırmalıklar', fiyatKurus: 5500, sira: 3, aciklama: 'Fransız tarzı, çok katmanlı.' },
+  // ── Yarım Ekmek & Kumru ───────────────────────────────────────────
+  { ad: 'Yarım Ekmek Köfte', kat: 'Yarım Ekmek & Kumru', fiyatKurus: 16000, sira: 1 },
+  { ad: 'Yarım Ekmek Sucuk', kat: 'Yarım Ekmek & Kumru', fiyatKurus: 16000, sira: 2 },
+  { ad: 'Kumru',             kat: 'Yarım Ekmek & Kumru', fiyatKurus: 14000, sira: 3, aciklama: 'Özel kumru ekmeğinde sucuk, salam ve kaşar peyniri.' },
+  { ad: 'Double Kumru',      kat: 'Yarım Ekmek & Kumru', fiyatKurus: 18000, sira: 4, aciklama: 'Çift porsiyon malzemeyle daha doyurucu kumru.' },
+
+  // ── Sepetler ──────────────────────────────────────────────────────
+  { ad: 'Çıtır Tavuk Sepeti', kat: 'Sepetler', fiyatKurus: 15000, sira: 1, aciklama: 'Altın renki çıtır tavuk parçaları.' },
+  { ad: 'Çıtır Kanat Sepeti', kat: 'Sepetler', fiyatKurus: 16000, sira: 2, aciklama: 'Baharatlı çıtır tavuk kanatları.', sefOnerisi: true },
+  { ad: 'Sosis Sepeti',       kat: 'Sepetler', fiyatKurus: 13000, sira: 3, aciklama: 'Kızarmış sosislerle pratik bir sepet.' },
+  { ad: 'Doyum Sepeti',       kat: 'Sepetler', fiyatKurus: 17500, sira: 4, aciklama: 'Karışık ürünlerle hazırlanmış bol porsiyon.' },
+  { ad: 'Patates Sepeti',     kat: 'Sepetler', fiyatKurus: 11000, sira: 5, aciklama: 'Patates kızartması.' },
+
+  // ── Çıtır ─────────────────────────────────────────────────────────
+  { ad: '500 gr Çıtır Tavuk',         kat: 'Çıtır', fiyatKurus: 28000, sira: 1 },
+  { ad: '1 kg Çıtır Tavuk',           kat: 'Çıtır', fiyatKurus: 50000, sira: 2 },
+  { ad: '500 gr Çıtır Kanat',         kat: 'Çıtır', fiyatKurus: 35000, sira: 3 },
+
+  // ── Makarnalar ────────────────────────────────────────────────────
+  { ad: 'Alfredo',             kat: 'Makarnalar', fiyatKurus: 16000, sira: 1 },
+  { ad: 'Karbonara',           kat: 'Makarnalar', fiyatKurus: 16000, sira: 2 },
+  { ad: 'Domates Soslu',       kat: 'Makarnalar', fiyatKurus: 18000, sira: 3 },
+  { ad: 'Kremalı Mantarlı',    kat: 'Makarnalar', fiyatKurus: 18000, sira: 4 },
+  { ad: 'Tavuklu',             kat: 'Makarnalar', fiyatKurus: 18000, sira: 5 },
+  { ad: 'Penne Arrabbiata',    kat: 'Makarnalar', fiyatKurus: 18000, sira: 6 },
+  { ad: 'Penne Somon',         kat: 'Makarnalar', fiyatKurus: 18000, sira: 7 },
+  { ad: 'Bucatini',            kat: 'Makarnalar', fiyatKurus: 18000, sira: 8 },
+  { ad: 'Cafe de Paris',       kat: 'Makarnalar', fiyatKurus: 18000, sira: 9, aciklama: 'Özel cafe de paris sosuyla hazırlanmış makarna.' },
+
+  // ── Kahve ─────────────────────────────────────────────────────────
+  { ad: 'Americano',    kat: 'Kahve', fiyatKurus: 10000, sira: 1 },
+  { ad: 'Espresso',     kat: 'Kahve', fiyatKurus:  6500, sira: 2, aciklama: 'Tek shot.' },
+  { ad: 'Espresso Double', kat: 'Kahve', fiyatKurus: 8500, sira: 3, aciklama: 'Çift shot.' },
+  { ad: 'Cortado',      kat: 'Kahve', fiyatKurus: 10000, sira: 4 },
+  { ad: 'Cappuccino',   kat: 'Kahve', fiyatKurus: 13000, sira: 5, opsiyonGruplari: [OPT_SUT] },
+  { ad: 'Flat White',   kat: 'Kahve', fiyatKurus: 15000, sira: 6 },
+  { ad: 'Latte',        kat: 'Kahve', fiyatKurus: 15000, sira: 7, opsiyonGruplari: [OPT_SUT] },
+  { ad: 'Türk Kahvesi', kat: 'Kahve', fiyatKurus:  7000, sira: 8, opsiyonGruplari: [OPT_SEKER] },
+
+  // ── Aromatik Latte ────────────────────────────────────────────────
+  { ad: 'Bico Latte',           kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 1 },
+  { ad: 'Toffee Nut Latte',     kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 2 },
+  { ad: 'Pecan Latte',          kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 3 },
+  { ad: 'Pumpkin Spice Latte',  kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 4 },
+  { ad: 'Cookie Latte',         kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 5 },
+  { ad: 'Salted Caramel Latte', kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 6, sefOnerisi: true },
+  { ad: 'Irish Latte',          kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 7 },
+
+  // ── Mocha ─────────────────────────────────────────────────────────
+  { ad: 'Mocha',        kat: 'Mocha', fiyatKurus: 16000, sira: 1 },
+  { ad: 'White Mocha',  kat: 'Mocha', fiyatKurus: 16000, sira: 2 },
+  { ad: 'Dark Mocha',   kat: 'Mocha', fiyatKurus: 16000, sira: 3 },
+
+  // ── Sıcak İçecekler ───────────────────────────────────────────────
+  { ad: 'Sahlep',          kat: 'Sıcak İçecekler', fiyatKurus: 12000, sira: 1 },
+  { ad: 'Sıcak Çikolata',  kat: 'Sıcak İçecekler', fiyatKurus: 12000, sira: 2 },
+  { ad: 'Beyaz Çikolata',  kat: 'Sıcak İçecekler', fiyatKurus: 12000, sira: 3 },
+  { ad: 'Bardak Çikolata', kat: 'Sıcak İçecekler', fiyatKurus: 14000, sira: 4 },
+
+  // ── Fresh ─────────────────────────────────────────────────────────
+  { ad: 'Orange Mango',      kat: 'Fresh', fiyatKurus: 15000, sira: 1 },
+  { ad: 'Cool Lime',         kat: 'Fresh', fiyatKurus: 15000, sira: 2 },
+  { ad: 'Berry Hibiscus',    kat: 'Fresh', fiyatKurus: 15000, sira: 3 },
+  { ad: 'Passion Fruit Mango', kat: 'Fresh', fiyatKurus: 15000, sira: 4 },
+  { ad: 'Manta Cubano',      kat: 'Fresh', fiyatKurus: 15000, sira: 5 },
+
+  // ── Çay ───────────────────────────────────────────────────────────
+  { ad: 'Bardak Çay',   kat: 'Çay', fiyatKurus:  3000, sira: 1 },
+  { ad: 'Fincan Çay',   kat: 'Çay', fiyatKurus:  5000, sira: 2 },
+  { ad: 'Ihlamur',      kat: 'Çay', fiyatKurus:  8000, sira: 3 },
+  { ad: 'Nane Limon',   kat: 'Çay', fiyatKurus: 10000, sira: 4 },
+  { ad: 'Hibiskus',     kat: 'Çay', fiyatKurus: 10000, sira: 5 },
+  { ad: 'Kuşburnu',     kat: 'Çay', fiyatKurus:  3500, sira: 6 },
+  { ad: 'Kivi',         kat: 'Çay', fiyatKurus:  3500, sira: 7 },
+  { ad: 'Muz',          kat: 'Çay', fiyatKurus:  3500, sira: 8 },
+  { ad: 'Karadut',      kat: 'Çay', fiyatKurus:  3500, sira: 9 },
+  { ad: 'Prenses',      kat: 'Çay', fiyatKurus:  3500, sira: 10 },
+
+  // ── Soğuk İçecekler ───────────────────────────────────────────────
+  { ad: 'Gazoz',        kat: 'Soğuk İçecekler', fiyatKurus:  6000, sira: 1 },
+  { ad: 'Fuse Tea',     kat: 'Soğuk İçecekler', fiyatKurus:  8500, sira: 2 },
+  { ad: 'Coca-Cola',    kat: 'Soğuk İçecekler', fiyatKurus:  8500, sira: 3 },
+  { ad: 'Fanta',        kat: 'Soğuk İçecekler', fiyatKurus:  8500, sira: 4 },
+  { ad: 'Sprite',       kat: 'Soğuk İçecekler', fiyatKurus:  8500, sira: 5 },
+  { ad: 'Su',           kat: 'Soğuk İçecekler', fiyatKurus:  2000, sira: 6 },
+  { ad: 'Soda',         kat: 'Soğuk İçecekler', fiyatKurus:  4000, sira: 7 },
+  { ad: 'Meyveli Soda', kat: 'Soğuk İçecekler', fiyatKurus:  8000, sira: 8 },
+  { ad: 'Churchill',    kat: 'Soğuk İçecekler', fiyatKurus:  8500, sira: 9 },
+  { ad: 'Redbull',      kat: 'Soğuk İçecekler', fiyatKurus: 11000, sira: 10 },
 ];
 
 // 20 masa
