@@ -9,7 +9,7 @@ import {
   query,
   where,
 } from 'firebase/firestore';
-import { ChevronLeft, ChevronRight, Plus, ShoppingBag, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Minus, Plus, ShoppingBag, X } from 'lucide-react';
 import { getClientDb } from '@/lib/firebase/client';
 import {
   kategoriConverter,
@@ -169,24 +169,38 @@ function KalemSatiri({
               <span className="text-[11px]">—</span>
             </span>
           ) : adet > 0 ? (
-            <button
-              type="button"
-              onClick={() =>
-                tekSatir
-                  ? guncelle(tekSatir.satirId, adet - 1)
-                  : onDetay(urun)
-              }
-              className="w-9 h-9 rounded-full flex items-center justify-center transition active:scale-90"
+            <div
+              className="inline-flex items-center rounded-full"
               style={{
                 border: '1px solid hsl(13 58% 23% / 0.35)',
                 backgroundColor: 'hsl(13 58% 23% / 0.08)',
               }}
-              aria-label={`${urun.ad} sepetten çıkar`}
             >
-              <span className="font-mono text-[13px] text-primary tabular-nums font-medium">
+              <button
+                type="button"
+                onClick={() =>
+                  tekSatir
+                    ? guncelle(tekSatir.satirId, adet - 1)
+                    : onDetay(urun)
+                }
+                className="flex h-9 w-8 items-center justify-center transition active:scale-90"
+                aria-label="Azalt"
+              >
+                <Minus className="size-3 text-primary" />
+              </button>
+              <span className="w-5 text-center font-mono text-[13px] text-primary tabular-nums font-medium">
                 {adet}
               </span>
-            </button>
+              <button
+                ref={btnRef}
+                type="button"
+                onClick={handleEkle}
+                className="flex h-9 w-8 items-center justify-center transition active:scale-90"
+                aria-label="Artır"
+              >
+                <Plus className="size-3 text-primary" />
+              </button>
+            </div>
           ) : (
             <button
               ref={btnRef}

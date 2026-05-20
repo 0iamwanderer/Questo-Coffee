@@ -2,7 +2,7 @@
 
 import { useRef } from 'react';
 import Image from 'next/image';
-import { Sparkles } from 'lucide-react';
+import { Minus, Plus, Sparkles } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet } from '@/stores/sepet';
@@ -41,10 +41,15 @@ function VitrinGorseli({ urun }: { urun: Urun }) {
 
 export function VitrinKarti({ urun, onDetay }: Props) {
   const ekle = useSepet((s) => s.ekle);
+  const guncelle = useSepet((s) => s.guncelle);
+  const kalemler = useSepet((s) => s.kalemler);
   const gorselRef = useRef<HTMLButtonElement>(null);
 
   const opsiyonlu = (urun.opsiyonGruplari?.length ?? 0) > 0;
   const stokYok = !urun.stoktaMi;
+  const tekSatir = !opsiyonlu
+    ? kalemler.find((k) => k.urunId === urun.id && !k.secimler)
+    : undefined;
 
   const hizliEkle = () => {
     ekle(urun.id);
@@ -114,13 +119,47 @@ export function VitrinKarti({ urun, onDetay }: Props) {
               {formatTL(urun.fiyatKurus)}
             </span>
             {!stokYok && (
-              <button
-                type="button"
-                onClick={opsiyonlu ? () => onDetay?.(urun) : hizliEkle}
-                className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-soft transition active:scale-[0.96]"
-              >
-                {opsiyonlu ? 'Seç' : 'Sepete ekle'}
-              </button>
+              <div onClick={(e) => e.stopPropagation()}>
+                {opsiyonlu ? (
+                  <button
+                    type="button"
+                    onClick={() => onDetay?.(urun)}
+                    className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-soft transition active:scale-[0.96]"
+                  >
+                    Seç
+                  </button>
+                ) : tekSatir ? (
+                  <div className="inline-flex items-center gap-1 rounded-full border bg-card px-1 shadow-soft">
+                    <button
+                      type="button"
+                      aria-label="Azalt"
+                      onClick={() => guncelle(tekSatir.satirId, tekSatir.adet - 1)}
+                      className="rounded-full p-1.5 transition active:scale-[0.92]"
+                    >
+                      <Minus className="size-3.5" />
+                    </button>
+                    <span className="min-w-5 text-center text-sm font-medium tabular-nums">
+                      {tekSatir.adet}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Artır"
+                      onClick={hizliEkle}
+                      className="rounded-full p-1.5 transition active:scale-[0.92]"
+                    >
+                      <Plus className="size-3.5" />
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={hizliEkle}
+                    className="rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground shadow-soft transition active:scale-[0.96]"
+                  >
+                    Sepete ekle
+                  </button>
+                )}
+              </div>
             )}
             {stokYok && (
               <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
