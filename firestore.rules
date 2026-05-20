@@ -16,6 +16,14 @@ service cloud.firestore {
       return kasiyerMi() && request.auth.token.sahip == true;
     }
 
+    // collectionGroup('siparisler') için zorunlu wildcard kuralı ──────────
+    // collectionGroup sorguları tüm yolları tarar; bu kural en üst seviyede
+    // olmalı — restoranlar/{id} içine yerleştirilirse Firestore tanımıyor.
+    match /{path=**}/siparisler/{siparisId} {
+      allow read: if kasiyerMi();
+      allow write: if false;
+    }
+
     match /restoranlar/{restoranId} {
 
       // Restoran meta — public read (App Check Console'da enforce edilir)
@@ -51,14 +59,6 @@ service cloud.firestore {
           allow write: if false;
         }
       }
-
-    // collectionGroup('siparisler') için zorunlu wildcard kuralı ──────────
-    // Firebase, collectionGroup sorgularında tüm olası yolları /{path=**}/
-    // deseniyle değerlendirir; spesifik yol kuralı yetmiyor.
-    match /{path=**}/siparisler/{siparisId} {
-      allow read: if kasiyerMi();
-      allow write: if false;
-    }
 
       // ── Günlük sipariş sayaçları — sadece sunucu ───────────────────
       match /sayaclar/{sayacId} {
