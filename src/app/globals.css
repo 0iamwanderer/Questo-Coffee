@@ -210,6 +210,16 @@
   animation: pop 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Sepete ekle ↔ miktar kontrolü geçiş — yay efektli */
+@keyframes pop-in {
+  0%   { opacity: 0; transform: scale(0.55); }
+  65%  { transform: scale(1.1); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.anim-pop-in {
+  animation: pop-in 220ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
 /* Pulse — stok azaldığında ışıldama */
 @keyframes pulse-soft {
   0%, 100% { opacity: 1; }

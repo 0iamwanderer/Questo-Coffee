@@ -159,7 +159,7 @@ export function UrunKarti({ urun, onDetay }: Props) {
             )}
           </button>
         ) : tekSatir ? (
-          <div className="inline-flex items-center gap-1 rounded-full border bg-card px-1 shadow-soft">
+          <div key="counter" className="anim-pop-in inline-flex items-center gap-1 rounded-full border bg-card px-1 shadow-soft">
             <button
               type="button"
               aria-label="Azalt"
@@ -184,9 +184,10 @@ export function UrunKarti({ urun, onDetay }: Props) {
           </div>
         ) : (
           <button
+            key="add"
             type="button"
             onClick={sepeteEkleAnimasyonlu}
-            className="rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-soft transition active:scale-[0.96]"
+            className="anim-pop-in rounded-full bg-primary px-4 py-1.5 text-xs font-medium text-primary-foreground shadow-soft transition active:scale-[0.96]"
           >
             Ekle
           </button>

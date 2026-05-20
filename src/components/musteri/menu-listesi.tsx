@@ -170,7 +170,8 @@ function KalemSatiri({
             </span>
           ) : adet > 0 ? (
             <div
-              className="inline-flex items-center rounded-full"
+              key="counter"
+              className="anim-pop-in inline-flex items-center rounded-full"
               style={{
                 border: '1px solid hsl(13 58% 23% / 0.35)',
                 backgroundColor: 'hsl(13 58% 23% / 0.08)',
@@ -203,10 +204,11 @@ function KalemSatiri({
             </div>
           ) : (
             <button
+              key="add"
               ref={btnRef}
               type="button"
               onClick={handleEkle}
-              className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition active:scale-90 shadow-soft"
+              className="anim-pop-in w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center transition active:scale-90 shadow-soft"
               aria-label={`${urun.ad} sepete ekle`}
             >
               <Plus className="size-4" />
