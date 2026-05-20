@@ -719,6 +719,68 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
                 />
               </div>
 
+              {/* Mobil ileri flip — tüm sayfa sola döner */}
+              {flip?.yon === 'forward' && oncekiKategori && (
+                <div
+                  key={`flip-mob-fw-${flip.oncekiId}`}
+                  className="md:hidden absolute inset-0 anim-page-flip-forward kitap-3d"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <div className="flip-on">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={oncekiKategori}
+                      indeks={oncekiIndeks}
+                      urunler={oncekiUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                    <div className="page-curl forward" />
+                  </div>
+                  <div className="flip-arka">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={aktifKategori}
+                      indeks={aktifIndeks}
+                      urunler={goruntulenenUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Mobil geri flip — tüm sayfa sağa döner */}
+              {flip?.yon === 'backward' && oncekiKategori && (
+                <div
+                  key={`flip-mob-bw-${flip.oncekiId}`}
+                  className="md:hidden absolute inset-0 anim-page-flip-backward kitap-3d"
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <div className="flip-on">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={oncekiKategori}
+                      indeks={oncekiIndeks}
+                      urunler={oncekiUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                    <div className="page-curl backward" />
+                  </div>
+                  <div className="flip-arka">
+                    <KitapYarim
+                      taraf="sol"
+                      kategori={aktifKategori}
+                      indeks={aktifIndeks}
+                      urunler={goruntulenenUrunler}
+                      onDetay={setDetayUrun}
+                      roman={roman}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Backward flip: sol yarım sağa devrilir (desktop only) */}
               {flip?.yon === 'backward' && oncekiKategori && (
                 <div
