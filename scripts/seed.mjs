@@ -97,12 +97,10 @@ const KATEGORILER = [
   { ad: 'Çıtır',                 sira: 6  },
   { ad: 'Makarnalar',            sira: 7  },
   { ad: 'Kahve',                 sira: 8  },
-  { ad: 'Aromatik Latte',        sira: 9  },
-  { ad: 'Mocha',                 sira: 10 },
-  { ad: 'Sıcak İçecekler',       sira: 11 },
-  { ad: 'Fresh',                 sira: 12 },
-  { ad: 'Çay',                   sira: 13 },
-  { ad: 'Soğuk İçecekler',       sira: 14 },
+  { ad: 'Sıcak İçecekler',       sira: 9  },
+  { ad: 'Fresh',                 sira: 10 },
+  { ad: 'Çay',                   sira: 11 },
+  { ad: 'Soğuk İçecekler',       sira: 12 },
 ];
 
 // ── Ürünler (fiyatlar TRY → kuruş) ────────────────────────────────────
@@ -176,19 +174,16 @@ const URUNLER = [
   { ad: 'Latte',        kat: 'Kahve', fiyatKurus: 15000, sira: 7, opsiyonGruplari: [OPT_SUT] },
   { ad: 'Türk Kahvesi', kat: 'Kahve', fiyatKurus:  7000, sira: 8, opsiyonGruplari: [OPT_SEKER] },
 
-  // ── Aromatik Latte ────────────────────────────────────────────────
-  { ad: 'Bico Latte',           kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 1 },
-  { ad: 'Toffee Nut Latte',     kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 2 },
-  { ad: 'Pecan Latte',          kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 3 },
-  { ad: 'Pumpkin Spice Latte',  kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 4 },
-  { ad: 'Cookie Latte',         kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 5 },
-  { ad: 'Salted Caramel Latte', kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 6, sefOnerisi: true },
-  { ad: 'Irish Latte',          kat: 'Aromatik Latte', fiyatKurus: 16000, sira: 7 },
-
-  // ── Mocha ─────────────────────────────────────────────────────────
-  { ad: 'Mocha',        kat: 'Mocha', fiyatKurus: 16000, sira: 1 },
-  { ad: 'White Mocha',  kat: 'Mocha', fiyatKurus: 16000, sira: 2 },
-  { ad: 'Dark Mocha',   kat: 'Mocha', fiyatKurus: 16000, sira: 3 },
+  { ad: 'Bico Latte',           kat: 'Kahve', fiyatKurus: 16000, sira: 9,  altKategori: 'Aromatik Latte' },
+  { ad: 'Toffee Nut Latte',     kat: 'Kahve', fiyatKurus: 16000, sira: 10, altKategori: 'Aromatik Latte' },
+  { ad: 'Pecan Latte',          kat: 'Kahve', fiyatKurus: 16000, sira: 11, altKategori: 'Aromatik Latte' },
+  { ad: 'Pumpkin Spice Latte',  kat: 'Kahve', fiyatKurus: 16000, sira: 12, altKategori: 'Aromatik Latte' },
+  { ad: 'Cookie Latte',         kat: 'Kahve', fiyatKurus: 16000, sira: 13, altKategori: 'Aromatik Latte' },
+  { ad: 'Salted Caramel Latte', kat: 'Kahve', fiyatKurus: 16000, sira: 14, altKategori: 'Aromatik Latte', sefOnerisi: true },
+  { ad: 'Irish Latte',          kat: 'Kahve', fiyatKurus: 16000, sira: 15, altKategori: 'Aromatik Latte' },
+  { ad: 'Mocha',                kat: 'Kahve', fiyatKurus: 16000, sira: 16, altKategori: 'Mocha' },
+  { ad: 'White Mocha',          kat: 'Kahve', fiyatKurus: 16000, sira: 17, altKategori: 'Mocha' },
+  { ad: 'Dark Mocha',           kat: 'Kahve', fiyatKurus: 16000, sira: 18, altKategori: 'Mocha' },
 
   // ── Sıcak İçecekler ───────────────────────────────────────────────
   { ad: 'Sahlep',          kat: 'Sıcak İçecekler', fiyatKurus: 12000, sira: 1 },
