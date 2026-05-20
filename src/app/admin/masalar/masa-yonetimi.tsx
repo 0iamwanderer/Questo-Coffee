@@ -28,7 +28,10 @@ export function MasaYonetimi() {
   const [authHazir, setAuthHazir] = useState(false);
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(getClientAuth(), (u) => setAuthHazir(!!u));
+    const unsub = onAuthStateChanged(getClientAuth(), async (u) => {
+      if (u) await u.getIdToken(true);
+      setAuthHazir(!!u);
+    });
     return () => unsub();
   }, []);
 

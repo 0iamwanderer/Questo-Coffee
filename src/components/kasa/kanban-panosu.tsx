@@ -28,7 +28,8 @@ export function KanbanPanosu() {
   const gorulen = useRef<Set<string>>(new Set());
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(getClientAuth(), (u) => {
+    const unsub = onAuthStateChanged(getClientAuth(), async (u) => {
+      if (u) await u.getIdToken(true); // claims'lerin token'a yazılmasını garantile
       setAuthHazir(!!u);
     });
     return () => unsub();

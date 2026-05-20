@@ -52,6 +52,14 @@ service cloud.firestore {
         }
       }
 
+    // collectionGroup('siparisler') için zorunlu wildcard kuralı ──────────
+    // Firebase, collectionGroup sorgularında tüm olası yolları /{path=**}/
+    // deseniyle değerlendirir; spesifik yol kuralı yetmiyor.
+    match /{path=**}/siparisler/{siparisId} {
+      allow read: if kasiyerMi();
+      allow write: if false;
+    }
+
       // ── Günlük sipariş sayaçları — sadece sunucu ───────────────────
       match /sayaclar/{sayacId} {
         allow read, write: if false;
