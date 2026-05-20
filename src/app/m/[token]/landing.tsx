@@ -183,7 +183,7 @@ export function Landing({ onEnter }: { onEnter: () => void }) {
       </div>
 
       {/* Alt: buton + dipnot */}
-      <div className="anim-rise anim-rise-4 flex flex-col items-center gap-5 w-full max-w-[280px] mb-6">
+      <div className="anim-rise anim-rise-4 flex flex-col items-center gap-5 w-full max-w-[280px] mb-20">
         <button
           type="button"
           onClick={onEnter}
