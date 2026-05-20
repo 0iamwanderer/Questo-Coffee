@@ -268,7 +268,7 @@ export function MenuYonetimi() {
                     </span>
                   )}
                 </button>
-                <div className="flex shrink-0 gap-1 opacity-0 transition group-hover:opacity-100">
+                <div className="flex shrink-0 gap-1 sm:opacity-0 sm:transition sm:group-hover:opacity-100">
                   <button
                     type="button"
                     aria-label="Düzenle"

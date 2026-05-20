@@ -550,8 +550,11 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
       >
         <div className="flex flex-col items-center gap-3">
           <div
-            className="size-8 rounded-full border-2 border-t-transparent animate-spin"
-            style={{ borderColor: 'hsl(22 42% 9%)', borderTopColor: 'transparent' }}
+            className="size-8 rounded-full border-2 animate-spin"
+            style={{
+              borderColor: 'hsl(46 56% 91% / 0.2)',
+              borderTopColor: 'hsl(46 56% 91%)',
+            }}
           />
           <p className="micro-caps text-white/35">Yükleniyor</p>
         </div>
@@ -617,6 +620,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               <button
                 key={k.id}
                 type="button"
+                ref={isActive ? (el) => el?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' }) : undefined}
                 onClick={() => kategoriDegistir(k.id)}
                 className={cn(
                   'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all whitespace-nowrap',
