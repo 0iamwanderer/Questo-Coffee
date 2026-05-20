@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { MenuListesi } from '@/components/musteri/menu-listesi';
 import { KvkkBildirim } from '@/components/musteri/kvkk-bildirim';
 import { cn } from '@/lib/utils';
@@ -10,22 +10,10 @@ import { Landing } from './landing';
 type AkisDurumu = 'landing' | 'opening' | 'menu' | 'closing';
 const KAPAK_SURE_MS = 700;
 
-const ziyaretAnahtar = (token: string) => `questo-landing-gorulmus-${token}`;
 
 export function MusteriAkisi() {
   const { masaToken } = useMasa();
-  const [durum, setDurum] = useState<AkisDurumu>('landing');
-
-  // İlk ziyarette landing'i göster; sonraki ziyaretlerde direkt menüye geç.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const k = ziyaretAnahtar(masaToken);
-    if (localStorage.getItem(k) === '1') {
-      setDurum('menu');
-    } else {
-      localStorage.setItem(k, '1');
-    }
-  }, [masaToken]);
+  const [durum, setDurum] = useState<AkisDurumu>('menu');
 
   const menuyeGec = () => {
     if (durum !== 'landing') return;
