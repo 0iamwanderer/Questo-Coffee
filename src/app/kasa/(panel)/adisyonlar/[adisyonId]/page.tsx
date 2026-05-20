@@ -89,6 +89,28 @@ export default async function AdisyonDetay({
     .reduce((acc, t) => acc + t.toplamKurus, 0);
   const kalanToplam = Math.max(0, (adisyon.toplamKurus as number) - odenmisToplam);
 
+  // Ürün bazlı ödeme: hangi kalemler ödendi?
+  const odenmisKalemMap = new Map<string, number>();
+  for (const t of talepler) {
+    if (t.durum !== 'odendi' || t.yontem !== 'urun' || !t.secilenKalemler) continue;
+    for (const k of t.secilenKalemler) {
+      const kk = `${k.siparisId}||${k.ad}||${k.araToplamKurus}`;
+      odenmisKalemMap.set(kk, (odenmisKalemMap.get(kk) ?? 0) + 1);
+    }
+  }
+  // Her siparişteki kalemlerin ödendi mi boolean dizisi
+  const konsumMap = new Map(odenmisKalemMap);
+  const siparisKalemDurum = new Map<string, boolean[]>();
+  for (const s of siparisler) {
+    const durumlar = (s.kalemler as SiparisKalemi[]).map((k) => {
+      const kk = `${s.id}||${k.ad}||${k.araToplamKurus}`;
+      const kalan = konsumMap.get(kk) ?? 0;
+      if (kalan > 0) { konsumMap.set(kk, kalan - 1); return true; }
+      return false;
+    });
+    siparisKalemDurum.set(s.id, durumlar);
+  }
+
   return (
     <div className="mx-auto max-w-3xl p-4 space-y-4">
       <Link
@@ -137,78 +159,111 @@ export default async function AdisyonDetay({
       </div>
 
       <ul className="space-y-3">
-        {siparisler.map((s) => (
-          <li key={s.id} className="rounded-lg border bg-card p-3">
-            <div className="flex items-center justify-between text-sm">
-              <div className="flex items-center gap-2">
-                <span className="font-medium">#{s.gunlukNo}</span>
-                {s.musteriAd && (
-                  <span className="font-semibold">{s.musteriAd}</span>
-                )}
+        {siparisler.map((s) => {
+          const kdl = siparisKalemDurum.get(s.id) ?? [];
+          const odenmisAlt = (s.kalemler as SiparisKalemi[]).reduce(
+            (acc, k, i) => acc + (kdl[i] ? (k.araToplamKurus as number) : 0),
+            0,
+          );
+          const kalanAlt = (s.toplamKurus as number) - odenmisAlt;
+          return (
+            <li key={s.id} className="rounded-lg border bg-card p-3">
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-2">
+                  <span className="font-medium">#{s.gunlukNo}</span>
+                  {s.musteriAd && (
+                    <span className="font-semibold">{s.musteriAd}</span>
+                  )}
+                </div>
+                <span className="rounded-md border px-2 py-0.5 text-xs">
+                  {DURUM_ETIKET[s.durum]}
+                </span>
               </div>
-              <span className="rounded-md border px-2 py-0.5 text-xs">
-                {DURUM_ETIKET[s.durum]}
-              </span>
-            </div>
-            <ul className="mt-2 space-y-1 text-sm">
-              {(s.kalemler as SiparisKalemi[]).map((k, i) => (
-                <li
-                  key={`${k.urunId}-${i}`}
-                  className="flex items-start justify-between gap-2"
-                >
-                  <span className="min-w-0">
-                    <span className="tabular-nums text-muted-foreground">
-                      {k.adet}×
-                    </span>{' '}
-                    {k.ad}
-                    {k.secimler && k.secimler.length > 0 && (
-                      <span className="block text-xs text-foreground/80">
-                        {k.secimler
-                          .map(
-                            (sec) =>
-                              `${sec.grupAd}: ${sec.secenekler
-                                .map((s) => s.ad)
-                                .join(', ')}`,
-                          )
-                          .join(' · ')}
-                      </span>
-                    )}
-                    {k.notlar && (
-                      <span className="block text-xs text-muted-foreground">
-                        Not: {k.notlar}
-                      </span>
-                    )}
+              <ul className="mt-2 space-y-1 text-sm">
+                {(s.kalemler as SiparisKalemi[]).map((k, i) => (
+                  <li
+                    key={`${k.urunId}-${i}`}
+                    className={`flex items-start justify-between gap-2 ${kdl[i] ? 'opacity-40' : ''}`}
+                  >
+                    <span className={`min-w-0 ${kdl[i] ? 'line-through' : ''}`}>
+                      <span className="tabular-nums text-muted-foreground">
+                        {k.adet}×
+                      </span>{' '}
+                      {k.ad}
+                      {k.secimler && k.secimler.length > 0 && (
+                        <span className="block text-xs text-foreground/80">
+                          {k.secimler
+                            .map(
+                              (sec) =>
+                                `${sec.grupAd}: ${sec.secenekler
+                                  .map((s) => s.ad)
+                                  .join(', ')}`,
+                            )
+                            .join(' · ')}
+                        </span>
+                      )}
+                      {k.notlar && (
+                        <span className="block text-xs text-muted-foreground">
+                          Not: {k.notlar}
+                        </span>
+                      )}
+                    </span>
+                    <span
+                      className={`shrink-0 tabular-nums text-xs ${kdl[i] ? 'line-through text-muted-foreground' : ''}`}
+                    >
+                      {formatTL(k.araToplamKurus)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-2 border-t pt-2 space-y-0.5">
+                {odenmisAlt > 0 && (
+                  <div className="flex justify-between text-xs text-emerald-700 dark:text-emerald-400">
+                    <span>Ödenen</span>
+                    <span className="tabular-nums">−{formatTL(odenmisAlt)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">
+                    {odenmisAlt > 0 ? 'Kalan' : 'Ara toplam'}
                   </span>
-                  <span className="shrink-0 tabular-nums text-xs">
-                    {formatTL(k.araToplamKurus)}
+                  <span className="font-medium tabular-nums">
+                    {formatTL(odenmisAlt > 0 ? kalanAlt : s.toplamKurus)}
                   </span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-2 flex justify-between border-t pt-2 text-sm">
-              <span className="text-muted-foreground">Ara toplam</span>
-              <span className="font-medium">{formatTL(s.toplamKurus)}</span>
-            </div>
-          </li>
-        ))}
+                </div>
+              </div>
+            </li>
+          );
+        })}
       </ul>
 
       {acik && (
         <KasiyerBolme
           adisyonId={adisyonId}
-          toplamKurus={adisyon.toplamKurus as number}
-          siparisler={siparisler.map((s) => ({
-            id: s.id,
-            gunlukNo: s.gunlukNo,
-            durum: s.durum,
-            musteriAd: s.musteriAd,
-            toplamKurus: s.toplamKurus as number,
-            kalemler: (s.kalemler as SiparisKalemi[]).map((k) => ({
-              ad: k.ad,
-              adet: k.adet,
-              araToplamKurus: k.araToplamKurus as number,
-            })),
-          }))}
+          toplamKurus={kalanToplam}
+          siparisler={siparisler
+            .map((s) => {
+              const kdl = siparisKalemDurum.get(s.id) ?? [];
+              const odenmisAlt = (s.kalemler as SiparisKalemi[]).reduce(
+                (acc, k, i) => acc + (kdl[i] ? (k.araToplamKurus as number) : 0),
+                0,
+              );
+              return {
+                id: s.id,
+                gunlukNo: s.gunlukNo,
+                durum: s.durum,
+                musteriAd: s.musteriAd,
+                toplamKurus: (s.toplamKurus as number) - odenmisAlt,
+                kalemler: (s.kalemler as SiparisKalemi[])
+                  .filter((_, i) => !kdl[i])
+                  .map((k) => ({
+                    ad: k.ad,
+                    adet: k.adet,
+                    araToplamKurus: k.araToplamKurus as number,
+                  })),
+              };
+            })
+            .filter((s) => s.kalemler.length > 0)}
         />
       )}
 
