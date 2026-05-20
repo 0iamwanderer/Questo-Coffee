@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { collection, onSnapshot, query } from 'firebase/firestore';
+import { collection, doc, getDoc } from 'firebase/firestore';
+// collection: urunConverter için gerekli (withConverter zinciri)
 import { getClientDb } from '@/lib/firebase/client';
 import { urunConverter } from '@/lib/firebase/converters';
 import { formatTL } from '@/lib/utils/para';
@@ -56,20 +57,24 @@ export function SepetIcerik({ onKapat }: { onKapat?: () => void } = {}) {
       : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
   );
 
+  // Tüm ürün koleksiyonunu dinlemek yerine sadece sepetteki ürünleri fetch et
   useEffect(() => {
+    if (kalemler.length === 0) return;
     const db = getClientDb();
-    const q = query(
-      collection(db, `restoranlar/${RESTORAN}/urunler`).withConverter(
-        urunConverter,
+    const urunIds = [...new Set(kalemler.map((k) => k.urunId))];
+    Promise.all(
+      urunIds.map((id) =>
+        getDoc(
+          doc(collection(db, `restoranlar/${RESTORAN}/urunler`).withConverter(urunConverter), id),
+        ),
       ),
-    );
-    const unsub = onSnapshot(q, (snap) => {
+    ).then((snaps) => {
       const m = new Map<string, Urun>();
-      snap.docs.forEach((d) => m.set(d.id, d.data()));
+      snaps.forEach((s) => { if (s.exists()) m.set(s.id, s.data()); });
       setUrunler(m);
     });
-    return () => unsub();
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kalemler.map((k) => k.urunId).join(',')]);
 
   const tahminiToplam = useMemo(
     () =>

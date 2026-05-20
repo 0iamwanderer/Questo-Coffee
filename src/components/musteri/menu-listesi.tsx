@@ -91,17 +91,19 @@ function KalemSatiri({
   urun: Urun;
   onDetay: (u: Urun) => void;
 }) {
+  const opsiyonlu = (urun.opsiyonGruplari?.length ?? 0) > 0;
+  const stokYok = !urun.stoktaMi;
+
+  // Tek selector: tüm kalemler array'i yerine sadece bu ürünün satırını dinle
   const adet = useSepet((s) => s.adetGetir(urun.id));
   const ekle = useSepet((s) => s.ekle);
   const guncelle = useSepet((s) => s.guncelle);
-  const kalemler = useSepet((s) => s.kalemler);
+  const tekSatir = useSepet((s) =>
+    !opsiyonlu
+      ? s.kalemler.find((k) => k.urunId === urun.id && !k.secimler)
+      : undefined,
+  );
   const btnRef = useRef<HTMLButtonElement>(null);
-
-  const opsiyonlu = (urun.opsiyonGruplari?.length ?? 0) > 0;
-  const stokYok = !urun.stoktaMi;
-  const tekSatir = !opsiyonlu
-    ? kalemler.find((k) => k.urunId === urun.id && !k.secimler)
-    : undefined;
 
   const handleEkle = () => {
     if (opsiyonlu) {
@@ -527,22 +529,15 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
     [urunler, aktifId],
   );
 
-  // Flip için önceki spread snapshot'ı
-  const oncekiKategori = useMemo(
-    () =>
-      flip ? kategoriler.find((k) => k.id === flip.oncekiId) ?? null : null,
-    [flip, kategoriler],
-  );
-  const oncekiIndeks = useMemo(
-    () =>
-      flip ? kategoriler.findIndex((k) => k.id === flip.oncekiId) : -1,
-    [flip, kategoriler],
-  );
-  const oncekiUrunler = useMemo(
-    () =>
-      flip ? urunler.filter((u) => u.kategoriId === flip.oncekiId) : [],
-    [flip, urunler],
-  );
+  // Flip için önceki spread snapshot'ı — üç ayrı memo yerine tek hesaplama
+  const { oncekiKategori, oncekiIndeks, oncekiUrunler } = useMemo(() => {
+    if (!flip) return { oncekiKategori: null, oncekiIndeks: -1, oncekiUrunler: [] as Urun[] };
+    return {
+      oncekiKategori: kategoriler.find((k) => k.id === flip.oncekiId) ?? null,
+      oncekiIndeks: kategoriler.findIndex((k) => k.id === flip.oncekiId),
+      oncekiUrunler: urunler.filter((u) => u.kategoriId === flip.oncekiId),
+    };
+  }, [flip, kategoriler, urunler]);
 
   const roman = (k: Kategori | null, idx: number) =>
     k?.roman ?? ROMAN_SAYILAR[idx] ?? `${idx + 1}`;
