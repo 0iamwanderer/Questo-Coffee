@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Minus, Plus, Users } from 'lucide-react';
+import { Check, Clock, Minus, Plus, Users } from 'lucide-react';
 import { formatTL } from '@/lib/utils/para';
 import type { SiparisDurumu } from '@/types/model';
 
@@ -32,6 +32,7 @@ type Sekme = 'kisi' | 'esit' | 'urun';
 interface KisiGrubu {
   ad: string | null;
   toplam: number;
+  teslimEdildi: boolean;
   kalemler: Array<{
     siparisId: string;
     siparisNo: number;
@@ -59,9 +60,11 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
       const mevcut = map.get(anahtar) ?? {
         ad: s.musteriAd ?? null,
         toplam: 0,
+        teslimEdildi: true,
         kalemler: [],
       };
       mevcut.toplam += s.toplamKurus;
+      if (s.durum !== 'teslim') mevcut.teslimEdildi = false;
       for (const k of s.kalemler) {
         mevcut.kalemler.push({
           siparisId: s.id,
@@ -77,15 +80,24 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   }, [aktifSiparisler]);
 
   const adliGrup = kisiGruplari.some((g) => g.ad !== null);
+  const tumTeslimEdildi = aktifSiparisler.every((s) => s.durum === 'teslim');
 
-  const sekme: Sekme = adliGrup ? 'kisi' : 'esit';
-  const [aktifSekme, setAktifSekme] = useState<Sekme>(sekme);
+  const [aktifSekme, setAktifSekme] = useState<Sekme>(
+    adliGrup ? 'kisi' : 'esit',
+  );
 
-  const tumKalemler = aktifSiparisler.flatMap((s) =>
+  // Ürün Seç: yalnızca teslim edilmiş sipariş kalemleri seçilebilir
+  const teslimSiparisler = aktifSiparisler.filter((s) => s.durum === 'teslim');
+  const bekleyenSiparisler = aktifSiparisler.filter(
+    (s) => s.durum !== 'teslim',
+  );
+
+  const teslimKalemler = teslimSiparisler.flatMap((s) =>
     s.kalemler.map((k, i) => ({
       key: `${s.id}-${i}`,
       siparisId: s.id,
       siparisNo: s.gunlukNo,
+      musteriAd: s.musteriAd,
       ad: k.ad,
       adet: k.adet,
       araToplamKurus: k.araToplamKurus,
@@ -93,7 +105,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   );
 
   const seciliToplam = Array.from(secili).reduce((acc, key) => {
-    const item = tumKalemler.find((k) => k.key === key);
+    const item = teslimKalemler.find((k) => k.key === key);
     return acc + (item?.araToplamKurus ?? 0);
   }, 0);
 
@@ -114,20 +126,17 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   ) => {
     setYukleniyor(anahtarId);
     try {
-      const res = await fetch(
-        `/api/adisyon/${adisyonId}/kasiyer-talep`,
-        {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify(body),
-        },
-      );
+      const res = await fetch(`/api/adisyon/${adisyonId}/kasiyer-talep`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
       if (!res.ok) throw new Error();
       setOdenenler((prev) => new Set([...prev, anahtarId]));
       onSuccess?.();
       router.refresh();
     } catch {
-      // sessiz hata — buton tekrar basılabilir
+      // sessiz hata
     } finally {
       setYukleniyor(null);
     }
@@ -154,7 +163,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
 
   const urunOde = () => {
     const kalemler = Array.from(secili).map((key) => {
-      const item = tumKalemler.find((k) => k.key === key)!;
+      const item = teslimKalemler.find((k) => k.key === key)!;
       return {
         siparisId: item.siparisId,
         siparisNo: item.siparisNo,
@@ -163,8 +172,10 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
         araToplamKurus: item.araToplamKurus,
       };
     });
-    talep({ yontem: 'urun', secilenKalemler: kalemler }, `urun-${Date.now()}`, () =>
-      setSecili(new Set()),
+    talep(
+      { yontem: 'urun', secilenKalemler: kalemler },
+      `urun-${Date.now()}`,
+      () => setSecili(new Set()),
     );
   };
 
@@ -233,7 +244,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                 className={`rounded-lg border p-3 ${odendi ? 'opacity-60' : ''}`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div className="space-y-1 flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 space-y-1">
                     <p className="text-sm font-medium">
                       {grup.ad ?? 'Adsız'}
                     </p>
@@ -249,13 +260,17 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                       ))}
                     </ul>
                   </div>
-                  <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
                     <span className="text-sm font-semibold tabular-nums">
                       {formatTL(grup.toplam)}
                     </span>
                     {odendi ? (
                       <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
                         <Check className="size-3" /> Ödendi
+                      </span>
+                    ) : !grup.teslimEdildi ? (
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <Clock className="size-3" /> Teslim bekleniyor
                       </span>
                     ) : (
                       <button
@@ -278,6 +293,15 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
       {/* ─── Eşit Böl ────────────────────────────────── */}
       {aktifSekme === 'esit' && (
         <div className="space-y-3">
+          {!tumTeslimEdildi && (
+            <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+              <Clock className="size-3 shrink-0" />
+              {bekleyenSiparisler.length === 1
+                ? '1 sipariş henüz teslim edilmedi.'
+                : `${bekleyenSiparisler.length} sipariş henüz teslim edilmedi.`}
+            </div>
+          )}
+
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Kişi sayısı</span>
             <div className="flex items-center gap-3">
@@ -312,10 +336,10 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
             </div>
           </div>
 
-          {/* Ödenen dilimler */}
           <div className="space-y-1.5">
             {Array.from({ length: kisiSayisi }).map((_, i) => {
               const odendi = i < odenenSayisi;
+              const aktif = tumTeslimEdildi && i === odenenSayisi;
               return (
                 <div
                   key={i}
@@ -328,17 +352,25 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                     <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
                       <Check className="size-3" /> Ödendi
                     </span>
-                  ) : i === odenenSayisi ? (
+                  ) : aktif ? (
                     <button
                       type="button"
                       onClick={esitDilimOde}
-                      disabled={yukleniyor === `esit-${i}`}
+                      disabled={!!yukleniyor}
                       className="rounded-md bg-emerald-600 px-2.5 py-1 text-xs font-medium text-white disabled:opacity-50"
                     >
-                      {yukleniyor === `esit-${i}` ? '…' : 'Ödendi ✓'}
+                      {yukleniyor ? '…' : 'Ödendi ✓'}
                     </button>
                   ) : (
-                    <span className="text-xs text-muted-foreground">bekliyor</span>
+                    <span className="text-xs text-muted-foreground">
+                      {!tumTeslimEdildi && i === 0 ? (
+                        <span className="flex items-center gap-1">
+                          <Clock className="size-3" /> Teslim bekleniyor
+                        </span>
+                      ) : (
+                        'bekliyor'
+                      )}
+                    </span>
                   )}
                 </div>
               );
@@ -350,14 +382,21 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
       {/* ─── Ürün Seç ────────────────────────────────── */}
       {aktifSekme === 'urun' && (
         <div className="space-y-2">
-          {tumKalemler.length === 0 ? (
+          {bekleyenSiparisler.length > 0 && (
+            <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
+              <Clock className="size-3 shrink-0" />
+              Teslim edilmemiş siparişlerin ürünleri seçilemiyor.
+            </div>
+          )}
+
+          {teslimKalemler.length === 0 ? (
             <p className="py-3 text-center text-sm text-muted-foreground">
-              Seçilebilir ürün yok.
+              Henüz teslim edilmiş ürün yok.
             </p>
           ) : (
             <>
               <ul className="max-h-56 space-y-0.5 overflow-y-auto">
-                {aktifSiparisler.map((s) => (
+                {teslimSiparisler.map((s) => (
                   <li key={s.id}>
                     <p className="px-2 pt-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                       {s.musteriAd
