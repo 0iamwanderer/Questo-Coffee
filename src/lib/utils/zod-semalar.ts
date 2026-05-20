@@ -16,6 +16,7 @@ export const SiparisKalemiGirdi = z.object({
 export const SiparisIstegi = z.object({
   masaToken: z.string().min(16).max(64),
   kalemler: z.array(SiparisKalemiGirdi).min(1).max(50),
+  musteriAd: z.string().trim().min(1).max(50).optional(),
 });
 export type SiparisIstegiT = z.infer<typeof SiparisIstegi>;
 
@@ -92,10 +93,12 @@ export const OdemeTalebiIstegi = z.discriminatedUnion('yontem', [
   z.object({
     yontem: z.literal('esit'),
     kisiSayisi: z.number().int().min(2).max(20),
+    musteriAd: z.string().trim().min(1).max(50).optional(),
   }),
   z.object({
     yontem: z.literal('urun'),
     secilenKalemler: z.array(OdemeTalebiKalemiGirdi).min(1).max(100),
+    musteriAd: z.string().trim().min(1).max(50).optional(),
   }),
 ]);
 export type OdemeTalebiIstegiT = z.infer<typeof OdemeTalebiIstegi>;

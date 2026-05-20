@@ -21,6 +21,7 @@ export interface SepetKalemi {
 interface SepetState {
   aktifMasaToken: string | null;
   kalemler: SepetKalemi[];
+  musteriAd: string | null;
 
   masaAyarla: (token: string) => void;
   ekle: (
@@ -31,6 +32,7 @@ interface SepetState {
   guncelle: (satirId: string, adet: number) => void;
   notGuncelle: (satirId: string, notlar: string | undefined) => void;
   temizle: () => void;
+  musteriAdAyarla: (ad: string | null) => void;
 
   /** Ürünün sepetteki tüm varyantlarının toplam adedi */
   adetGetir: (urunId: string) => number;
@@ -55,6 +57,7 @@ export const useSepet = create<SepetState>()(
     (set, get) => ({
       aktifMasaToken: null,
       kalemler: [],
+      musteriAd: null,
 
       masaAyarla: (token) => {
         const cur = get().aktifMasaToken;
@@ -129,6 +132,7 @@ export const useSepet = create<SepetState>()(
         })),
 
       temizle: () => set({ kalemler: [] }),
+      musteriAdAyarla: (ad) => set({ musteriAd: ad }),
 
       adetGetir: (urunId) =>
         get()
@@ -142,6 +146,7 @@ export const useSepet = create<SepetState>()(
       partialize: (s) => ({
         aktifMasaToken: s.aktifMasaToken,
         kalemler: s.kalemler,
+        musteriAd: s.musteriAd,
       }),
     },
   ),

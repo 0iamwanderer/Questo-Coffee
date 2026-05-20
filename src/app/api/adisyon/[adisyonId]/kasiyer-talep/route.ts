@@ -1,5 +1,6 @@
 import { FieldValue } from 'firebase-admin/firestore';
-import { getAdminAuth, getAdminDb } from '@/lib/firebase/admin';
+import { apiKasiyer } from '@/lib/auth/guard';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
 import { OdemeTalebiIstegi } from '@/lib/utils/zod-semalar';
 
@@ -16,17 +17,14 @@ export async function POST(
   { params }: { params: Promise<{ adisyonId: string }> },
 ) {
   try {
-    const auth = req.headers.get('authorization');
-    if (!auth?.startsWith('Bearer ')) {
-      throw new AppError('yetkisiz', 'Kimlik bilgisi eksik.', 401);
+    const u = await apiKasiyer();
+    const restoranId = R();
+    if (u.claims.restoranId !== restoranId) {
+      throw new AppError('yetkisiz', 'Restoran kapsamı uyuşmuyor.', 403);
     }
-    const decoded = await getAdminAuth().verifyIdToken(
-      auth.slice('Bearer '.length).trim(),
-    );
 
     const body = OdemeTalebiIstegi.parse(await req.json());
     const { adisyonId } = await params;
-    const restoranId = R();
     const db = getAdminDb();
 
     const aRef = db.doc(`restoranlar/${restoranId}/adisyonlar/${adisyonId}`);
@@ -43,9 +41,9 @@ export async function POST(
     let extra: Record<string, unknown> = {};
 
     if (body.yontem === 'esit') {
-      toplamKurus = adisyon.toplamKurus;
-      const kisiPayi = Math.ceil(toplamKurus / body.kisiSayisi);
-      extra = { kisiSayisi: body.kisiSayisi, kisiPayi };
+      toplamKurus = Math.ceil(adisyon.toplamKurus / body.kisiSayisi);
+      extra = { kisiSayisi: body.kisiSayisi, kisiPayi: toplamKurus };
+      toplamKurus = toplamKurus; // kisiPayi miktarı kaydedilir
     } else {
       toplamKurus = body.secilenKalemler.reduce(
         (acc, k) => acc + k.araToplamKurus,
@@ -57,22 +55,17 @@ export async function POST(
     const talepRef = aRef.collection('odemeTalepleri').doc();
     await talepRef.set({
       adisyonId,
-      musteriUid: decoded.uid,
       yontem: body.yontem,
       toplamKurus,
       ...extra,
       ...(body.musteriAd ? { musteriAd: body.musteriAd } : {}),
-      durum: 'bekliyor',
-      kaynak: 'musteri',
+      durum: 'odendi',
+      kaynak: 'kasiyer',
+      kasiyerUid: u.uid,
       olusturulduAt: FieldValue.serverTimestamp(),
     });
 
-    return Response.json({
-      ok: true,
-      talepId: talepRef.id,
-      toplamKurus,
-      ...(extra.kisiPayi !== undefined && { kisiPayi: extra.kisiPayi }),
-    });
+    return Response.json({ ok: true, talepId: talepRef.id, toplamKurus });
   } catch (e) {
     return httpHata(e);
   }

@@ -163,7 +163,14 @@ async function AdisyonGosterici({
             style={{ animationDelay: `${i * 80}ms` }}
           >
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium tabular-nums">#{s.gunlukNo}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium tabular-nums">#{s.gunlukNo}</span>
+                {s.musteriAd && (
+                  <span className="text-xs text-muted-foreground">
+                    · {s.musteriAd}
+                  </span>
+                )}
+              </div>
               <span
                 className={`rounded-full px-2.5 py-0.5 text-[11px] font-medium ${DURUM_RENK[s.durum]}`}
               >
@@ -234,6 +241,7 @@ async function AdisyonGosterici({
           id: s.id,
           gunlukNo: s.gunlukNo,
           durum: s.durum,
+          musteriAd: s.musteriAd,
           kalemler: (s.kalemler as SiparisKalemi[]).map((k) => ({
             ad: k.ad,
             adet: k.adet,

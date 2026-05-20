@@ -12,6 +12,7 @@ import type {
 } from '@/types/model';
 import { AdisyonuKapatBtn } from './kapat-btn';
 import { OdemeTalepleri } from '@/components/kasa/odeme-talepleri';
+import { KasiyerBolme } from '@/components/kasa/kasiyer-bolme';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -76,6 +77,8 @@ export default async function AdisyonDetay({
         araToplamKurus: k.araToplamKurus as number,
       })),
       durum: data.durum,
+      musteriAd: data.musteriAd,
+      kaynak: data.kaynak,
     };
   });
 
@@ -110,7 +113,14 @@ export default async function AdisyonDetay({
         {siparisler.map((s) => (
           <li key={s.id} className="rounded-lg border bg-card p-3">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium">#{s.gunlukNo}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-medium">#{s.gunlukNo}</span>
+                {s.musteriAd && (
+                  <span className="text-xs text-muted-foreground">
+                    · {s.musteriAd}
+                  </span>
+                )}
+              </div>
               <span className="rounded-md border px-2 py-0.5 text-xs">
                 {DURUM_ETIKET[s.durum]}
               </span>
@@ -157,6 +167,25 @@ export default async function AdisyonDetay({
           </li>
         ))}
       </ul>
+
+      {acik && (
+        <KasiyerBolme
+          adisyonId={adisyonId}
+          toplamKurus={adisyon.toplamKurus as number}
+          siparisler={siparisler.map((s) => ({
+            id: s.id,
+            gunlukNo: s.gunlukNo,
+            durum: s.durum,
+            musteriAd: s.musteriAd,
+            toplamKurus: s.toplamKurus as number,
+            kalemler: (s.kalemler as SiparisKalemi[]).map((k) => ({
+              ad: k.ad,
+              adet: k.adet,
+              araToplamKurus: k.araToplamKurus as number,
+            })),
+          }))}
+        />
+      )}
 
       <OdemeTalepleri adisyonId={adisyonId} talepler={talepler} />
 

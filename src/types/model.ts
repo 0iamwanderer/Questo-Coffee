@@ -132,6 +132,8 @@ export interface Siparis {
   olusturulduAt: Date;
   /** SLA Cloud Function tarafından konur (10 dk yeni / 15 dk hazırlanıyor). */
   slaUyari?: boolean;
+  /** Siparişi veren kişinin adı — hesap bölme için isteğe bağlı. */
+  musteriAd?: string;
 }
 
 export interface Adisyon {
@@ -158,7 +160,7 @@ export interface OdemeTalebiKalemi {
 export interface OdemeTalebi {
   id: string;
   adisyonId: string;
-  musteriUid: string;
+  musteriUid?: string;
   yontem: OdemeTalebiYontemi;
   toplamKurus: Kurus;
   kisiSayisi?: number;
@@ -166,4 +168,8 @@ export interface OdemeTalebi {
   secilenKalemler?: OdemeTalebiKalemi[];
   durum: OdemeTalebiDurumu;
   olusturulduAt: Date;
+  /** Ödemeyi yapan kişinin adı — kişiye göre hesap bölme için. */
+  musteriAd?: string;
+  /** Talebin kaynağı — müşteri mi yoksa kasiyer mi oluşturdu. */
+  kaynak?: 'musteri' | 'kasiyer';
 }

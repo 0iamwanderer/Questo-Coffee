@@ -319,6 +319,7 @@ export const siparisYaz = async (
       durum: 'yeni',
       durumTarihleri: { yeni: simdiTs },
       olusturulduAt: simdiTs,
+      ...(istek.musteriAd ? { musteriAd: istek.musteriAd } : {}),
     });
 
     // Stok düşürme (varsa). 0'a düşerse stoktaMi otomatik false.

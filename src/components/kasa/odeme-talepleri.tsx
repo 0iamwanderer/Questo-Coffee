@@ -20,6 +20,8 @@ interface TalepItem {
   kisiPayi?: number;
   secilenKalemler?: TalepKalemi[];
   durum: 'bekliyor' | 'odendi' | 'iptal';
+  musteriAd?: string;
+  kaynak?: 'musteri' | 'kasiyer';
 }
 
 interface Props {
@@ -96,17 +98,25 @@ export function OdemeTalepleri({ adisyonId, talepler }: Props) {
           <li key={t.id} className="rounded-lg border bg-card p-3">
             <div className="flex items-start justify-between gap-2">
               <div className="space-y-1">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <span
                     className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${DURUM_STIL[t.durum]}`}
                   >
                     {DURUM_ETIKET[t.durum]}
                   </span>
+                  {t.musteriAd && (
+                    <span className="text-xs font-medium">{t.musteriAd}</span>
+                  )}
                   <span className="text-xs text-muted-foreground">
                     {t.yontem === 'esit'
                       ? `Eşit böl — ${t.kisiSayisi} kişi`
                       : 'Ürün seçimi'}
                   </span>
+                  {t.kaynak === 'musteri' && (
+                    <span className="text-[10px] text-muted-foreground/70">
+                      (müşteri talebi)
+                    </span>
+                  )}
                 </div>
 
                 {t.yontem === 'urun' && t.secilenKalemler && (

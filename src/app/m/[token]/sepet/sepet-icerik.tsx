@@ -43,6 +43,8 @@ export function SepetIcerik({ onKapat }: { onKapat?: () => void } = {}) {
   const cikar = useSepet((s) => s.cikar);
   const notGuncelle = useSepet((s) => s.notGuncelle);
   const temizle = useSepet((s) => s.temizle);
+  const musteriAd = useSepet((s) => s.musteriAd);
+  const musteriAdAyarla = useSepet((s) => s.musteriAdAyarla);
 
   const [urunler, setUrunler] = useState<Map<string, Urun>>(new Map());
   const [gonderiliyor, setGonderiliyor] = useState(false);
@@ -102,6 +104,7 @@ export function SepetIcerik({ onKapat }: { onKapat?: () => void } = {}) {
               ? { secimler: k.secimler }
               : {}),
           })),
+          ...(musteriAd ? { musteriAd } : {}),
         }),
       });
 
@@ -326,6 +329,33 @@ export function SepetIcerik({ onKapat }: { onKapat?: () => void } = {}) {
           );
         })}
       </ul>
+
+      {/* İsim alanı — hesap ayırma için */}
+      <div className="rounded-2xl border bg-card p-4 shadow-soft space-y-2">
+        <label className="block text-sm font-medium" htmlFor="musteri-ad">
+          Adınız{' '}
+          <span className="font-normal text-muted-foreground">
+            (isteğe bağlı)
+          </span>
+        </label>
+        <input
+          id="musteri-ad"
+          type="text"
+          inputMode="text"
+          autoComplete="given-name"
+          placeholder="Ali, Ayşe…"
+          value={musteriAd ?? ''}
+          maxLength={50}
+          onChange={(e) =>
+            musteriAdAyarla(e.target.value.trim() || null)
+          }
+          className="w-full rounded-xl border bg-card px-3 py-2 text-sm outline-none transition focus:border-foreground focus:ring-1 focus:ring-foreground"
+        />
+        <p className="text-xs text-muted-foreground">
+          Adınız siparişinize eklenir; hesap ayırırken kişiye göre
+          gruplama yapılır.
+        </p>
+      </div>
 
       {/* Cross-sell: sepete eklemediği ürünlerden öneri */}
       <Tamamlayicilar

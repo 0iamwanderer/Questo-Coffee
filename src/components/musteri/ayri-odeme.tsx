@@ -17,6 +17,7 @@ interface SiparisOzet {
   id: string;
   gunlukNo: number;
   durum: SiparisDurumu;
+  musteriAd?: string;
   kalemler: KalemOzet[];
 }
 
@@ -243,9 +244,11 @@ export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
               <ul className="max-h-60 space-y-1 overflow-y-auto">
                 {aktifSiparisler.map((s) => (
                   <li key={s.id}>
-                    {aktifSiparisler.length > 1 && (
+                    {(aktifSiparisler.length > 1 || s.musteriAd) && (
                       <p className="px-2 pt-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-                        Sipariş #{s.gunlukNo}
+                        {s.musteriAd
+                          ? `${s.musteriAd} — Sipariş #${s.gunlukNo}`
+                          : `Sipariş #${s.gunlukNo}`}
                       </p>
                     )}
                     {s.kalemler.map((k, i) => {
