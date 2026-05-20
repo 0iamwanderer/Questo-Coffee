@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { MenuListesi } from '@/components/musteri/menu-listesi';
 import { KvkkBildirim } from '@/components/musteri/kvkk-bildirim';
 import { cn } from '@/lib/utils';
@@ -14,14 +14,6 @@ const KAPAK_SURE_MS = 700;
 export function MusteriAkisi() {
   const { masaToken } = useMasa();
   const [durum, setDurum] = useState<AkisDurumu>('landing');
-
-  // Sonraki ziyaretlerde direkt menüye geç.
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const k = `questo-landing-${masaToken}`;
-    if (localStorage.getItem(k) === '1') setDurum('menu');
-    else localStorage.setItem(k, '1');
-  }, [masaToken]);
 
   const menuyeGec = () => {
     if (durum !== 'landing') return;
