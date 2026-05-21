@@ -1,64 +1,44 @@
 @echo off
 chcp 65001 >nul
-title Questo - Kontrol Paneli
+title Questo - Baslatiliyor...
 color 06
 
 echo.
-echo  ╔════════════════════════════════════════════╗
-echo  ║      Questo Coffea Co. baslatiliyor...     ║
-echo  ╚════════════════════════════════════════════╝
+echo  Questo baslatiliyor...
 echo.
 
 cd /d "%~dp0"
 
-echo  • Sunucu yeni pencerede aciliyor...
+echo  [1/4] Sunucu yeni pencerede aciliyor...
 start "Questo Sunucu" cmd /k "chcp 65001 >nul && npm run dev:all"
 
-echo  • Hazir olmasini bekliyoruz (20 saniye)...
-timeout /t 20 /nobreak >nul
+echo  [2/4] Emulator hazir olana kadar bekleniyor...
+:bekle_emu
+powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',8080)).Close();exit 0}catch{exit 1}" >nul 2>&1
+if errorlevel 1 ( timeout /t 2 /nobreak >nul & goto bekle_emu )
+
+echo  [3/4] Demo veri yukleniyor...
+call npm run seed
+
+echo.
+echo  [4/4] Uygulama hazir olana kadar bekleniyor...
+:bekle_next
+powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',3000)).Close();exit 0}catch{exit 1}" >nul 2>&1
+if errorlevel 1 ( timeout /t 2 /nobreak >nul & goto bekle_next )
 
 start http://localhost:3000
 
-:menu
 cls
+title Questo - Calisiyor
+color 0A
 echo.
 echo  ╔════════════════════════════════════════════╗
-echo  ║         Questo Kontrol Paneli              ║
+echo  ║     Questo hazir!  →  localhost:3000       ║
 echo  ╚════════════════════════════════════════════╝
 echo.
-echo   [1]  Demo veri yukle
-echo   [2]  Tarayici ac  (localhost:3000)
-echo   [3]  Sunucuyu durdur ve cik
-echo   [4]  Sadece cik  (sunucu calismaya devam eder)
+echo   Sunucu arka planda calisiyor.
+echo   Bu pencereyi kapatabilirsiniz, sunucu devam eder.
 echo.
-set /p "choice=  Seciminiz: "
-
-if "%choice%"=="1" goto seed
-if "%choice%"=="2" goto browser
-if "%choice%"=="3" goto stop
-if "%choice%"=="4" goto quit
-goto menu
-
-:seed
-echo.
-echo  Demo veri yukleniyor...
-call npm run seed
+echo   Tamamen durdurmak icin: Questo'yu Durdur.bat
 echo.
 pause
-goto menu
-
-:browser
-start http://localhost:3000
-goto menu
-
-:stop
-echo.
-echo  Durduruluyor...
-taskkill /F /IM node.exe >nul 2>&1
-taskkill /F /IM java.exe >nul 2>&1
-echo  Tum islemler durduruldu.
-timeout /t 2 /nobreak >nul
-exit /b
-
-:quit
-exit /b
