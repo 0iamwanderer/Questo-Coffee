@@ -10,7 +10,8 @@
     "typecheck": "tsc --noEmit",
     "emulators": "firebase emulators:start --only auth,firestore,storage --import=./emulator-veri --export-on-exit",
     "seed": "node --env-file=.env.local scripts/seed.mjs",
-    "dev:all": "concurrently --names \"emu,next\" --prefix-colors \"yellow,cyan\" --kill-others-on-fail \"npm:emulators\" \"npm:dev\"",
+    "kill-ports": "npx --yes kill-port 3000 4000 4400 4500 9099 8080 9199 2>nul || exit 0",
+    "dev:all": "npm run kill-ports && concurrently --names \"emu,next\" --prefix-colors \"yellow,cyan\" --kill-others-on-fail \"npm:emulators\" \"npm:dev\"",
     "test": "vitest"
   },
   "dependencies": {
