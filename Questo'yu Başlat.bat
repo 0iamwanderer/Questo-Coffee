@@ -10,7 +10,7 @@ echo.
 cd /d "%~dp0"
 
 echo  [1/4] Sunucu yeni pencerede aciliyor...
-start "Questo Sunucu" cmd /k "chcp 65001 >nul & cd /d "%~dp0" & npm run dev:all"
+start "Questo Sunucu" cmd /k "chcp 65001 >nul & npm run dev:all"
 
 REM Yeni penceredeki kill-ports'un bitmesini bekle
 echo        (5 saniye hazirlik suresi)
