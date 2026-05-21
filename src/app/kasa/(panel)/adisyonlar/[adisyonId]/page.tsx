@@ -269,7 +269,7 @@ export default async function AdisyonDetay({
 
       <OdemeTalepleri adisyonId={adisyonId} talepler={talepler} />
 
-      {acik && <AdisyonuKapatBtn adisyonId={adisyonId} />}
+      {acik && <AdisyonuKapatBtn adisyonId={adisyonId} kalanKurus={kalanToplam} />}
     </div>
   );
 }

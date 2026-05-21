@@ -267,7 +267,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                         type="button"
                         onClick={() => kisiOde(grup)}
                         disabled={yukleniyor === anahtar}
-                        className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                        className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                       >
                         {yukleniyor === anahtar ? '…' : 'Ödeme al'}
                       </button>
@@ -347,7 +347,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                       type="button"
                       onClick={esitDilimOde}
                       disabled={!!yukleniyor}
-                      className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                      className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                     >
                       {yukleniyor ? '…' : 'Ödeme al'}
                     </button>
@@ -431,7 +431,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                     type="button"
                     onClick={urunOde}
                     disabled={!!yukleniyor}
-                    className="rounded-md bg-primary px-2.5 py-1 text-xs font-medium text-primary-foreground disabled:opacity-50"
+                    className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
                   >
                     {yukleniyor ? '…' : 'Ödeme al'}
                   </button>

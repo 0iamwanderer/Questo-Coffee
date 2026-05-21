@@ -3,12 +3,22 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-export function AdisyonuKapatBtn({ adisyonId }: { adisyonId: string }) {
+export function AdisyonuKapatBtn({
+  adisyonId,
+  kalanKurus,
+}: {
+  adisyonId: string;
+  kalanKurus: number;
+}) {
   const router = useRouter();
   const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
   const kapat = async () => {
+    if (kalanKurus > 0) {
+      window.alert('Tüm ödemeler alınmadan adisyon kapatılamaz.');
+      return;
+    }
     if (!window.confirm('Adisyon kapatılsın mı? Geri alınamaz.')) return;
     setYukleniyor(true);
     setHata(null);
@@ -35,10 +45,14 @@ export function AdisyonuKapatBtn({ adisyonId }: { adisyonId: string }) {
       <button
         type="button"
         onClick={kapat}
-        disabled={yukleniyor}
-        className="w-full rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground disabled:opacity-50"
+        disabled={yukleniyor || kalanKurus > 0}
+        className="w-full rounded-md bg-destructive px-3 py-2 text-sm font-medium text-destructive-foreground disabled:opacity-40"
       >
-        {yukleniyor ? 'Kapatılıyor…' : 'Adisyonu kapat (ödeme alındı)'}
+        {yukleniyor
+          ? 'Kapatılıyor…'
+          : kalanKurus > 0
+            ? 'Tüm ödemeler alınmadan kapatılamaz'
+            : 'Adisyonu kapat (ödeme alındı)'}
       </button>
     </div>
   );
