@@ -44,7 +44,6 @@ interface KisiGrubu {
 
 export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   const router = useRouter();
-  const [acik, setAcik] = useState(false);
   const [kisiSayisi, setKisiSayisi] = useState(2);
   const [secili, setSecili] = useState<Set<string>>(new Set());
   const [odenenler, setOdenenler] = useState<Set<string>>(new Set());
@@ -184,19 +183,6 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
     );
   };
 
-  if (!acik) {
-    return (
-      <button
-        type="button"
-        onClick={() => setAcik(true)}
-        className="flex w-full items-center gap-2 rounded-lg border bg-card px-3 py-2.5 text-sm text-muted-foreground hover:bg-muted/30"
-      >
-        <Users className="size-4" />
-        Hesabı Böl
-      </button>
-    );
-  }
-
   const sekmeler: { id: Sekme; etiket: string }[] = [
     ...(adliGrup ? [{ id: 'kisi' as Sekme, etiket: 'Kişiye Göre' }] : []),
     { id: 'esit', etiket: 'Eşit Böl' },
@@ -208,15 +194,8 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-semibold">
           <Users className="size-4" />
-          Hesabı Böl
+          Ödemeyi Al
         </div>
-        <button
-          type="button"
-          onClick={() => setAcik(false)}
-          className="text-xs text-muted-foreground"
-        >
-          Kapat
-        </button>
       </div>
 
       {hata && (
