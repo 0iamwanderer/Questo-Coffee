@@ -64,7 +64,7 @@ export async function GET(req: Request) {
       ? ((restoranSnap.data() as { ad?: string }).ad ?? 'Restoran')
       : 'Restoran';
 
-    const origin = new URL(req.url).origin;
+    const origin = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
 
     const masalar: MasaQr[] = await Promise.all(
       masaSnap.docs.map(async (d) => {
