@@ -69,7 +69,7 @@ export async function GET(req: Request) {
     const masalar: MasaQr[] = await Promise.all(
       masaSnap.docs.map(async (d) => {
         const data = d.data() as { ad: string; token: string };
-        const url = `${origin}/m/${data.token}`;
+        const url = `${origin}/m/qr/${d.id}`;
         const qr = await QRCode.toDataURL(url, {
           width: 600,
           margin: 1,
@@ -99,7 +99,7 @@ export async function GET(req: Request) {
               <Text style={styles.yardim}>
                 QR kodu telefonunuzla okutun ve sipariş verin
               </Text>
-              <Text style={styles.url}>{`${origin}/m/${m.token}`}</Text>
+              <Text style={styles.url}>{`${origin}/m/qr/${m.id}`}</Text>
             </View>
           </Page>
         ))}

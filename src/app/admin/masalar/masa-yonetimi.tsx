@@ -106,7 +106,7 @@ export function MasaYonetimi() {
   const rotate = async (m: Masa) => {
     if (
       !window.confirm(
-        `${m.ad} masasının QR'ını yenilemek istiyor musunuz? Eski QR'lar geçersiz olacak.`,
+        `${m.ad} masasındaki aktif bağlantılar kesilsin mi? QR kodu geçerliliğini korur, yalnızca açık oturumlar sona erer.`,
       )
     )
       return;
@@ -239,7 +239,7 @@ export function MasaYonetimi() {
                   Aktif
                 </label>
                 <Link
-                  href={`/m/${m.token}`}
+                  href={`/m/qr/${m.id}`}
                   target="_blank"
                   className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs"
                 >
