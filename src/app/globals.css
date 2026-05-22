@@ -167,21 +167,6 @@
 }
 
 /* Landing → Menü kapak animasyonu (yaprak sola döner) */
-@keyframes cover-open {
-  0%   { transform: rotateY(0deg); }
-  100% { transform: rotateY(-180deg); }
-}
-@keyframes cover-close {
-  0%   { transform: rotateY(-180deg); }
-  100% { transform: rotateY(0deg); }
-}
-.anim-cover-open {
-  animation: cover-open 700ms cubic-bezier(0.6, 0.05, 0.3, 1) forwards;
-}
-.anim-cover-close {
-  animation: cover-close 700ms cubic-bezier(0.6, 0.05, 0.3, 1) forwards;
-}
-
 /* Yumuşak parlama halkası — logo arkasında dönen ışıltı */
 @keyframes spin-slow {
   from { transform: rotate(0deg); }
