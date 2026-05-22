@@ -223,8 +223,8 @@ const URUNLER = [
   { ad: 'Redbull',      kat: 'Soğuk İçecekler', fiyatKurus: 11000, sira: 10 },
 ];
 
-// 20 masa
-const MASALAR = Array.from({ length: 20 }, (_, i) => `M${i + 1}`);
+// 15 masa
+const MASALAR = Array.from({ length: 15 }, (_, i) => `M${i + 1}`);
 
 // ── Helpers ────────────────────────────────────────────────────────────
 const koleksiyonuBosalt = async (koleksiyon) => {

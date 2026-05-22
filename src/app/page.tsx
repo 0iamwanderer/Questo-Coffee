@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, FlaskConical } from 'lucide-react';
+import { FlaskConical } from 'lucide-react';
 import { getAdminDb } from '@/lib/firebase/admin';
 
 export const dynamic = 'force-dynamic';
@@ -61,7 +61,7 @@ export default async function HomePage() {
             'radial-gradient(80% 50% at 50% 25%, hsl(var(--accent) / 0.55) 0%, transparent 70%)',
         }}
       />
-      <div className="relative max-w-md w-full space-y-8 text-center anim-fade-in">
+      <div className="relative max-w-2xl w-full space-y-8 text-center anim-fade-in">
         <div className="flex flex-col items-center gap-4">
           <div
             className="relative size-32 overflow-hidden rounded-full"
@@ -99,18 +99,14 @@ export default async function HomePage() {
               Emulator modunda masaları doğrudan açabilirsin. Bu kart
               production'da gizli kalır — gerçek müşteri QR kodu okutarak gelir.
             </p>
-            <ul className="space-y-1.5">
+            <ul className="grid grid-cols-3 gap-2 sm:grid-cols-5">
               {masalar.map((m) => (
                 <li key={m.id}>
                   <Link
                     href={`/m/${m.token}`}
-                    className="flex items-center justify-between gap-2 rounded-lg border bg-card px-3 py-2 text-sm shadow-soft transition active:scale-[0.98] hover:bg-accent/40"
+                    className="flex aspect-square items-center justify-center rounded-xl border bg-card text-sm font-medium shadow-soft transition active:scale-[0.97] hover:bg-accent/40"
                   >
-                    <span className="font-medium">{m.ad}</span>
-                    <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
-                      Aç
-                      <ArrowRight className="size-3.5" />
-                    </span>
+                    {m.ad}
                   </Link>
                 </li>
               ))}
