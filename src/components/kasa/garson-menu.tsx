@@ -113,6 +113,26 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
 
   const opsiyonluMu = (u: Urun) => (u.opsiyonGruplari?.length ?? 0) > 0;
 
+  // Ürünün sepetteki toplam adedi (opsiyonlu varyantlar dahil)
+  const urunAdedi = (urunId: string) =>
+    sepet
+      .filter((k) => k.urunId === urunId)
+      .reduce((acc, k) => acc + k.adet, 0);
+
+  // Opsiyonsuz tek satırı azalt; 0'a inerse satır kaldırılır.
+  const azalt = (urun: Urun) => {
+    setSepet((s) => {
+      const mevcut = s.find((k) => k.urunId === urun.id && !k.secimler);
+      if (!mevcut) return s;
+      if (mevcut.adet <= 1) {
+        return s.filter((k) => k.satirId !== mevcut.satirId);
+      }
+      return s.map((k) =>
+        k.satirId === mevcut.satirId ? { ...k, adet: k.adet - 1 } : k,
+      );
+    });
+  };
+
   const urunEkle = (urun: Urun) => {
     if (opsiyonluMu(urun)) {
       setOpsiyonUrun(urun);
@@ -283,29 +303,70 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
           </div>
         ) : (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
-            {gosterilen.map((u) => (
-              <li key={u.id}>
-                <button
-                  type="button"
-                  onClick={() => urunEkle(u)}
-                  className="flex h-full w-full flex-col justify-between gap-2 rounded-lg border bg-card p-3 text-left shadow-soft transition active:scale-[0.98] hover:bg-accent/40"
-                >
-                  <span className="text-sm font-medium leading-tight line-clamp-2">
-                    {u.ad}
-                  </span>
-                  <span className="flex items-baseline justify-between gap-1">
-                    <span className="text-sm tabular-nums">
-                      {formatTL(u.fiyatKurus)}
+            {gosterilen.map((u) => {
+              const opsiyonlu = opsiyonluMu(u);
+              const adet = urunAdedi(u.id);
+              return (
+                <li key={u.id}>
+                  <div className="flex h-full w-full flex-col justify-between gap-2 rounded-lg border bg-card p-3 text-left shadow-soft">
+                    <span className="text-sm font-medium leading-tight line-clamp-2">
+                      {u.ad}
                     </span>
-                    {opsiyonluMu(u) && (
-                      <span className="rounded-md border px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
-                        Opsiyon
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-sm tabular-nums">
+                        {formatTL(u.fiyatKurus)}
                       </span>
-                    )}
-                  </span>
-                </button>
-              </li>
-            ))}
+                      {opsiyonlu ? (
+                        <button
+                          type="button"
+                          onClick={() => urunEkle(u)}
+                          className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-primary-foreground transition active:scale-95"
+                          aria-label={`${u.ad} ekle`}
+                        >
+                          {adet > 0 && (
+                            <span className="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] font-medium tabular-nums">
+                              {adet}
+                            </span>
+                          )}
+                          <Plus className="size-3.5" />
+                        </button>
+                      ) : adet > 0 ? (
+                        <div className="inline-flex items-center rounded-full border bg-card">
+                          <button
+                            type="button"
+                            onClick={() => azalt(u)}
+                            className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
+                            aria-label="Azalt"
+                          >
+                            <Minus className="size-3" />
+                          </button>
+                          <span className="w-5 text-center text-sm font-medium tabular-nums">
+                            {adet}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => urunEkle(u)}
+                            className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
+                            aria-label="Artır"
+                          >
+                            <Plus className="size-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => urunEkle(u)}
+                          className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90"
+                          aria-label={`${u.ad} ekle`}
+                        >
+                          <Plus className="size-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
