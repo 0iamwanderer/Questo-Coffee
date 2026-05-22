@@ -11,8 +11,14 @@ echo.
 echo  [1/5] Portlar temizleniyor...
 call npm run kill-ports
 
-echo  [2/5] Emulator baslatiliyor...
-start "Questo - Emulator" cmd /k "cd /d "%~dp0" && npm run emulators"
+rem Logs klasoru ve onceki loglar
+if not exist "logs" mkdir "logs"
+if exist "logs\emulator.log" del /q "logs\emulator.log"
+if exist "logs\nextjs.log"   del /q "logs\nextjs.log"
+if exist "logs\seed.log"     del /q "logs\seed.log"
+
+echo  [2/5] Emulator baslatiliyor (gizli, log: logs\emulator.log)...
+wscript "%~dp0scripts\gizli-calistir.vbs" "emulator.log" "npm run emulators"
 
 echo  [3/5] Emulator hazir olana kadar bekleniyor...
 set /a emu_sure=0
@@ -23,7 +29,7 @@ if errorlevel 1 (
     if %emu_sure% geq 90 (
         echo.
         echo  HATA: Emulator 90 saniye icinde baslayamadi.
-        echo  "Questo - Emulator" penceresini kontrol edin.
+        echo  Log: logs\emulator.log
         pause
         exit /b 1
     )
@@ -32,10 +38,10 @@ if errorlevel 1 (
 )
 
 echo  [4/5] Demo veri yukleniyor...
-call npm run seed
+call npm run seed > "logs\seed.log" 2>&1
 
-echo  [5/5] Next.js baslatiliyor...
-start "Questo - Next.js" cmd /k "cd /d "%~dp0" && npm run dev"
+echo  [5/5] Next.js baslatiliyor (gizli, log: logs\nextjs.log)...
+wscript "%~dp0scripts\gizli-calistir.vbs" "nextjs.log" "npm run dev"
 
 set /a next_sure=0
 :bekle_next
@@ -45,7 +51,7 @@ if errorlevel 1 (
     if %next_sure% geq 60 (
         echo.
         echo  HATA: Next.js 60 saniye icinde baslayamadi.
-        echo  "Questo - Next.js" penceresini kontrol edin.
+        echo  Log: logs\nextjs.log
         pause
         exit /b 1
     )
@@ -77,6 +83,9 @@ color 0A
 echo.
 echo  Questo hazir!  ^>  localhost:3000
 echo.
-echo  Durdurmak icin: Questo'yu Durdur.bat
+echo  Loglar:     logs\emulator.log  /  logs\nextjs.log
+echo  Durdurmak:  Questo'yu Durdur.bat
 echo.
-pause
+echo  Bu pencere 5 saniye sonra otomatik kapanacak...
+timeout /t 5 /nobreak >nul
+exit /b 0

@@ -17,3 +17,6 @@ service-account*.json
 
 # Yerel kullanım batch dosyaları
 *.bat
+
+# Başlat.bat'ın gizli proseslerinin log çıktıları
+logs/
