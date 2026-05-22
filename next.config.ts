@@ -12,7 +12,7 @@ const config: NextConfig = {
 
   images: {
     formats: ['image/avif', 'image/webp'],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 86_400, // 1 gün — logo gibi nadir değişen görsellere
     remotePatterns: [
       { protocol: 'https', hostname: 'firebasestorage.googleapis.com' },
       { protocol: 'https', hostname: '*.firebasestorage.app' },
@@ -20,8 +20,6 @@ const config: NextConfig = {
   },
 
   experimental: {
-    // lucide-react tree-shake'i Next 15'te otomatik ama açıkça yazmak
-    // build tarafında fark yaratır
     optimizePackageImports: ['lucide-react'],
   },
 
