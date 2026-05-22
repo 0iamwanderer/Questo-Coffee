@@ -45,7 +45,7 @@ export function AdminShell({
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2">
           <div className="flex items-center gap-4">
             <Link
-              href="/admin/menu"
+              href="/"
               className="flex items-center gap-2 font-semibold"
             >
               <span className="relative size-7 overflow-hidden rounded-full">

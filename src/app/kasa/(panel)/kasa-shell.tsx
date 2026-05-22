@@ -50,7 +50,7 @@ export function KasaShell({ kullanici, children }: Props) {
       <header className="sticky top-0 z-30 border-b bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-2">
           <div className="flex items-center gap-4">
-            <Link href="/kasa" className="flex items-center gap-2 font-semibold">
+            <Link href="/" className="flex items-center gap-2 font-semibold">
               <span className="relative size-7 overflow-hidden rounded-full">
                 <Image
                   src="/logo.jpg"

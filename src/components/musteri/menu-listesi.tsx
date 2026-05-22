@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import {
   collection,
   onSnapshot,
@@ -455,7 +456,7 @@ function KitapYarim({
 /* ─── Main export ─── */
 const FLIP_SURE_MS = 850;
 
-export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
+export function MenuListesi() {
   const { masaToken, restoranAd } = useMasa();
   const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
   const [urunler, setUrunler] = useState<Urun[]>([]);
@@ -640,10 +641,9 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
     >
       {/* ── Header ── */}
       <header className="flex items-center justify-between gap-3 px-3 md:px-6 py-2 md:py-2.5 flex-shrink-0">
-        {/* Logo + brand — clicking returns to landing */}
-        <button
-          type="button"
-          onClick={onBack}
+        {/* Logo + brand — ana sayfaya doner */}
+        <Link
+          href="/"
           className="flex items-center gap-2.5 shrink-0 text-left"
         >
           <div className="relative size-9 overflow-hidden rounded-full border border-white/10 flex-shrink-0">
@@ -677,7 +677,7 @@ export function MenuListesi({ onBack }: { onBack?: () => void } = {}) {
               Coffea Co. · Manisa
             </div>
           </div>
-        </button>
+        </Link>
 
         {/* Category tabs */}
         <nav
