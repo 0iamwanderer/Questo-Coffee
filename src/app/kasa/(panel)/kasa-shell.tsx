@@ -17,7 +17,7 @@ interface Props {
 }
 
 const NAV = [
-  { yol: '/kasa/adisyonlar', etiket: 'Adisyonlar' },
+  { yol: '/kasa/adisyonlar', etiket: 'Masalar' },
 ];
 
 export function KasaShell({ kullanici, children }: Props) {

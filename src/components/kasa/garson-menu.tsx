@@ -1,0 +1,572 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Minus, Plus, Search, Trash2, X } from 'lucide-react';
+import {
+  collection,
+  onSnapshot,
+  orderBy,
+  query,
+  where,
+} from 'firebase/firestore';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getClientAuth, getClientDb } from '@/lib/firebase/client';
+import { kategoriConverter, urunConverter } from '@/lib/firebase/converters';
+import type { Kategori, Urun, UrunOpsiyonGrubu } from '@/types/model';
+import { formatTL } from '@/lib/utils/para';
+import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
+
+const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
+
+interface SepetSecim {
+  grupId: string;
+  grupAd: string;
+  secenekler: { id: string; ad: string; ekFiyatKurus: number }[];
+}
+
+interface SepetKalemi {
+  satirId: string;
+  urunId: string;
+  ad: string;
+  birimFiyatKurus: number;
+  adet: number;
+  secimler?: SepetSecim[];
+}
+
+interface Props {
+  /** Sipariş gönderildikten sonra adisyona dönüş; verilmezse /kasa/adisyonlar/<id> */
+  masaToken: string;
+  masaAd: string;
+}
+
+export function GarsonMenu({ masaToken, masaAd }: Props) {
+  const router = useRouter();
+  const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
+  const [urunler, setUrunler] = useState<Urun[]>([]);
+  const [aktifKategoriId, setAktifKategoriId] = useState<string | null>(null);
+  const [arama, setArama] = useState('');
+  const [yukleniyor, setYukleniyor] = useState(true);
+  const [authHazir, setAuthHazir] = useState(false);
+  const [sepet, setSepet] = useState<SepetKalemi[]>([]);
+  const [opsiyonUrun, setOpsiyonUrun] = useState<Urun | null>(null);
+  const [gonderiliyor, setGonderiliyor] = useState(false);
+  const satirSayaci = useRef(0);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(getClientAuth(), (u) => {
+      setAuthHazir(!!u);
+    });
+    return () => unsub();
+  }, []);
+
+  useEffect(() => {
+    if (!authHazir) return;
+    const db = getClientDb();
+    const kQ = query(
+      collection(db, `restoranlar/${RESTORAN}/kategoriler`).withConverter(
+        kategoriConverter,
+      ),
+      where('aktifMi', '==', true),
+      orderBy('sira', 'asc'),
+    );
+    const uQ = query(
+      collection(db, `restoranlar/${RESTORAN}/urunler`).withConverter(
+        urunConverter,
+      ),
+      orderBy('sira', 'asc'),
+    );
+    const u1 = onSnapshot(kQ, (snap) => {
+      setKategoriler(snap.docs.map((d) => d.data()));
+      setYukleniyor(false);
+    });
+    const u2 = onSnapshot(uQ, (snap) => {
+      setUrunler(snap.docs.map((d) => d.data()));
+    });
+    return () => {
+      u1();
+      u2();
+    };
+  }, [authHazir]);
+
+  useEffect(() => {
+    if (!aktifKategoriId && kategoriler[0]) {
+      setAktifKategoriId(kategoriler[0].id);
+    }
+  }, [kategoriler, aktifKategoriId]);
+
+  const aramaAktif = arama.trim().length > 0;
+  const gosterilen = useMemo(() => {
+    const term = arama.trim().toLocaleLowerCase('tr');
+    if (term) {
+      return urunler.filter(
+        (u) =>
+          u.stoktaMi !== false &&
+          u.ad.toLocaleLowerCase('tr').includes(term),
+      );
+    }
+    return urunler.filter(
+      (u) => u.kategoriId === aktifKategoriId && u.stoktaMi !== false,
+    );
+  }, [urunler, aktifKategoriId, arama]);
+
+  const opsiyonluMu = (u: Urun) => (u.opsiyonGruplari?.length ?? 0) > 0;
+
+  const urunEkle = (urun: Urun) => {
+    if (opsiyonluMu(urun)) {
+      setOpsiyonUrun(urun);
+      return;
+    }
+    // Opsiyonsuz: aynı ürün varsa adet++; yoksa yeni satır
+    setSepet((s) => {
+      const mevcut = s.find((k) => k.urunId === urun.id && !k.secimler);
+      if (mevcut) {
+        return s.map((k) =>
+          k.satirId === mevcut.satirId ? { ...k, adet: k.adet + 1 } : k,
+        );
+      }
+      satirSayaci.current += 1;
+      return [
+        ...s,
+        {
+          satirId: `s${satirSayaci.current}`,
+          urunId: urun.id,
+          ad: urun.ad,
+          birimFiyatKurus: urun.fiyatKurus,
+          adet: 1,
+        },
+      ];
+    });
+  };
+
+  const adetGuncelle = (satirId: string, yeni: number) => {
+    setSepet((s) =>
+      yeni <= 0
+        ? s.filter((k) => k.satirId !== satirId)
+        : s.map((k) => (k.satirId === satirId ? { ...k, adet: yeni } : k)),
+    );
+  };
+
+  const sepetTopla = sepet.reduce(
+    (acc, k) => acc + k.birimFiyatKurus * k.adet,
+    0,
+  );
+  const sepetAdet = sepet.reduce((acc, k) => acc + k.adet, 0);
+
+  const opsiyonlaEkle = (
+    urun: Urun,
+    secimler: SepetSecim[],
+    ekFiyat: number,
+  ) => {
+    satirSayaci.current += 1;
+    setSepet((s) => [
+      ...s,
+      {
+        satirId: `s${satirSayaci.current}`,
+        urunId: urun.id,
+        ad: urun.ad,
+        birimFiyatKurus: urun.fiyatKurus + ekFiyat,
+        adet: 1,
+        secimler,
+      },
+    ]);
+    setOpsiyonUrun(null);
+  };
+
+  const gonder = async () => {
+    if (sepet.length === 0 || gonderiliyor) return;
+    setGonderiliyor(true);
+    try {
+      const res = await fetch('/api/kasiyer/siparis', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'idempotency-key': `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        },
+        body: JSON.stringify({
+          masaToken,
+          kalemler: sepet.map((k) => ({
+            urunId: k.urunId,
+            adet: k.adet,
+            ...(k.secimler && k.secimler.length > 0
+              ? {
+                  secimler: k.secimler.map((s) => ({
+                    grupId: s.grupId,
+                    secenekIds: s.secenekler.map((sc) => sc.id),
+                  })),
+                }
+              : {}),
+          })),
+        }),
+      });
+      const j = (await res.json()) as { ok?: boolean; mesaj?: string; adisyonId?: string };
+      if (!res.ok || !j.ok || !j.adisyonId) {
+        throw new Error(j.mesaj ?? 'Sipariş gönderilemedi.');
+      }
+      toast.success(`${masaAd}: ${sepetAdet} kalem adisyona eklendi.`);
+      setSepet([]);
+      router.replace(`/kasa/adisyonlar/${j.adisyonId}`);
+      router.refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Sipariş hatası.');
+    } finally {
+      setGonderiliyor(false);
+    }
+  };
+
+  if (yukleniyor || !authHazir) {
+    return (
+      <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
+        Menü yükleniyor…
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+      <div className="space-y-3">
+        {/* Arama + kategoriler */}
+        <div className="space-y-2">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <input
+              type="search"
+              value={arama}
+              onChange={(e) => setArama(e.target.value)}
+              placeholder="Ürün ara…"
+              className="w-full rounded-md border bg-background pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+            />
+            {arama && (
+              <button
+                type="button"
+                onClick={() => setArama('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+                aria-label="Aramayı temizle"
+              >
+                <X className="size-4" />
+              </button>
+            )}
+          </div>
+
+          {!aramaAktif && (
+            <nav
+              className="flex items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              aria-label="Kategoriler"
+            >
+              {kategoriler.map((k) => {
+                const aktif = k.id === aktifKategoriId;
+                return (
+                  <button
+                    key={k.id}
+                    type="button"
+                    onClick={() => setAktifKategoriId(k.id)}
+                    className={cn(
+                      'whitespace-nowrap rounded-full border px-3 py-1 text-sm transition',
+                      aktif
+                        ? 'border-primary bg-primary text-primary-foreground'
+                        : 'border-border bg-card text-muted-foreground hover:text-foreground',
+                    )}
+                  >
+                    {k.ad}
+                  </button>
+                );
+              })}
+            </nav>
+          )}
+        </div>
+
+        {/* Ürün grid */}
+        {gosterilen.length === 0 ? (
+          <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
+            {aramaAktif ? 'Eşleşen ürün yok.' : 'Bu kategoride ürün yok.'}
+          </div>
+        ) : (
+          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {gosterilen.map((u) => (
+              <li key={u.id}>
+                <button
+                  type="button"
+                  onClick={() => urunEkle(u)}
+                  className="flex h-full w-full flex-col justify-between gap-2 rounded-lg border bg-card p-3 text-left shadow-soft transition active:scale-[0.98] hover:bg-accent/40"
+                >
+                  <span className="text-sm font-medium leading-tight line-clamp-2">
+                    {u.ad}
+                  </span>
+                  <span className="flex items-baseline justify-between gap-1">
+                    <span className="text-sm tabular-nums">
+                      {formatTL(u.fiyatKurus)}
+                    </span>
+                    {opsiyonluMu(u) && (
+                      <span className="rounded-md border px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                        Opsiyon
+                      </span>
+                    )}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      {/* Sepet paneli */}
+      <aside className="space-y-3 rounded-lg border bg-card p-3 lg:sticky lg:top-20 lg:self-start">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold">
+            Yeni sipariş ({sepetAdet})
+          </h2>
+          {sepet.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setSepet([])}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+              aria-label="Sepeti temizle"
+            >
+              <Trash2 className="size-3.5" />
+              Temizle
+            </button>
+          )}
+        </div>
+
+        {sepet.length === 0 ? (
+          <p className="rounded-md border border-dashed py-6 text-center text-xs text-muted-foreground">
+            Sol panelden ürün seç
+          </p>
+        ) : (
+          <ul className="space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto">
+            {sepet.map((k) => (
+              <li key={k.satirId} className="rounded-md border bg-background p-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium leading-snug">
+                      {k.ad}
+                    </div>
+                    {k.secimler && k.secimler.length > 0 && (
+                      <div className="text-xs text-muted-foreground">
+                        {k.secimler
+                          .map(
+                            (s) =>
+                              `${s.grupAd}: ${s.secenekler.map((x) => x.ad).join(', ')}`,
+                          )
+                          .join(' · ')}
+                      </div>
+                    )}
+                    <div className="text-xs tabular-nums text-muted-foreground mt-0.5">
+                      {formatTL(k.birimFiyatKurus * k.adet)}
+                    </div>
+                  </div>
+                  <div className="inline-flex shrink-0 items-center rounded-full border bg-card">
+                    <button
+                      type="button"
+                      onClick={() => adetGuncelle(k.satirId, k.adet - 1)}
+                      className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground"
+                      aria-label="Azalt"
+                    >
+                      <Minus className="size-3" />
+                    </button>
+                    <span className="w-5 text-center text-sm tabular-nums">
+                      {k.adet}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => adetGuncelle(k.satirId, k.adet + 1)}
+                      className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground"
+                      aria-label="Artır"
+                    >
+                      <Plus className="size-3" />
+                    </button>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        <div className="flex items-center justify-between border-t pt-3 text-sm">
+          <span className="text-muted-foreground">Toplam</span>
+          <span className="text-base font-semibold tabular-nums">
+            {formatTL(sepetTopla)}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={gonder}
+          disabled={sepet.length === 0 || gonderiliyor}
+          className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {gonderiliyor ? 'Gönderiliyor…' : 'Adisyona ekle'}
+        </button>
+      </aside>
+
+      {opsiyonUrun && (
+        <OpsiyonSecici
+          urun={opsiyonUrun}
+          onIptal={() => setOpsiyonUrun(null)}
+          onEkle={opsiyonlaEkle}
+        />
+      )}
+    </div>
+  );
+}
+
+function OpsiyonSecici({
+  urun,
+  onIptal,
+  onEkle,
+}: {
+  urun: Urun;
+  onIptal: () => void;
+  onEkle: (urun: Urun, secimler: SepetSecim[], ekFiyat: number) => void;
+}) {
+  // Her grup için varsayılan seçim: zorunlu/tek tipte ilk seçenek
+  const [secimler, setSecimler] = useState<Record<string, Set<string>>>(() => {
+    const out: Record<string, Set<string>> = {};
+    for (const g of urun.opsiyonGruplari ?? []) {
+      out[g.id] =
+        g.zorunlu && g.tip === 'tek' && g.secenekler[0]
+          ? new Set([g.secenekler[0].id])
+          : new Set();
+    }
+    return out;
+  });
+
+  const grup = (g: UrunOpsiyonGrubu, secenekId: string, checked: boolean) => {
+    setSecimler((prev) => {
+      const yeni = new Set(prev[g.id]);
+      if (g.tip === 'tek') {
+        yeni.clear();
+        if (checked) yeni.add(secenekId);
+      } else {
+        if (checked) yeni.add(secenekId);
+        else yeni.delete(secenekId);
+      }
+      return { ...prev, [g.id]: yeni };
+    });
+  };
+
+  const ekFiyat = (urun.opsiyonGruplari ?? []).reduce((acc, g) => {
+    const set = secimler[g.id];
+    if (!set) return acc;
+    return (
+      acc +
+      g.secenekler
+        .filter((sc) => set.has(sc.id))
+        .reduce((a, sc) => a + sc.ekFiyatKurus, 0)
+    );
+  }, 0);
+
+  const eksikGrup = (urun.opsiyonGruplari ?? []).find(
+    (g) => g.zorunlu && (secimler[g.id]?.size ?? 0) === 0,
+  );
+
+  const ekle = () => {
+    if (eksikGrup) return;
+    const liste: SepetSecim[] = [];
+    for (const g of urun.opsiyonGruplari ?? []) {
+      const set = secimler[g.id] ?? new Set<string>();
+      const secilenler = g.secenekler.filter((sc) => set.has(sc.id));
+      if (secilenler.length === 0) continue;
+      liste.push({
+        grupId: g.id,
+        grupAd: g.ad,
+        secenekler: secilenler.map((sc) => ({
+          id: sc.id,
+          ad: sc.ad,
+          ekFiyatKurus: sc.ekFiyatKurus as number,
+        })),
+      });
+    }
+    onEkle(urun, liste, ekFiyat);
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-50 flex items-end justify-center bg-background/80 p-0 backdrop-blur sm:items-center sm:p-6"
+      onClick={onIptal}
+    >
+      <div
+        className="w-full max-w-md space-y-4 rounded-t-2xl border bg-card p-4 shadow-lg sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between gap-2">
+          <h2 className="font-serif text-lg">{urun.ad}</h2>
+          <button
+            type="button"
+            onClick={onIptal}
+            className="rounded-md p-1 text-muted-foreground hover:text-foreground"
+            aria-label="Kapat"
+          >
+            <X className="size-5" />
+          </button>
+        </div>
+
+        <div className="max-h-[60vh] space-y-4 overflow-y-auto">
+          {(urun.opsiyonGruplari ?? []).map((g) => (
+            <div key={g.id} className="space-y-1.5">
+              <div className="flex items-baseline justify-between">
+                <span className="text-sm font-medium">{g.ad}</span>
+                <span className="text-xs text-muted-foreground">
+                  {g.zorunlu ? 'zorunlu' : 'opsiyonel'} ·{' '}
+                  {g.tip === 'tek' ? 'tek seç' : 'çoklu seç'}
+                </span>
+              </div>
+              <ul className="space-y-1">
+                {g.secenekler.map((sc) => {
+                  const seciliMi = secimler[g.id]?.has(sc.id) ?? false;
+                  return (
+                    <li key={sc.id}>
+                      <label
+                        className={cn(
+                          'flex cursor-pointer items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm',
+                          seciliMi
+                            ? 'border-primary bg-primary/5'
+                            : 'border-border bg-background',
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <input
+                            type={g.tip === 'tek' ? 'radio' : 'checkbox'}
+                            name={`grup-${g.id}`}
+                            checked={seciliMi}
+                            onChange={(e) => grup(g, sc.id, e.target.checked)}
+                            className="size-4 accent-primary"
+                          />
+                          {sc.ad}
+                        </span>
+                        {sc.ekFiyatKurus > 0 && (
+                          <span className="text-xs tabular-nums text-muted-foreground">
+                            +{formatTL(sc.ekFiyatKurus)}
+                          </span>
+                        )}
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex items-center justify-between border-t pt-3 text-sm">
+          <span className="text-muted-foreground">Birim fiyat</span>
+          <span className="font-semibold tabular-nums">
+            {formatTL(urun.fiyatKurus + ekFiyat)}
+          </span>
+        </div>
+
+        <button
+          type="button"
+          onClick={ekle}
+          disabled={!!eksikGrup}
+          className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {eksikGrup ? `${eksikGrup.ad} seç` : 'Sepete ekle'}
+        </button>
+      </div>
+    </div>
+  );
+}

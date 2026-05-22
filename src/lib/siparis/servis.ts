@@ -79,10 +79,16 @@ const restoranId = (): string => {
  * - **Idempotency:** opsiyonel idempotencyKey ile aynı istek tekrarlanırsa
  *   önceki sonuç döner (24 saat TTL).
  */
+export interface SiparisYazSecenekler {
+  /** true ise rate limit kontrolu atlanir (kasiyer/garson icin). */
+  rateLimitAtla?: boolean;
+}
+
 export const siparisYaz = async (
   istek: SiparisIstegiT,
   musteriUid: string,
   idempotencyKey?: string,
+  secenekler: SiparisYazSecenekler = {},
 ): Promise<SiparisYazSonuc> => {
   const R = restoranId();
   const db = getAdminDb();
@@ -93,7 +99,9 @@ export const siparisYaz = async (
   const sayacRef = db.doc(
     `restoranlar/${R}/sayaclar/${istanbulGunId()}`,
   );
-  const rateRef = db.doc(`rateLimit/${musteriUid}`);
+  const rateRef = secenekler.rateLimitAtla
+    ? null
+    : db.doc(`rateLimit/${musteriUid}`);
   const idempotencyRef = idempotencyKey
     ? db.doc(`idempotency/${idempotencyKey}`)
     : null;
@@ -117,23 +125,26 @@ export const siparisYaz = async (
 
     // ── 2) Rate limit kontrolü ─────────────────────────────────────────
     const simdi = Date.now();
-    const rateSnap = await tx.get(rateRef);
-    const oncekiPencere = rateSnap.exists
-      ? ((rateSnap.data() as RateLimitOkuma).pencere ?? [])
-      : [];
-    const guncelPencere = oncekiPencere.filter(
-      (t) => simdi - t < RATE_PENCERE_MS,
-    );
-    if (guncelPencere.length >= RATE_LIMIT) {
-      const ilkZaman = guncelPencere[0] ?? simdi;
-      const beklemeSn = Math.ceil(
-        (RATE_PENCERE_MS - (simdi - ilkZaman)) / 1000,
+    let guncelPencere: number[] = [];
+    if (rateRef) {
+      const rateSnap = await tx.get(rateRef);
+      const oncekiPencere = rateSnap.exists
+        ? ((rateSnap.data() as RateLimitOkuma).pencere ?? [])
+        : [];
+      guncelPencere = oncekiPencere.filter(
+        (t) => simdi - t < RATE_PENCERE_MS,
       );
-      throw new AppError(
-        'rate_limit',
-        `Çok sık sipariş veriyorsunuz. ${beklemeSn} saniye sonra tekrar deneyin.`,
-        429,
-      );
+      if (guncelPencere.length >= RATE_LIMIT) {
+        const ilkZaman = guncelPencere[0] ?? simdi;
+        const beklemeSn = Math.ceil(
+          (RATE_PENCERE_MS - (simdi - ilkZaman)) / 1000,
+        );
+        throw new AppError(
+          'rate_limit',
+          `Çok sık sipariş veriyorsunuz. ${beklemeSn} saniye sonra tekrar deneyin.`,
+          429,
+        );
+      }
     }
 
     // ── 3) Diğer okumalar (yazılardan önce HEPSİ) ──────────────────────
@@ -330,8 +341,10 @@ export const siparisYaz = async (
       });
     }
 
-    // Rate limit penceresini güncelle
-    tx.set(rateRef, { pencere: [...guncelPencere, simdi] }, { merge: true });
+    // Rate limit penceresini guncelle (varsa)
+    if (rateRef) {
+      tx.set(rateRef, { pencere: [...guncelPencere, simdi] }, { merge: true });
+    }
 
     const sonuc: SiparisYazSonuc = {
       adisyonId: adisyonRef.id,
