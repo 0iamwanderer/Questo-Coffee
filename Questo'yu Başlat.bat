@@ -17,7 +17,7 @@ start "Questo - Emulator" cmd /k "cd /d "%~dp0" && npm run emulators"
 echo  [3/5] Emulator hazir olana kadar bekleniyor...
 set /a emu_sure=0
 :bekle_emu
-powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',8080)).Close();exit 0}catch{exit 1}" >nul 2>&1
+powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',8080)).Close();(New-Object Net.Sockets.TcpClient('127.0.0.1',9099)).Close();exit 0}catch{exit 1}" >nul 2>&1
 if errorlevel 1 (
     set /a emu_sure+=2
     if %emu_sure% geq 90 (

@@ -1,3 +1,5 @@
+import { ZodError } from 'zod';
+
 export class AppError extends Error {
   constructor(
     public readonly kod: string,
@@ -16,9 +18,20 @@ export const httpHata = (e: unknown): Response => {
       { status: e.status },
     );
   }
-  console.error('[questo] beklenmedik hata:', e);
+  if (e instanceof ZodError) {
+    return Response.json(
+      { kod: 'dogrulama_hatasi', mesaj: 'Geçersiz istek verisi.' },
+      { status: 400 },
+    );
+  }
+  const hata = e instanceof Error ? e : new Error(String(e));
+  console.error('[questo] beklenmedik hata:', hata.message, hata);
+  const mesaj =
+    process.env.NODE_ENV === 'development'
+      ? `Sunucu hatası: ${hata.message}`
+      : 'Beklenmedik bir hata oluştu.';
   return Response.json(
-    { kod: 'sunucu_hata', mesaj: 'Beklenmedik bir hata oluştu.' },
+    { kod: 'sunucu_hata', mesaj },
     { status: 500 },
   );
 };
