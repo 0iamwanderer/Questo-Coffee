@@ -17,7 +17,6 @@ interface Props {
 }
 
 const NAV = [
-  { yol: '/kasa/masalar', etiket: 'Masalar' },
   { yol: '/kasa/adisyonlar', etiket: 'Adisyonlar' },
 ];
 
