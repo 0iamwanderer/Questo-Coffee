@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { CheckCircle2, Minus, Plus, Users } from 'lucide-react';
+import { CheckCircle2, Minus, Plus } from 'lucide-react';
 import { formatTL } from '@/lib/utils/para';
 import { anonGirisiSagla } from '@/lib/auth/anon';
 import type { SiparisDurumu } from '@/types/model';
@@ -27,12 +27,17 @@ interface Props {
   siparisler: SiparisOzet[];
 }
 
-type Yontem = 'esit' | 'urun';
+type Yontem = 'tam' | 'esit' | 'urun';
 type Yukleme = 'idle' | 'bekliyor' | 'basarili' | 'hata';
 
+const TAB_ETIKET: Record<Yontem, string> = {
+  tam: 'Tüm Hesap',
+  esit: 'Eşit Böl',
+  urun: 'Ürün Seç',
+};
+
 export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
-  const [acik, setAcik] = useState(false);
-  const [yontem, setYontem] = useState<Yontem>('esit');
+  const [yontem, setYontem] = useState<Yontem>('tam');
   const [kisiSayisi, setKisiSayisi] = useState(2);
   const [secili, setSecili] = useState<Set<string>>(new Set());
   const [yukleme, setYukleme] = useState<Yukleme>('idle');
@@ -76,21 +81,23 @@ export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
       const idToken = await user.getIdToken();
 
       const body =
-        yontem === 'esit'
-          ? { yontem: 'esit', kisiSayisi }
-          : {
-              yontem: 'urun',
-              secilenKalemler: Array.from(secili).map((key) => {
-                const item = tumKalemler.find((k) => k.key === key)!;
-                return {
-                  siparisId: item.siparisId,
-                  siparisNo: item.siparisNo,
-                  ad: item.ad,
-                  adet: item.adet,
-                  araToplamKurus: item.araToplamKurus,
-                };
-              }),
-            };
+        yontem === 'tam'
+          ? { yontem: 'tam' as const }
+          : yontem === 'esit'
+            ? { yontem: 'esit' as const, kisiSayisi }
+            : {
+                yontem: 'urun' as const,
+                secilenKalemler: Array.from(secili).map((key) => {
+                  const item = tumKalemler.find((k) => k.key === key)!;
+                  return {
+                    siparisId: item.siparisId,
+                    siparisNo: item.siparisNo,
+                    ad: item.ad,
+                    adet: item.adet,
+                    araToplamKurus: item.araToplamKurus,
+                  };
+                }),
+              };
 
       const res = await fetch(`/api/adisyon/${adisyonId}/odeme-talebi`, {
         method: 'POST',
@@ -136,47 +143,13 @@ export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
     );
   }
 
-  if (!acik) {
-    return (
-      <button
-        type="button"
-        onClick={() => setAcik(true)}
-        className="w-full rounded-2xl border bg-card p-4 shadow-soft text-left transition-colors hover:bg-muted/30"
-      >
-        <div className="flex items-center gap-2">
-          <Users className="size-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Payımı Ayır</span>
-        </div>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Ayrı ödeme talep etmek için dokunun
-        </p>
-      </button>
-    );
-  }
-
   return (
     <div className="rounded-2xl border bg-card p-4 shadow-soft space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="size-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Payımı Ayır</span>
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            setAcik(false);
-            setYukleme('idle');
-            setHata(null);
-          }}
-          className="text-xs text-muted-foreground"
-        >
-          İptal
-        </button>
-      </div>
+      <p className="text-sm font-medium">Ödemeyi Al</p>
 
-      {/* Yöntem seçici */}
+      {/* Yöntem tabları */}
       <div className="flex gap-1 rounded-xl bg-muted p-1">
-        {(['esit', 'urun'] as const).map((y) => (
+        {(['tam', 'esit', 'urun'] as const).map((y) => (
           <button
             key={y}
             type="button"
@@ -187,13 +160,28 @@ export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
                 : 'text-muted-foreground'
             }`}
           >
-            {y === 'esit' ? 'Eşit Böl' : 'Ürün Seç'}
+            {TAB_ETIKET[y]}
           </button>
         ))}
       </div>
 
-      {/* İçerik */}
-      {yontem === 'esit' ? (
+      {/* Tam hesap */}
+      {yontem === 'tam' && (
+        <div className="rounded-xl bg-muted/50 p-3 space-y-1 text-sm">
+          <div className="flex justify-between text-muted-foreground">
+            <span>Ödenecek tutar</span>
+            <span className="font-semibold text-foreground tabular-nums">
+              {formatTL(toplamKurus)}
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Tüm hesabı tek seferde ödeyeceksiniz.
+          </p>
+        </div>
+      )}
+
+      {/* Eşit böl */}
+      {yontem === 'esit' && (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Kişi sayısı</span>
@@ -233,7 +221,10 @@ export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
             )}
           </div>
         </div>
-      ) : (
+      )}
+
+      {/* Ürün seç */}
+      {yontem === 'urun' && (
         <div className="space-y-2">
           {tumKalemler.length === 0 ? (
             <p className="py-4 text-center text-sm text-muted-foreground">

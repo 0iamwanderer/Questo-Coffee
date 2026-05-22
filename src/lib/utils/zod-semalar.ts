@@ -91,6 +91,10 @@ const OdemeTalebiKalemiGirdi = z.object({
 
 export const OdemeTalebiIstegi = z.discriminatedUnion('yontem', [
   z.object({
+    yontem: z.literal('tam'),
+    musteriAd: z.string().trim().min(1).max(50).optional(),
+  }),
+  z.object({
     yontem: z.literal('esit'),
     kisiSayisi: z.number().int().min(2).max(20),
     musteriAd: z.string().trim().min(1).max(50).optional(),

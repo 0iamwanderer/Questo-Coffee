@@ -42,7 +42,19 @@ export async function POST(
     let toplamKurus: number;
     let extra: Record<string, unknown> = {};
 
-    if (body.yontem === 'esit') {
+    if (body.yontem === 'tam') {
+      // Kalan tutarı sunucu tarafında hesapla (güvenlik)
+      const paidSnap = await aRef
+        .collection('odemeTalepleri')
+        .where('durum', '==', 'odendi')
+        .get();
+      const odenmisToplam = paidSnap.docs.reduce(
+        (acc, d) =>
+          acc + ((d.data() as { toplamKurus?: number }).toplamKurus ?? 0),
+        0,
+      );
+      toplamKurus = Math.max(0, adisyon.toplamKurus - odenmisToplam);
+    } else if (body.yontem === 'esit') {
       toplamKurus = adisyon.toplamKurus;
       const kisiPayi = Math.ceil(toplamKurus / body.kisiSayisi);
       extra = { kisiSayisi: body.kisiSayisi, kisiPayi };
