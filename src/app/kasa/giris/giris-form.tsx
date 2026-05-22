@@ -1,65 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import { toast } from 'sonner';
-import { getClientAuth } from '@/lib/firebase/client';
+import { otoGirisYap } from '@/lib/auth/oto-giris-client';
 
 export function GirisForm() {
   const router = useRouter();
   const params = useSearchParams();
   const geri = params.get('geri') ?? '/kasa';
 
-  const [eposta, setEposta] = useState('');
-  const [sifre, setSifre] = useState('');
-  const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
-  const onGiris = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setHata(null);
-    setYukleniyor(true);
-    try {
-      const cred = await signInWithEmailAndPassword(
-        getClientAuth(),
-        eposta.trim(),
-        sifre,
-      );
-      const idToken = await cred.user.getIdToken(true);
+  useEffect(() => {
+    let iptal = false;
 
-      const res = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ idToken }),
-      });
-      if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { mesaj?: string };
-        throw new Error(j.mesaj ?? 'Oturum açılamadı.');
+    const calistir = async () => {
+      try {
+        await otoGirisYap();
+        if (iptal) return;
+        router.replace(geri);
+        router.refresh();
+      } catch (e) {
+        if (iptal) return;
+        const msg =
+          e instanceof Error
+            ? e.message.replace(/^Firebase:\s*/i, '')
+            : 'Giriş başarısız.';
+        setHata(msg);
+        toast.error(msg);
       }
+    };
 
-      toast.success('Hoş geldiniz.');
-      router.replace(geri);
-      router.refresh();
-    } catch (e) {
-      const msg =
-        e instanceof Error
-          ? e.message.replace(/^Firebase:\s*/i, '')
-          : 'Giriş başarısız.';
-      setHata(msg);
-      toast.error(msg);
-    } finally {
-      setYukleniyor(false);
-    }
-  };
+    void calistir();
+    return () => {
+      iptal = true;
+    };
+  }, [router, geri]);
 
   return (
-    <form
-      onSubmit={onGiris}
-      className="w-full max-w-sm space-y-5 rounded-2xl border bg-card p-6 shadow-soft"
-    >
-      <div className="flex items-center gap-3">
+    <div className="w-full max-w-sm space-y-5 rounded-2xl border bg-card p-6 shadow-soft text-center">
+      <div className="flex items-center justify-center">
         <div className="relative size-12 overflow-hidden rounded-full shadow-soft">
           <Image
             src="/logo.jpg"
@@ -69,57 +51,24 @@ export function GirisForm() {
             className="object-cover"
           />
         </div>
-        <div className="space-y-0.5">
-          <h1 className="font-serif text-xl leading-none">Kasa girişi</h1>
-          <p className="text-xs text-muted-foreground">
-            Personel hesabınızla oturum açın.
+      </div>
+
+      {hata ? (
+        <>
+          <p className="text-sm text-destructive" role="alert">
+            {hata}
           </p>
-        </div>
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="eposta">
-          E-posta
-        </label>
-        <input
-          id="eposta"
-          type="email"
-          required
-          autoComplete="email"
-          value={eposta}
-          onChange={(e) => setEposta(e.target.value)}
-          className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm font-medium" htmlFor="sifre">
-          Şifre
-        </label>
-        <input
-          id="sifre"
-          type="password"
-          required
-          autoComplete="current-password"
-          value={sifre}
-          onChange={(e) => setSifre(e.target.value)}
-          className="w-full rounded-md border bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-
-      {hata && (
-        <p className="text-sm text-destructive" role="alert">
-          {hata}
-        </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground"
+          >
+            Tekrar dene
+          </button>
+        </>
+      ) : (
+        <p className="text-sm text-muted-foreground">Giriş yapılıyor…</p>
       )}
-
-      <button
-        type="submit"
-        disabled={yukleniyor}
-        className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-      >
-        {yukleniyor ? 'Giriş yapılıyor…' : 'Giriş yap'}
-      </button>
-    </form>
+    </div>
   );
 }

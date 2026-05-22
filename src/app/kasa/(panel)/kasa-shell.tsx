@@ -3,16 +3,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getClientAuth } from '@/lib/firebase/client';
+import { otoGirisYap } from '@/lib/auth/oto-giris-client';
 import { BaglantiRozeti } from '@/components/kasa/baglanti-rozeti';
 import { VardiyaBaslat } from '@/components/kasa/vardiya-baslat';
 import { cn } from '@/lib/utils';
 
 interface Props {
-  kullanici: { email: string | null; sahip: boolean };
+  kullanici: { sahip: boolean };
   children: React.ReactNode;
 }
 
@@ -25,10 +26,23 @@ export function KasaShell({ kullanici, children }: Props) {
   const yol = usePathname();
   const [authHazir, setAuthHazir] = useState(false);
   const [menuAcik, setMenuAcik] = useState(false);
+  const otoGirisCalisti = useRef(false);
 
   useEffect(() => {
     const unsub = onAuthStateChanged(getClientAuth(), (u) => {
-      setAuthHazir(!!u);
+      if (u) {
+        setAuthHazir(true);
+        return;
+      }
+      setAuthHazir(false);
+      // Server cookie var (middleware geçirdi) ama client oturumu yok —
+      // sessizce oto-giriş yap; aksi halde Firestore listener'ları
+      // 'permission-denied' verir.
+      if (otoGirisCalisti.current) return;
+      otoGirisCalisti.current = true;
+      otoGirisYap().catch(() => {
+        otoGirisCalisti.current = false;
+      });
     });
     return () => unsub();
   }, []);
@@ -77,19 +91,6 @@ export function KasaShell({ kullanici, children }: Props) {
           </div>
           <div className="flex items-center gap-3">
             <BaglantiRozeti />
-            {kullanici.email && (
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                {kullanici.email}
-              </span>
-            )}
-            <form action="/api/auth/cikis" method="post">
-              <button
-                type="submit"
-                className="text-xs underline text-muted-foreground"
-              >
-                Çıkış
-              </button>
-            </form>
             <button
               type="button"
               className="rounded-md p-1 text-muted-foreground sm:hidden"
@@ -136,11 +137,7 @@ export function KasaShell({ kullanici, children }: Props) {
       {!authHazir && (
         <div className="mx-auto max-w-6xl px-4 pt-4">
           <div className="rounded-md border border-amber-300/40 bg-amber-50 px-3 py-2 text-sm dark:bg-amber-950/30">
-            Firebase oturumu yükleniyor… Görünmüyorsa lütfen{' '}
-            <Link href="/kasa/giris" className="underline">
-              tekrar giriş yapın
-            </Link>
-            .
+            Oturum yükleniyor…
           </div>
         </div>
       )}

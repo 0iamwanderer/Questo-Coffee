@@ -13,7 +13,6 @@ export default async function PanelLayout({
   return (
     <KasaShell
       kullanici={{
-        email: u.email ?? null,
         sahip: u.claims.sahip === true,
       }}
     >

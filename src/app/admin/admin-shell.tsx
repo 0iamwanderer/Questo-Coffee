@@ -3,8 +3,11 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Menu, X } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getClientAuth } from '@/lib/firebase/client';
+import { otoGirisYap } from '@/lib/auth/oto-giris-client';
 import { cn } from '@/lib/utils';
 
 const NAV = [
@@ -16,14 +19,25 @@ const NAV = [
 ];
 
 export function AdminShell({
-  email,
   children,
 }: {
-  email: string | null;
   children: React.ReactNode;
 }) {
   const yol = usePathname();
   const [menuAcik, setMenuAcik] = useState(false);
+  const otoGirisCalisti = useRef(false);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(getClientAuth(), (u) => {
+      if (u) return;
+      if (otoGirisCalisti.current) return;
+      otoGirisCalisti.current = true;
+      otoGirisYap().catch(() => {
+        otoGirisCalisti.current = false;
+      });
+    });
+    return () => unsub();
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -69,19 +83,6 @@ export function AdminShell({
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            {email && (
-              <span className="hidden text-xs text-muted-foreground sm:inline">
-                {email}
-              </span>
-            )}
-            <form action="/api/auth/cikis" method="post">
-              <button
-                type="submit"
-                className="text-xs underline text-muted-foreground"
-              >
-                Çıkış
-              </button>
-            </form>
             <button
               type="button"
               className="rounded-md p-1 text-muted-foreground sm:hidden"

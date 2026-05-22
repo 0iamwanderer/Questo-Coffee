@@ -8,6 +8,6 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const u = await sahipGerekli('/admin/menu');
-  return <AdminShell email={u.email ?? null}>{children}</AdminShell>;
+  await sahipGerekli('/admin/menu');
+  return <AdminShell>{children}</AdminShell>;
 }
