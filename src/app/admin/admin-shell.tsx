@@ -11,12 +11,15 @@ import { otoGirisYap } from '@/lib/auth/oto-giris-client';
 import { cn } from '@/lib/utils';
 
 const NAV = [
+  { yol: '/kasa/adisyonlar', etiket: 'Adisyonlar' },
   { yol: '/admin/menu', etiket: 'Menü' },
   { yol: '/admin/masalar', etiket: 'Masalar' },
-  { yol: '/admin/masalar/qr', etiket: 'QR PDF' },
   { yol: '/admin/rapor', etiket: 'Rapor' },
   { yol: '/admin/ayarlar', etiket: 'Ayarlar' },
 ];
+
+const aktifMi = (mevcut: string, linkYol: string) =>
+  mevcut === linkYol || mevcut.startsWith(linkYol + '/');
 
 export function AdminShell({
   children,
@@ -66,7 +69,7 @@ export function AdminShell({
                   href={n.yol}
                   className={cn(
                     'rounded-md px-2.5 py-1',
-                    yol === n.yol
+                    aktifMi(yol, n.yol)
                       ? 'bg-secondary text-secondary-foreground'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
@@ -74,12 +77,6 @@ export function AdminShell({
                   {n.etiket}
                 </Link>
               ))}
-              <Link
-                href="/kasa"
-                className="rounded-md px-2.5 py-1 text-muted-foreground hover:text-foreground"
-              >
-                Kasaya dön
-              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -103,7 +100,7 @@ export function AdminShell({
                 onClick={() => setMenuAcik(false)}
                 className={cn(
                   'rounded-md px-3 py-2',
-                  yol === n.yol
+                  aktifMi(yol, n.yol)
                     ? 'bg-secondary text-secondary-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
@@ -111,13 +108,6 @@ export function AdminShell({
                 {n.etiket}
               </Link>
             ))}
-            <Link
-              href="/kasa"
-              onClick={() => setMenuAcik(false)}
-              className="rounded-md px-3 py-2 text-muted-foreground hover:text-foreground"
-            >
-              Kasaya dön
-            </Link>
           </nav>
         )}
       </header>

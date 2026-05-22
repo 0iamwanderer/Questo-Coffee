@@ -18,7 +18,14 @@ interface Props {
 
 const NAV = [
   { yol: '/kasa/adisyonlar', etiket: 'Adisyonlar' },
+  { yol: '/admin/menu', etiket: 'Menü', sahipGerek: true },
+  { yol: '/admin/masalar', etiket: 'Masalar', sahipGerek: true },
+  { yol: '/admin/rapor', etiket: 'Rapor', sahipGerek: true },
+  { yol: '/admin/ayarlar', etiket: 'Ayarlar', sahipGerek: true },
 ];
+
+const aktifMi = (mevcut: string, linkYol: string) =>
+  mevcut === linkYol || mevcut.startsWith(linkYol + '/');
 
 export function KasaShell({ kullanici, children }: Props) {
   const yol = usePathname();
@@ -63,13 +70,13 @@ export function KasaShell({ kullanici, children }: Props) {
               <span className="font-serif">Questo · Kasa</span>
             </Link>
             <nav className="hidden items-center gap-1 text-sm sm:flex">
-              {NAV.map((n) => (
+              {NAV.filter((n) => !n.sahipGerek || kullanici.sahip).map((n) => (
                 <Link
                   key={n.yol}
                   href={n.yol}
                   className={cn(
                     'rounded-md px-2.5 py-1',
-                    yol === n.yol
+                    aktifMi(yol, n.yol)
                       ? 'bg-secondary text-secondary-foreground'
                       : 'text-muted-foreground hover:text-foreground',
                   )}
@@ -77,14 +84,6 @@ export function KasaShell({ kullanici, children }: Props) {
                   {n.etiket}
                 </Link>
               ))}
-              {kullanici.sahip && (
-                <Link
-                  href="/admin/menu"
-                  className="rounded-md px-2.5 py-1 text-muted-foreground hover:text-foreground"
-                >
-                  Yönetim
-                </Link>
-              )}
             </nav>
           </div>
           <div className="flex items-center gap-3">
@@ -102,14 +101,14 @@ export function KasaShell({ kullanici, children }: Props) {
 
         {menuAcik && (
           <nav className="flex flex-col gap-1 border-t bg-background px-4 py-2 text-sm sm:hidden">
-            {NAV.map((n) => (
+            {NAV.filter((n) => !n.sahipGerek || kullanici.sahip).map((n) => (
               <Link
                 key={n.yol}
                 href={n.yol}
                 onClick={() => setMenuAcik(false)}
                 className={cn(
                   'rounded-md px-3 py-2',
-                  yol === n.yol
+                  aktifMi(yol, n.yol)
                     ? 'bg-secondary text-secondary-foreground'
                     : 'text-muted-foreground hover:text-foreground',
                 )}
@@ -117,15 +116,6 @@ export function KasaShell({ kullanici, children }: Props) {
                 {n.etiket}
               </Link>
             ))}
-            {kullanici.sahip && (
-              <Link
-                href="/admin/menu"
-                onClick={() => setMenuAcik(false)}
-                className="rounded-md px-3 py-2 text-muted-foreground hover:text-foreground"
-              >
-                Yönetim
-              </Link>
-            )}
           </nav>
         )}
       </header>
