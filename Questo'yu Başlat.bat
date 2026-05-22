@@ -53,7 +53,23 @@ if errorlevel 1 (
     goto bekle_next
 )
 
-start http://localhost:3000
+rem Default browser association bozulmus PC'lerde "Uygulama bulunamadi"
+rem hatasi gelmesin diye Edge -> Chrome bilinen yollarini, son care olarak
+rem default URL handler'i deniyoruz.
+set "QUESTO_URL=http://localhost:3000"
+set "EDGE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+set "CHROME=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
+set "CHROME_X86=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
+
+if exist "%EDGE%" (
+    start "" "%EDGE%" "%QUESTO_URL%"
+) else if exist "%CHROME%" (
+    start "" "%CHROME%" "%QUESTO_URL%"
+) else if exist "%CHROME_X86%" (
+    start "" "%CHROME_X86%" "%QUESTO_URL%"
+) else (
+    start "" "%QUESTO_URL%"
+)
 
 cls
 title Questo - Calisiyor
