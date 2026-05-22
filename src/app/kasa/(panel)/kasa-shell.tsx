@@ -9,7 +9,6 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { getClientAuth } from '@/lib/firebase/client';
 import { otoGirisYap } from '@/lib/auth/oto-giris-client';
 import { BaglantiRozeti } from '@/components/kasa/baglanti-rozeti';
-import { VardiyaBaslat } from '@/components/kasa/vardiya-baslat';
 import { cn } from '@/lib/utils';
 
 interface Props {
@@ -18,7 +17,6 @@ interface Props {
 }
 
 const NAV = [
-  { yol: '/kasa', etiket: 'Kanban' },
   { yol: '/kasa/adisyonlar', etiket: 'Adisyonlar' },
 ];
 
@@ -131,8 +129,6 @@ export function KasaShell({ kullanici, children }: Props) {
           </nav>
         )}
       </header>
-
-      <VardiyaBaslat />
 
       {!authHazir && (
         <div className="mx-auto max-w-6xl px-4 pt-4">
