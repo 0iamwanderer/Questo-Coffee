@@ -22,14 +22,6 @@ interface MasaDoc {
   ad: string;
 }
 
-interface MasaKart {
-  masaId: string;
-  ad: string;
-  acikAdisyonId: string | null;
-  toplamKurus: number;
-  siparisSayisi: number;
-}
-
 export default async function AdisyonlarSayfasi() {
   const db = getAdminDb();
   const restoranId = R();
@@ -39,81 +31,56 @@ export default async function AdisyonlarSayfasi() {
       .collection(`restoranlar/${restoranId}/adisyonlar`)
       .where('durum', '==', 'acik')
       .get(),
-    db
-      .collection(`restoranlar/${restoranId}/masalar`)
-      .where('aktifMi', '==', true)
-      .get(),
+    db.collection(`restoranlar/${restoranId}/masalar`).get(),
   ]);
 
-  const acikMap = new Map<string, { id: string; data: AdisyonDoc }>();
-  for (const d of adisyonSnap.docs) {
-    const data = d.data() as AdisyonDoc;
-    acikMap.set(data.masaId, { id: d.id, data });
-  }
+  const masaAdi = new Map<string, string>(
+    masaSnap.docs.map((d) => [d.id, (d.data() as MasaDoc).ad]),
+  );
 
-  const kartlar: MasaKart[] = masaSnap.docs
-    .map((m) => {
-      const acik = acikMap.get(m.id);
+  const kartlar = adisyonSnap.docs
+    .map((d) => {
+      const a = d.data() as AdisyonDoc;
       return {
-        masaId: m.id,
-        ad: (m.data() as MasaDoc).ad,
-        acikAdisyonId: acik?.id ?? null,
-        toplamKurus: acik?.data.toplamKurus ?? 0,
-        siparisSayisi: acik?.data.siparisSayisi ?? 0,
+        id: d.id,
+        masaId: a.masaId,
+        masaAd: masaAdi.get(a.masaId) ?? 'Bilinmeyen masa',
+        toplamKurus: a.toplamKurus,
+        siparisSayisi: a.siparisSayisi,
       };
     })
-    .sort((a, b) => karsilastirMasaAdi(a.ad, b.ad));
+    .sort((a, b) => karsilastirMasaAdi(a.masaAd, b.masaAd));
 
   return (
     <div className="mx-auto max-w-6xl p-4 space-y-4">
-      <h1 className="text-2xl font-semibold">Masalar</h1>
+      <h1 className="text-2xl font-semibold">Açık Adisyonlar</h1>
       {kartlar.length === 0 ? (
         <p className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
-          Tanımlı masa yok.
+          Şu an açık adisyon yok.
         </p>
       ) : (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {kartlar.map((k) => {
-            const acik = k.acikAdisyonId !== null;
-            return (
-              <li key={k.masaId}>
-                <Link
-                  href={
-                    acik
-                      ? `/kasa/adisyonlar/${k.acikAdisyonId}`
-                      : `/kasa/masa/${k.masaId}`
-                  }
-                  className={
-                    'flex aspect-square flex-col justify-between rounded-lg border p-3 shadow-soft transition active:scale-[0.98] ' +
-                    (acik
-                      ? 'border-primary/50 bg-primary/5 hover:bg-primary/10'
-                      : 'bg-card hover:bg-accent/40')
-                  }
-                >
-                  <div className="flex items-start justify-between">
-                    <span className="font-medium">{k.ad}</span>
-                    {acik && (
-                      <span className="rounded-full border border-primary/40 bg-primary/10 px-1.5 py-0.5 text-[10px] font-medium uppercase text-primary">
-                        Açık
-                      </span>
-                    )}
-                  </div>
-                  {acik ? (
-                    <div className="space-y-0.5">
-                      <div className="text-xs text-muted-foreground">
-                        {k.siparisSayisi} sipariş
-                      </div>
-                      <div className="text-lg font-semibold tabular-nums">
-                        {formatTL(k.toplamKurus)}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-xs text-muted-foreground">Boş</div>
-                  )}
-                </Link>
-              </li>
-            );
-          })}
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {kartlar.map((k) => (
+            <li key={k.id}>
+              <Link
+                href={`/kasa/adisyonlar/${k.id}`}
+                className="block rounded-lg border bg-card p-4 transition hover:bg-accent"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{k.masaAd}</span>
+                  <span className="rounded-md border px-2 py-0.5 text-xs">
+                    {k.siparisSayisi} sipariş
+                  </span>
+                </div>
+                <div className="mt-3 text-xs text-muted-foreground">
+                  Toplam
+                </div>
+                <div className="text-xl font-semibold tabular-nums">
+                  {formatTL(k.toplamKurus)}
+                </div>
+              </Link>
+            </li>
+          ))}
         </ul>
       )}
     </div>

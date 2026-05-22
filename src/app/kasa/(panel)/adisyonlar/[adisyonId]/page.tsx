@@ -117,7 +117,7 @@ export default async function AdisyonDetay({
   return (
     <div className="mx-auto max-w-6xl p-4 space-y-4">
       <Link
-        href="/kasa/adisyonlar"
+        href="/kasa/masalar"
         className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
       >
         <ArrowLeft className="size-4" />
