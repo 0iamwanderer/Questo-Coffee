@@ -3,17 +3,28 @@
 import {
   onAuthStateChanged,
   signInAnonymously,
+  signOut,
   type User,
 } from 'firebase/auth';
 import { getClientAuth } from '@/lib/firebase/client';
 
 /**
  * Müşteri cihazı için anonim Firebase oturumu sağlar.
- * Mevcut oturum varsa onu döner, yoksa açar.
+ * Mevcut oturum varsa token yenilemeyi dener; başarısız olursa (emulator
+ * yeniden başlatma gibi durumlar) çıkış yapıp yeni anonim oturum açar.
  */
 export const anonGirisiSagla = async (): Promise<User> => {
   const auth = getClientAuth();
-  if (auth.currentUser) return auth.currentUser;
+
+  if (auth.currentUser) {
+    try {
+      await auth.currentUser.getIdToken(/* forceRefresh= */ true);
+      return auth.currentUser;
+    } catch {
+      // Token geçersiz — yeni oturum açılacak
+      await signOut(auth).catch(() => {});
+    }
+  }
 
   return new Promise<User>((resolve, reject) => {
     const unsub = onAuthStateChanged(

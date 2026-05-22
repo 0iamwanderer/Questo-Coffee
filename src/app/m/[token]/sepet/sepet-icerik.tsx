@@ -114,7 +114,15 @@ export function SepetIcerik({ onKapat }: { onKapat?: () => void } = {}) {
       });
 
       if (!res.ok) {
-        const j = (await res.json().catch(() => ({}))) as { mesaj?: string };
+        const j = (await res.json().catch(() => ({}))) as {
+          kod?: string;
+          mesaj?: string;
+        };
+        if (res.status === 404 || j.kod === 'masa_yok') {
+          throw new Error(
+            'Masa bağlantısı sona ermiş. Sayfayı yenileyip tekrar deneyin.',
+          );
+        }
         throw new Error(j.mesaj ?? 'Sipariş gönderilemedi.');
       }
 
