@@ -43,12 +43,15 @@ export async function POST(
     if (body.yontem === 'esit') {
       toplamKurus = Math.ceil(adisyon.toplamKurus / body.kisiSayisi);
       extra = { kisiSayisi: body.kisiSayisi, kisiPayi: toplamKurus };
-    } else {
+    } else if (body.yontem === 'urun') {
       toplamKurus = body.secilenKalemler.reduce(
         (acc, k) => acc + k.araToplamKurus,
         0,
       );
       extra = { secilenKalemler: body.secilenKalemler };
+    } else {
+      // 'tam' — adisyonun kalan tutarının hepsi
+      toplamKurus = adisyon.toplamKurus;
     }
 
     const talepRef = aRef.collection('odemeTalepleri').doc();

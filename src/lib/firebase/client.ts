@@ -14,6 +14,9 @@ import {
 import {
   connectFirestoreEmulator,
   getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  persistentMultipleTabManager,
   type Firestore,
 } from 'firebase/firestore';
 import {
@@ -91,9 +94,25 @@ const emulatoraBagla = (
 
 export const getClientApp = (): FirebaseApp => baslat();
 
+const firestoreOlustur = (app: FirebaseApp): Firestore => {
+  // SSR ortamında IndexedDB yok — bu blok yalnızca client'ta çalışır.
+  // initializeFirestore yalnızca ilk kez çağrılabilir; ikinci çağrıda
+  // hata atar, bu yüzden try/catch ile getFirestore fallback.
+  if (typeof window === 'undefined') return getFirestore(app);
+  try {
+    return initializeFirestore(app, {
+      localCache: persistentLocalCache({
+        tabManager: persistentMultipleTabManager(),
+      }),
+    });
+  } catch {
+    return getFirestore(app);
+  }
+};
+
 const tumServisleriHazirla = () => {
   if (!_auth) _auth = getAuth(baslat());
-  if (!_db) _db = getFirestore(baslat());
+  if (!_db) _db = firestoreOlustur(baslat());
   if (!_storage) _storage = getStorage(baslat());
   if (emulatorAcik && !_emulatorBaglandi) {
     emulatoraBagla(_auth, _db, _storage);
