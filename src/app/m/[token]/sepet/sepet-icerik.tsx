@@ -12,7 +12,7 @@ import { urunConverter } from '@/lib/firebase/converters';
 import { formatTL } from '@/lib/utils/para';
 import { useSepet, type SepetKalemi } from '@/stores/sepet';
 import { useMasa } from '../masa-provider';
-import { anonGirisiSagla } from '@/lib/auth/anon';
+import { anonGirisiSagla, anonYenile } from '@/lib/auth/anon';
 import { Konfeti } from '@/components/musteri/konfeti';
 import { Tamamlayicilar } from '@/components/musteri/tamamlayicilar';
 import type { Urun } from '@/types/model';
@@ -89,29 +89,41 @@ export function SepetIcerik({ onKapat }: { onKapat?: () => void } = {}) {
     setHata(null);
     setGonderiliyor(true);
     try {
-      const user = await anonGirisiSagla();
-      const idToken = await user.getIdToken();
-
-      const res = await fetch('/api/siparis', {
-        method: 'POST',
-        headers: {
-          'content-type': 'application/json',
-          authorization: `Bearer ${idToken}`,
-          'idempotency-key': idempotencyKey,
-        },
-        body: JSON.stringify({
-          masaToken,
-          kalemler: kalemler.map((k) => ({
-            urunId: k.urunId,
-            adet: k.adet,
-            ...(k.notlar ? { notlar: k.notlar } : {}),
-            ...(k.secimler && k.secimler.length > 0
-              ? { secimler: k.secimler }
-              : {}),
-          })),
-          ...(musteriAd ? { musteriAd } : {}),
-        }),
+      const siparisBody = JSON.stringify({
+        masaToken,
+        kalemler: kalemler.map((k) => ({
+          urunId: k.urunId,
+          adet: k.adet,
+          ...(k.notlar ? { notlar: k.notlar } : {}),
+          ...(k.secimler && k.secimler.length > 0
+            ? { secimler: k.secimler }
+            : {}),
+        })),
+        ...(musteriAd ? { musteriAd } : {}),
       });
+
+      const postSiparis = async (idToken: string) =>
+        fetch('/api/siparis', {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/json',
+            authorization: `Bearer ${idToken}`,
+            'idempotency-key': idempotencyKey,
+          },
+          body: siparisBody,
+        });
+
+      let user = await anonGirisiSagla();
+      let idToken = await user.getIdToken();
+      let res = await postSiparis(idToken);
+
+      // 401: token revoked/expired (emulator yeniden başlatıldı vb.)
+      // Yeni anonim kullanıcı aç ve bir kez daha dene.
+      if (res.status === 401) {
+        user = await anonYenile();
+        idToken = await user.getIdToken(/* forceRefresh= */ true);
+        res = await postSiparis(idToken);
+      }
 
       if (!res.ok) {
         const j = (await res.json().catch(() => ({}))) as {
