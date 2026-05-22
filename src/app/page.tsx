@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { FlaskConical } from 'lucide-react';
 import { getAdminDb } from '@/lib/firebase/admin';
+import { karsilastirMasaAdi } from '@/lib/utils/masa';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,7 +27,6 @@ async function masalariYukle(): Promise<MasaListeItem[]> {
   const sorgu = getAdminDb()
     .collection(`restoranlar/${R}/masalar`)
     .where('aktifMi', '==', true)
-    .orderBy('ad', 'asc')
     .get();
 
   const timeout = new Promise<never>((_, reject) =>
@@ -35,10 +35,12 @@ async function masalariYukle(): Promise<MasaListeItem[]> {
 
   try {
     const snap = await Promise.race([sorgu, timeout]);
-    return snap.docs.map((d) => {
-      const data = d.data() as { ad: string; token: string };
-      return { id: d.id, ad: data.ad, token: data.token };
-    });
+    return snap.docs
+      .map((d) => {
+        const data = d.data() as { ad: string; token: string };
+        return { id: d.id, ad: data.ad, token: data.token };
+      })
+      .sort((a, b) => karsilastirMasaAdi(a.ad, b.ad));
   } catch (e) {
     console.warn(
       '[questo] masalar yüklenemedi (emulator çalışıyor mu?):',

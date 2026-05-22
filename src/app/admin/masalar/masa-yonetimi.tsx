@@ -9,12 +9,13 @@ import {
   RefreshCw,
   Trash2,
 } from 'lucide-react';
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore';
+import { collection, onSnapshot, query } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getClientAuth, getClientDb } from '@/lib/firebase/client';
 import { masaConverter } from '@/lib/firebase/converters';
 import type { Masa } from '@/types/model';
 import { cn } from '@/lib/utils';
+import { karsilastirMasaAdi } from '@/lib/utils/masa';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 
@@ -41,10 +42,11 @@ export function MasaYonetimi() {
       collection(getClientDb(), `restoranlar/${RESTORAN}/masalar`).withConverter(
         masaConverter,
       ),
-      orderBy('ad', 'asc'),
     );
     const unsub = onSnapshot(q, (s) =>
-      setMasalar(s.docs.map((d) => d.data())),
+      setMasalar(
+        s.docs.map((d) => d.data()).sort((a, b) => karsilastirMasaAdi(a.ad, b.ad)),
+      ),
     );
     return () => unsub();
   }, [authHazir]);

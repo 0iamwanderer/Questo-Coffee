@@ -12,6 +12,7 @@ import { apiSahip } from '@/lib/auth/guard';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { httpHata } from '@/lib/utils/hata';
 import { kapsamiDogrula, restoranIdGetir } from '@/lib/admin/restoran';
+import { karsilastirMasaAdi } from '@/lib/utils/masa';
 
 export const runtime = 'nodejs';
 
@@ -56,7 +57,6 @@ export async function GET(req: Request) {
       db
         .collection(`restoranlar/${R}/masalar`)
         .where('aktifMi', '==', true)
-        .orderBy('ad', 'asc')
         .get(),
     ]);
 
@@ -66,8 +66,14 @@ export async function GET(req: Request) {
 
     const origin = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
 
+    const siraliDokumanlar = [...masaSnap.docs].sort((a, b) => {
+      const ad1 = (a.data() as { ad: string }).ad;
+      const ad2 = (b.data() as { ad: string }).ad;
+      return karsilastirMasaAdi(ad1, ad2);
+    });
+
     const masalar: MasaQr[] = await Promise.all(
-      masaSnap.docs.map(async (d) => {
+      siraliDokumanlar.map(async (d) => {
         const data = d.data() as { ad: string; token: string };
         const url = `${origin}/m/qr/${d.id}`;
         const qr = await QRCode.toDataURL(url, {
