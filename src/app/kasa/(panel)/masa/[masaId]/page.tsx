@@ -43,18 +43,18 @@ export default async function MasaSiparisSayfasi({
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-4 space-y-4">
+    <div className="mx-auto max-w-6xl p-3 space-y-3 sm:p-4 sm:space-y-4">
       <Link
         href="/kasa/masalar"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm"
       >
-        <ArrowLeft className="size-4" />
+        <ArrowLeft className="size-3.5 sm:size-4" />
         Masalar
       </Link>
 
       <div>
-        <h1 className="text-2xl font-semibold">{masa.ad}</h1>
-        <p className="text-sm text-muted-foreground">İlk sipariş alınıyor</p>
+        <h1 className="text-lg font-semibold sm:text-2xl">{masa.ad}</h1>
+        <p className="text-xs text-muted-foreground sm:text-sm">İlk sipariş alınıyor</p>
       </div>
 
       <GarsonMenu masaToken={masa.token} masaAd={masa.ad} />

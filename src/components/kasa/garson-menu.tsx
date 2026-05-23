@@ -336,27 +336,27 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
   );
 
   return (
-    <div className="grid gap-4 pb-24 lg:grid-cols-[1fr_320px] lg:pb-0">
-      <div className="space-y-3">
+    <div className="grid gap-3 pb-24 sm:gap-4 lg:grid-cols-[1fr_320px] lg:pb-0">
+      <div className="space-y-2 sm:space-y-3">
         {/* Arama + kategoriler */}
         <div className="space-y-2">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground sm:left-3 sm:size-4" />
             <input
               type="search"
               value={arama}
               onChange={(e) => setArama(e.target.value)}
               placeholder="Ürün ara…"
-              className="w-full rounded-md border bg-background pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border bg-background pl-8 pr-3 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-ring sm:pl-9 sm:py-2 sm:text-sm"
             />
             {arama && (
               <button
                 type="button"
                 onClick={() => setArama('')}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground sm:right-2"
                 aria-label="Aramayı temizle"
               >
-                <X className="size-4" />
+                <X className="size-3.5 sm:size-4" />
               </button>
             )}
           </div>
@@ -374,7 +374,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                     type="button"
                     onClick={() => setAktifKategoriId(k.id)}
                     className={cn(
-                      'whitespace-nowrap rounded-full border px-3 py-1 text-sm transition',
+                      'whitespace-nowrap rounded-full border px-2.5 py-1 text-xs transition sm:px-3 sm:text-sm',
                       aktif
                         ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-border bg-card text-muted-foreground hover:text-foreground',
@@ -394,18 +394,18 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             {aramaAktif ? 'Eşleşen ürün yok.' : 'Bu kategoride ürün yok.'}
           </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2 lg:grid-cols-3">
             {gosterilen.map((u) => {
               const opsiyonlu = opsiyonluMu(u);
               const adet = urunAdedi(u.id);
               return (
                 <li key={u.id}>
-                  <div className="flex items-center gap-3 rounded-lg border bg-card p-3 text-left shadow-soft">
+                  <div className="flex items-center gap-2 rounded-lg border bg-card p-2.5 text-left shadow-soft sm:gap-3 sm:p-3">
                     <div className="min-w-0 flex-1">
-                      <div className="text-sm font-medium leading-tight line-clamp-2">
+                      <div className="text-[13px] font-medium leading-tight line-clamp-2 sm:text-sm">
                         {u.ad}
                       </div>
-                      <div className="text-sm tabular-nums text-muted-foreground mt-0.5">
+                      <div className="text-xs tabular-nums text-muted-foreground mt-0.5 sm:text-sm">
                         {formatTL(u.fiyatKurus)}
                       </div>
                     </div>
@@ -472,18 +472,18 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
 
       {/* Mobil: alt sticky özet barı */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:hidden">
-        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-2.5 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => setSepetAcik(true)}
             disabled={sepet.length === 0}
-            className="flex flex-1 items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left disabled:opacity-60"
+            className="flex flex-1 items-center justify-between gap-2 rounded-md border bg-background px-2.5 py-1.5 text-left disabled:opacity-60"
             aria-label="Sepeti gör"
           >
-            <span className="text-sm font-medium">
+            <span className="text-[13px] font-medium">
               {sepetAdet > 0 ? `${sepetAdet} kalem` : 'Sepet boş'}
             </span>
-            <span className="text-sm tabular-nums text-muted-foreground">
+            <span className="text-[13px] tabular-nums text-muted-foreground">
               {formatTL(sepetTopla)}
             </span>
           </button>
@@ -491,7 +491,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             type="button"
             onClick={gonder}
             disabled={sepet.length === 0 || gonderiliyor}
-            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            className="rounded-md bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground disabled:opacity-50"
           >
             {gonderiliyor ? 'Gönderiliyor…' : 'Adisyona ekle'}
           </button>
