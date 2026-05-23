@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { JetBrains_Mono, Manrope, Playfair_Display } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { cn } from '@/lib/utils';
+import { OnayProvider } from '@/components/ortak/onay-dialog';
 import { SwRegister } from './sw-register';
 import './globals.css';
 
@@ -9,15 +10,17 @@ const manrope = Manrope({
   subsets: ['latin'],
   variable: '--font-sans',
   display: 'swap',
-  weight: ['300', '400', '500', '600', '700'],
+  // 300 (light) projede hiç kullanılmıyor — çıkarıldı (~30KB tasarruf)
+  weight: ['400', '500', '600', '700'],
 });
 
-// Spec: Playfair Display başlıklar (regular + medium + semibold + italic)
+// Spec: Playfair Display başlıklar (regular + semibold + italic)
 const serif = Playfair_Display({
   subsets: ['latin'],
   variable: '--font-serif',
   display: 'swap',
-  weight: ['400', '500', '600'],
+  // 500 hiç eşleşmiyor — çıkarıldı
+  weight: ['400', '600'],
   style: ['normal', 'italic'],
 });
 
@@ -62,7 +65,7 @@ export default function RootLayout({
       className={cn(manrope.variable, serif.variable, mono.variable)}
     >
       <body className="min-h-screen bg-background bg-paper text-foreground antialiased font-sans">
-        {children}
+        <OnayProvider>{children}</OnayProvider>
         <Toaster richColors position="top-center" closeButton />
         <SwRegister />
       </body>

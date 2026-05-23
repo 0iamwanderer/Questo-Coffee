@@ -1,6 +1,6 @@
 import 'server-only';
 
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase/admin';
 import type { OturumKullanicisi } from '@/lib/auth/guard';
 
@@ -14,9 +14,18 @@ export interface AuditKayit {
   meta?: Record<string, unknown>;
 }
 
+/** Audit kayıtları 180 gün sonra otomatik silinsin */
+const TTL_GUN = 180;
+const TTL_MS = TTL_GUN * 24 * 60 * 60 * 1000;
+
 /**
  * Admin eylemlerini denetim kaydı olarak tutar. Hata durumunda sessizce
  * loglar — denetim yazımı asıl operasyonu engellemez.
+ *
+ * **TTL:** Her belgeye `expireAt` Timestamp field'i yazılır. Firestore
+ * Console'dan `kullaniciAksiyonlari` koleksiyonu için TTL policy
+ * tanımlanmalı (Indexes → TTL → Add policy → `expireAt` field).
+ * Tek seferlik kurulum sonrası eski kayıtlar otomatik temizlenir.
  */
 export const auditLogla = async (
   u: OturumKullanicisi,
@@ -31,6 +40,7 @@ export const auditLogla = async (
         eposta: u.email ?? null,
         ...kayit,
         zaman: FieldValue.serverTimestamp(),
+        expireAt: Timestamp.fromMillis(Date.now() + TTL_MS),
       });
   } catch (e) {
     console.error('[audit] log yazılamadı:', e);

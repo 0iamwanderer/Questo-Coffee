@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Minus, Plus, Trash2 } from 'lucide-react';
@@ -13,9 +14,14 @@ import { formatTL } from '@/lib/utils/para';
 import { useSepet, type SepetKalemi } from '@/stores/sepet';
 import { useMasa } from '../masa-provider';
 import { anonGirisiSagla, anonYenile } from '@/lib/auth/anon';
-import { Konfeti } from '@/components/musteri/konfeti';
 import { Tamamlayicilar } from '@/components/musteri/tamamlayicilar';
 import type { Urun } from '@/types/model';
+
+// Konfeti yalnız sipariş başarısında 1 kez kullanılır — lazy yükle
+const Konfeti = dynamic(
+  () => import('@/components/musteri/konfeti').then((m) => ({ default: m.Konfeti })),
+  { ssr: false, loading: () => null },
+);
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 

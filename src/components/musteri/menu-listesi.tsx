@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -17,7 +18,13 @@ import {
   urunConverter,
 } from '@/lib/firebase/converters';
 import type { Kategori, Urun } from '@/types/model';
-import { UrunDetaySheet } from './urun-detay-sheet';
+
+// Detay sheet ağır (386 satır + opsiyon mantığı). İlk ürün tıklanana kadar
+// yüklenmesin — sonra mounted kalıp animasyon devam etsin.
+const UrunDetaySheet = dynamic(
+  () => import('./urun-detay-sheet').then((m) => ({ default: m.UrunDetaySheet })),
+  { ssr: false, loading: () => null },
+);
 import { useSepet } from '@/stores/sepet';
 import { flyToCart } from './sepete-uc';
 import { useMasa } from '@/app/m/[token]/masa-provider';
@@ -462,7 +469,14 @@ export function MenuListesi() {
   const [urunler, setUrunler] = useState<Urun[]>([]);
   const [aktifId, setAktifId] = useState<string | null>(null);
   const [yukleniyor, setYukleniyor] = useState(true);
-  const [detayUrun, setDetayUrun] = useState<Urun | null>(null);
+  const [detayUrun, setDetayUrunHam] = useState<Urun | null>(null);
+  // Sheet bir kez bile açıldıysa true kalır — dynamic import sonrası unmount
+  // etmeyiz, böylece kapanma animasyonu çalışır.
+  const [detayUrunOnceAcildi, setDetayUrunOnceAcildi] = useState(false);
+  const setDetayUrun = (u: Urun | null): void => {
+    setDetayUrunHam(u);
+    if (u && !detayUrunOnceAcildi) setDetayUrunOnceAcildi(true);
+  };
   // Flip durumu: yön + çevrilen önceki sayfa snapshot'ı.
   const [flip, setFlip] = useState<{
     yon: Exclude<SayfaYonu, 'none'>;
@@ -995,11 +1009,15 @@ export function MenuListesi() {
         </button>
       </div>
 
-      <UrunDetaySheet
-        urun={detayUrun}
-        acik={!!detayUrun}
-        onKapat={() => setDetayUrun(null)}
-      />
+      {/* Dynamic import: sheet ilk product click'le yüklenir. detayUrunOnceAcildi
+          ile bir kez yüklendikten sonra mounted kalır (animasyon korunur). */}
+      {detayUrunOnceAcildi && (
+        <UrunDetaySheet
+          urun={detayUrun}
+          acik={!!detayUrun}
+          onKapat={() => setDetayUrun(null)}
+        />
+      )}
 
       {/* ── Sepet Sheet — partial bottom overlay ── */}
       {sepetAcik && (

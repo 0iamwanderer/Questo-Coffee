@@ -19,6 +19,7 @@ import {
 import type { Kategori, Urun } from '@/types/model';
 import { formatTL, tlToKurus } from '@/lib/utils/para';
 import { cn } from '@/lib/utils';
+import { useOnay } from '@/components/ortak/onay-dialog';
 import { UrunOpsiyonlariModal } from './urun-opsiyonlari';
 
 const MAX_GORSEL_BYTE = 2 * 1024 * 1024;
@@ -52,6 +53,7 @@ const bosUrun: UrunForm = {
 };
 
 export function MenuYonetimi() {
+  const onay = useOnay();
   const [kategoriler, setKategoriler] = useState<Kategori[]>([]);
   const [urunler, setUrunler] = useState<Urun[]>([]);
   const [aktif, setAktif] = useState<string | null>(null);
@@ -133,7 +135,13 @@ export function MenuYonetimi() {
   };
 
   const kategoriSil = async (id: string) => {
-    if (!window.confirm('Kategoriyi silmek istediğinize emin misiniz?')) return;
+    const ok = await onay({
+      baslik: 'Kategoriyi sil',
+      mesaj: 'Bu kategoriyi silmek istediğine emin misin? İşlem geri alınamaz.',
+      onayEtiket: 'Sil',
+      tehlikeli: true,
+    });
+    if (!ok) return;
     try {
       await istek(`/api/admin/kategori/${id}`, 'DELETE');
     } catch (e) {
@@ -178,7 +186,13 @@ export function MenuYonetimi() {
   };
 
   const urunSil = async (id: string) => {
-    if (!window.confirm('Ürünü silmek istediğinize emin misiniz?')) return;
+    const ok = await onay({
+      baslik: 'Ürünü sil',
+      mesaj: 'Bu ürünü silmek istediğine emin misin? İşlem geri alınamaz.',
+      onayEtiket: 'Sil',
+      tehlikeli: true,
+    });
+    if (!ok) return;
     try {
       await istek(`/api/admin/urun/${id}`, 'DELETE');
     } catch (e) {

@@ -16,10 +16,12 @@ import { masaConverter } from '@/lib/firebase/converters';
 import type { Masa } from '@/types/model';
 import { cn } from '@/lib/utils';
 import { karsilastirMasaAdi } from '@/lib/utils/masa';
+import { useOnay } from '@/components/ortak/onay-dialog';
 
 const RESTORAN = process.env.NEXT_PUBLIC_RESTORAN_ID as string;
 
 export function MasaYonetimi() {
+  const onay = useOnay();
   const [masalar, setMasalar] = useState<Masa[]>([]);
   const [yeni, setYeni] = useState({ acik: false, ad: '' });
   const [duzenleId, setDuzenleId] = useState<string | null>(null);
@@ -106,12 +108,12 @@ export function MasaYonetimi() {
   };
 
   const rotate = async (m: Masa) => {
-    if (
-      !window.confirm(
-        `${m.ad} masasındaki aktif bağlantılar kesilsin mi? QR kodu geçerliliğini korur, yalnızca açık oturumlar sona erer.`,
-      )
-    )
-      return;
+    const ok = await onay({
+      baslik: `${m.ad} bağlantılarını sıfırla`,
+      mesaj: 'Aktif müşteri bağlantıları kesilir. QR kodu geçerliliğini korur; yalnızca açık oturumlar sona erer.',
+      onayEtiket: 'Sıfırla',
+    });
+    if (!ok) return;
     try {
       setCalisan(m.id);
       await istek(`/api/admin/masa/${m.id}/rotate`, 'POST');
@@ -123,7 +125,13 @@ export function MasaYonetimi() {
   };
 
   const sil = async (m: Masa) => {
-    if (!window.confirm(`${m.ad} silinsin mi?`)) return;
+    const ok = await onay({
+      baslik: `${m.ad} masasını sil`,
+      mesaj: 'Masa kalıcı olarak silinir. Açık adisyonu olan masa silinemez.',
+      onayEtiket: 'Sil',
+      tehlikeli: true,
+    });
+    if (!ok) return;
     try {
       setCalisan(m.id);
       await istek(`/api/admin/masa/${m.id}`, 'DELETE');

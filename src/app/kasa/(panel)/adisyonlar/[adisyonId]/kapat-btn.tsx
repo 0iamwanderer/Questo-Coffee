@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useOnay } from '@/components/ortak/onay-dialog';
 
 export function AdisyonuKapatBtn({
   adisyonId,
@@ -11,15 +13,22 @@ export function AdisyonuKapatBtn({
   kalanKurus: number;
 }) {
   const router = useRouter();
+  const onay = useOnay();
   const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState<string | null>(null);
 
   const kapat = async () => {
     if (kalanKurus > 0) {
-      window.alert('Tüm ödemeler alınmadan adisyon kapatılamaz.');
+      toast.warning('Tüm ödemeler alınmadan adisyon kapatılamaz.');
       return;
     }
-    if (!window.confirm('Adisyon kapatılsın mı? Geri alınamaz.')) return;
+    const ok = await onay({
+      baslik: 'Adisyonu kapat',
+      mesaj: 'Adisyon kalıcı olarak kapatılır. İşlem geri alınamaz.',
+      onayEtiket: 'Kapat',
+      tehlikeli: true,
+    });
+    if (!ok) return;
     setYukleniyor(true);
     setHata(null);
     try {
