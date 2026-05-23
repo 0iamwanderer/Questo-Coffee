@@ -20,6 +20,7 @@ service-account*.json
 
 # Başlat.bat'ın gizli proseslerinin log çıktıları
 logs/
+questo.log
 
 # IDE (JetBrains / Android Studio) — kişisel ayarlar
 .idea/
