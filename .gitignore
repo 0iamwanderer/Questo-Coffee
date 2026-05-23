@@ -20,3 +20,19 @@ service-account*.json
 
 # Başlat.bat'ın gizli proseslerinin log çıktıları
 logs/
+
+# IDE (JetBrains / Android Studio) — kişisel ayarlar
+.idea/
+
+# Yerel SQLite veritabanı
+data/
+
+# Capacitor / Android build artifact'ları (kaynak dosyalar repoda kalır)
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/local.properties
+android/.externalNativeBuild/
+android/.cxx/
+android/app/release/
