@@ -66,30 +66,41 @@ if errorlevel 1 (
     goto bekle_next
 )
 
-rem Default browser association bozulmus PC'lerde "Uygulama bulunamadi"
-rem hatasi gelmesin diye Edge -> Chrome bilinen yollarini, son care olarak
-rem default URL handler'i deniyoruz.
+rem Tarayiciyi ac — Chrome onceligi, Edge fallback, son care default URL handler.
+rem %TARAYICI% son ekranda gosterilir; tarayici acilmazsa kullanici URL'i goruyor.
 set "QUESTO_URL=http://localhost:3000"
-set "EDGE=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
-set "CHROME=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
-set "CHROME_X86=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
+set "TARAYICI=?"
 
-if exist "%EDGE%" (
-    start "" "%EDGE%" "%QUESTO_URL%"
-) else if exist "%CHROME%" (
-    start "" "%CHROME%" "%QUESTO_URL%"
+set "CHROME_X64=%ProgramFiles%\Google\Chrome\Application\chrome.exe"
+set "CHROME_X86=%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"
+set "EDGE_X86=%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"
+set "EDGE_X64=%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"
+
+if exist "%CHROME_X64%" (
+    start "" "%CHROME_X64%" "%QUESTO_URL%"
+    set "TARAYICI=Chrome"
 ) else if exist "%CHROME_X86%" (
     start "" "%CHROME_X86%" "%QUESTO_URL%"
+    set "TARAYICI=Chrome"
+) else if exist "%EDGE_X86%" (
+    start "" "%EDGE_X86%" "%QUESTO_URL%"
+    set "TARAYICI=Edge"
+) else if exist "%EDGE_X64%" (
+    start "" "%EDGE_X64%" "%QUESTO_URL%"
+    set "TARAYICI=Edge"
 ) else (
-    start "" "%QUESTO_URL%"
+    rem Hicbiri yoksa: Windows URL handler — default browser'i acar
+    rundll32 url.dll,FileProtocolHandler %QUESTO_URL%
+    set "TARAYICI=Default"
 )
 
 cls
 title Questo - Calisiyor
 color 0A
 echo.
-echo  Questo hazir!  ^>  localhost:3000
+echo  Questo hazir!  ^>  %QUESTO_URL%
 echo.
+echo  Tarayici:   %TARAYICI%   (acilmadiysa URL'i manuel acin)
 echo  Loglar:     logs\emulator.log  /  logs\nextjs.log
 echo  Durdurmak:  Questo'yu Durdur.bat
 echo.
