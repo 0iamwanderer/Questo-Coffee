@@ -338,8 +338,8 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
   return (
     <div className="grid gap-3 pb-24 sm:gap-4 lg:grid-cols-[1fr_320px] lg:pb-0">
       <div className="space-y-2 sm:space-y-3">
-        {/* Arama + kategoriler */}
-        <div className="space-y-2">
+        {/* Arama + kategoriler — mobilde sticky */}
+        <div className="sticky top-11 z-20 -mx-2 space-y-2 border-b border-transparent bg-background/95 px-2 pt-1 pb-2 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:top-auto sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-0">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground sm:left-3 sm:size-4" />
             <input
@@ -363,7 +363,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
 
           {!aramaAktif && (
             <nav
-              className="flex items-center gap-1 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex items-center gap-1 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               aria-label="Kategoriler"
             >
               {kategoriler.map((k) => {
