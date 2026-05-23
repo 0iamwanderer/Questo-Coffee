@@ -15,7 +15,8 @@ export async function otoGirisYap(): Promise<void> {
   const { customToken } = (await tokenRes.json()) as { customToken: string };
 
   const cred = await signInWithCustomToken(getClientAuth(), customToken);
-  const idToken = await cred.user.getIdToken(true);
+  // Custom token ile yeni signin yapildi -> ID token zaten taze, force refresh gereksiz.
+  const idToken = await cred.user.getIdToken();
 
   const sessionRes = await fetch('/api/auth/session', {
     method: 'POST',

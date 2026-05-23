@@ -53,7 +53,7 @@ export function GirisForm() {
         </div>
       </div>
 
-      {hata ? (
+      {hata && (
         <>
           <p className="text-sm text-destructive" role="alert">
             {hata}
@@ -66,8 +66,6 @@ export function GirisForm() {
             Tekrar dene
           </button>
         </>
-      ) : (
-        <p className="text-sm text-muted-foreground">Giriş yapılıyor…</p>
       )}
     </div>
   );
