@@ -402,30 +402,27 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                   <button
                     type="button"
                     onClick={() => urunEkle(u)}
-                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition active:bg-secondary/40 sm:gap-3 sm:p-3"
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition active:bg-secondary/40 sm:p-3"
                     aria-label={`${u.ad} ekle`}
                   >
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[13px] font-medium leading-tight line-clamp-2 sm:text-sm">
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-[13px] font-medium leading-tight line-clamp-2 sm:text-sm">
                         {u.ad}
-                      </div>
-                      <div className="text-xs tabular-nums text-muted-foreground mt-0.5 sm:text-sm">
+                      </span>
+                      <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground sm:text-sm">
                         {formatTL(u.fiyatKurus)}
-                      </div>
-                    </div>
+                      </span>
+                    </span>
                     <span
-                      className={cn(
-                        'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-sm font-medium transition',
-                        adet > 0
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-secondary text-secondary-foreground',
-                      )}
+                      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-2 text-primary-foreground"
                       aria-hidden="true"
                     >
                       {adet > 0 && (
-                        <span className="tabular-nums">{adet}</span>
+                        <span className="text-sm font-bold tabular-nums">
+                          {adet}
+                        </span>
                       )}
-                      <Plus className="size-4" strokeWidth={2.5} />
+                      <Plus className="size-4" strokeWidth={3} />
                     </span>
                   </button>
                 </li>
