@@ -4,7 +4,7 @@ export default function MasaNotFound() {
       <div className="max-w-md w-full space-y-3 text-center">
         <h1 className="text-2xl font-semibold">Masa bulunamadı</h1>
         <p className="text-sm text-muted-foreground">
-          QR kod hatalı ya da masa pasif. Lütfen personeli çağırın.
+          Bağlantı geçersiz ya da masa pasif. Lütfen personeli çağırın.
         </p>
       </div>
     </main>

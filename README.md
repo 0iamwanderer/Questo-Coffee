@@ -1,7 +1,9 @@
-# Questo — QR Kodlu Sipariş ve Adisyon Sistemi
+# Questo — Restoran Sipariş ve Adisyon Sistemi
 
-Tek restoran için, müşterinin masadaki QR'ı okutup mobil tarayıcıdan sipariş
-verdiği, kasanın canlı olarak takip edip kapattığı sistem.
+Tek restoran için, masaya gelen müşterinin mobil tarayıcıdan menüye ulaşıp
+sipariş verdiği, kasanın canlı olarak takip edip kapattığı yerel ağ
+(LAN-only) sistemi. İnternet bağlantısı gerektirmez — Firebase emulator
+restoranın PC'sinde çalışır, telefon/tabletler aynı WiFi üzerinden bağlanır.
 
 ## Teknoloji
 
@@ -157,7 +159,7 @@ firebase emulators:start --only firestore,functions,auth
 - [x] Faz 2 — Güvenlik & rol (firestore.rules, session, middleware, kasa girişi)
 - [x] Faz 3 — Müşteri akışı (menü, sepet, sipariş transaction)
 - [x] Faz 4 — Kasa (Kanban, adisyon paneli, durum güncelleme)
-- [x] Faz 5 — Admin (menü/masa CRUD, QR PDF)
+- [x] Faz 5 — Admin (menü/masa CRUD)
 - [x] Faz 6 — Operasyonel + Cloud Functions (SLA bildirim)
 - [x] Faz 7 — Güvenlik sertleştirme (rate limit + idempotency + audit log)
 - [x] Faz 8 — Ürün görseli + günlük rapor + KVKK

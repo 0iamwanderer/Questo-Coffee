@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Questo Coffea Co.',
     short_name: 'Questo',
     description:
-      'Kafe ve restoran için QR kodlu sipariş ve adisyon sistemi',
+      'Kafe ve restoran için sipariş ve adisyon sistemi',
     start_url: '/',
     scope: '/',
     display: 'standalone',

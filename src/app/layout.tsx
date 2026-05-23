@@ -34,7 +34,7 @@ const mono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: 'Questo Coffea Co. — Manisa',
-  description: 'QR Kodlu Sipariş ve Adisyon Sistemi',
+  description: 'Restoran Sipariş ve Adisyon Sistemi',
   applicationName: 'Questo',
   appleWebApp: {
     capable: true,
