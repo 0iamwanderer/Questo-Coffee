@@ -20,7 +20,18 @@ const config: NextConfig = {
   },
 
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    // Tree-shake + barrel import optimizasyonu — bundle'ı küçültür, ilk
+    // JS yüklenmesini hızlandırır.
+    optimizePackageImports: [
+      'lucide-react',
+      'sonner',
+      'firebase/firestore',
+      'firebase/auth',
+      'firebase/app',
+      '@hookform/resolvers',
+      'react-hook-form',
+      'zod',
+    ],
   },
 
   webpack: (webpackConfig, { isServer }) => {

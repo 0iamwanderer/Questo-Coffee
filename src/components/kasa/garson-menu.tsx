@@ -305,8 +305,15 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
       }
       toast.success(`${masaAd}: ${sepetAdet} kalem adisyona eklendi.`);
       setSepet([]);
-      router.replace(`/kasa/adisyonlar/${j.adisyonId}`);
-      router.refresh();
+      // Aynı adisyon sayfasındaysak (mevcut adisyona ekleme) yalnızca refresh;
+      // farklı sayfadaysak (yeni masa açma) sadece replace yeter — her ikisini
+      // birden çağırmak iki RSC round-trip'e mal oluyordu.
+      const hedef = `/kasa/adisyonlar/${j.adisyonId}`;
+      if (typeof window !== 'undefined' && window.location.pathname === hedef) {
+        router.refresh();
+      } else {
+        router.replace(hedef);
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'Sipariş hatası.');
     } finally {
