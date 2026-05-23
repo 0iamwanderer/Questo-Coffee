@@ -11,6 +11,9 @@ echo.
 echo  [1/5] Portlar temizleniyor...
 call npm run kill-ports
 
+rem Onceki yedek script instance'ini kapat — duplicate olmasin
+wmic process where "name='powershell.exe' and CommandLine like '%%yedek-periodic.ps1%%'" delete >nul 2>&1
+
 rem Logs klasoru ve onceki loglar
 if not exist "logs" mkdir "logs"
 if exist "logs\emulator.log" del /q "logs\emulator.log"
@@ -42,6 +45,10 @@ call npm run seed > "logs\seed.log" 2>&1
 
 echo  [5/5] Next.js baslatiliyor (gizli, log: logs\nextjs.log)...
 wscript "%~dp0scripts\gizli-calistir.vbs" "nextjs.log" "npm run dev"
+
+rem Periodic yedek scripti — her 15dk emulator verisini diske yazar + gunluk zip
+echo  [+] Periodic yedek scripti baslatiliyor (logs\yedek.log)...
+wscript "%~dp0scripts\gizli-calistir.vbs" "yedek.log" "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\yedek-periodic.ps1"
 
 set /a next_sure=0
 :bekle_next
