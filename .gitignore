@@ -27,12 +27,5 @@ logs/
 # Yerel SQLite veritabanı
 data/
 
-# Capacitor / Android build artifact'ları (kaynak dosyalar repoda kalır)
-android/.gradle/
-android/build/
-android/app/build/
-android/captures/
-android/local.properties
-android/.externalNativeBuild/
-android/.cxx/
-android/app/release/
+# Capacitor android wrapper — yerel üretilir (`npx cap add android`)
+android/
