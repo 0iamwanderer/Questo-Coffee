@@ -110,7 +110,7 @@ export function MasaYonetimi() {
   const rotate = async (m: Masa) => {
     const ok = await onay({
       baslik: `${m.ad} bağlantılarını sıfırla`,
-      mesaj: 'Aktif müşteri bağlantıları kesilir. QR kodu geçerliliğini korur; yalnızca açık oturumlar sona erer.',
+      mesaj: 'Aktif müşteri bağlantıları kesilir. Açık oturumlar sona erer; masa URL\'i yeniden üretilir.',
       onayEtiket: 'Sıfırla',
     });
     if (!ok) return;
@@ -249,7 +249,7 @@ export function MasaYonetimi() {
                   Aktif
                 </label>
                 <Link
-                  href={`/m/qr/${m.id}`}
+                  href={`/m/${m.token}`}
                   target="_blank"
                   className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs"
                 >
