@@ -52,6 +52,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
   const [sepet, setSepet] = useState<SepetKalemi[]>([]);
   const [opsiyonUrun, setOpsiyonUrun] = useState<Urun | null>(null);
   const [gonderiliyor, setGonderiliyor] = useState(false);
+  const [sepetAcik, setSepetAcik] = useState(false);
   const satirSayaci = useRef(0);
 
   useEffect(() => {
@@ -243,8 +244,99 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
     );
   }
 
+  const sepetIcerigi = (
+    <>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold">
+          Yeni sipariş ({sepetAdet})
+        </h2>
+        {sepet.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setSepet([])}
+            className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
+            aria-label="Sepeti temizle"
+          >
+            <Trash2 className="size-3.5" />
+            Temizle
+          </button>
+        )}
+      </div>
+
+      {sepet.length === 0 ? (
+        <p className="rounded-md border border-dashed py-6 text-center text-xs text-muted-foreground">
+          Sol panelden ürün seç
+        </p>
+      ) : (
+        <ul className="space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto">
+          {sepet.map((k) => (
+            <li key={k.satirId} className="rounded-md border bg-background p-2">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-medium leading-snug">
+                    {k.ad}
+                  </div>
+                  {k.secimler && k.secimler.length > 0 && (
+                    <div className="text-xs text-muted-foreground">
+                      {k.secimler
+                        .map(
+                          (s) =>
+                            `${s.grupAd}: ${s.secenekler.map((x) => x.ad).join(', ')}`,
+                        )
+                        .join(' · ')}
+                    </div>
+                  )}
+                  <div className="text-xs tabular-nums text-muted-foreground mt-0.5">
+                    {formatTL(k.birimFiyatKurus * k.adet)}
+                  </div>
+                </div>
+                <div className="inline-flex shrink-0 items-center rounded-full border bg-card">
+                  <button
+                    type="button"
+                    onClick={() => adetGuncelle(k.satirId, k.adet - 1)}
+                    className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label="Azalt"
+                  >
+                    <Minus className="size-3.5" />
+                  </button>
+                  <span className="w-6 text-center text-sm tabular-nums">
+                    {k.adet}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => adetGuncelle(k.satirId, k.adet + 1)}
+                    className="flex size-8 items-center justify-center text-muted-foreground hover:text-foreground"
+                    aria-label="Artır"
+                  >
+                    <Plus className="size-3.5" />
+                  </button>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="flex items-center justify-between border-t pt-3 text-sm">
+        <span className="text-muted-foreground">Toplam</span>
+        <span className="text-base font-semibold tabular-nums">
+          {formatTL(sepetTopla)}
+        </span>
+      </div>
+
+      <button
+        type="button"
+        onClick={gonder}
+        disabled={sepet.length === 0 || gonderiliyor}
+        className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+      >
+        {gonderiliyor ? 'Gönderiliyor…' : 'Adisyona ekle'}
+      </button>
+    </>
+  );
+
   return (
-    <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-4 pb-24 lg:grid-cols-[1fr_320px] lg:pb-0">
       <div className="space-y-3">
         {/* Arama + kategoriler */}
         <div className="space-y-2">
@@ -371,95 +463,58 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
         )}
       </div>
 
-      {/* Sepet paneli */}
-      <aside className="space-y-3 rounded-lg border bg-card p-3 lg:sticky lg:top-20 lg:self-start">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">
-            Yeni sipariş ({sepetAdet})
-          </h2>
-          {sepet.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setSepet([])}
-              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive"
-              aria-label="Sepeti temizle"
-            >
-              <Trash2 className="size-3.5" />
-              Temizle
-            </button>
-          )}
-        </div>
-
-        {sepet.length === 0 ? (
-          <p className="rounded-md border border-dashed py-6 text-center text-xs text-muted-foreground">
-            Sol panelden ürün seç
-          </p>
-        ) : (
-          <ul className="space-y-2 max-h-[calc(100vh-260px)] overflow-y-auto">
-            {sepet.map((k) => (
-              <li key={k.satirId} className="rounded-md border bg-background p-2">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-sm font-medium leading-snug">
-                      {k.ad}
-                    </div>
-                    {k.secimler && k.secimler.length > 0 && (
-                      <div className="text-xs text-muted-foreground">
-                        {k.secimler
-                          .map(
-                            (s) =>
-                              `${s.grupAd}: ${s.secenekler.map((x) => x.ad).join(', ')}`,
-                          )
-                          .join(' · ')}
-                      </div>
-                    )}
-                    <div className="text-xs tabular-nums text-muted-foreground mt-0.5">
-                      {formatTL(k.birimFiyatKurus * k.adet)}
-                    </div>
-                  </div>
-                  <div className="inline-flex shrink-0 items-center rounded-full border bg-card">
-                    <button
-                      type="button"
-                      onClick={() => adetGuncelle(k.satirId, k.adet - 1)}
-                      className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground"
-                      aria-label="Azalt"
-                    >
-                      <Minus className="size-3" />
-                    </button>
-                    <span className="w-5 text-center text-sm tabular-nums">
-                      {k.adet}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => adetGuncelle(k.satirId, k.adet + 1)}
-                      className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground"
-                      aria-label="Artır"
-                    >
-                      <Plus className="size-3" />
-                    </button>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <div className="flex items-center justify-between border-t pt-3 text-sm">
-          <span className="text-muted-foreground">Toplam</span>
-          <span className="text-base font-semibold tabular-nums">
-            {formatTL(sepetTopla)}
-          </span>
-        </div>
-
-        <button
-          type="button"
-          onClick={gonder}
-          disabled={sepet.length === 0 || gonderiliyor}
-          className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-        >
-          {gonderiliyor ? 'Gönderiliyor…' : 'Adisyona ekle'}
-        </button>
+      {/* Masaüstü: sağ sticky sepet paneli */}
+      <aside className="hidden space-y-3 rounded-lg border bg-card p-3 lg:block lg:sticky lg:top-20 lg:self-start">
+        {sepetIcerigi}
       </aside>
+
+      {/* Mobil: alt sticky özet barı */}
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:hidden">
+        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-3 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={() => setSepetAcik(true)}
+            disabled={sepet.length === 0}
+            className="flex flex-1 items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left disabled:opacity-60"
+            aria-label="Sepeti gör"
+          >
+            <span className="text-sm font-medium">
+              {sepetAdet > 0 ? `${sepetAdet} kalem` : 'Sepet boş'}
+            </span>
+            <span className="text-sm tabular-nums text-muted-foreground">
+              {formatTL(sepetTopla)}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={gonder}
+            disabled={sepet.length === 0 || gonderiliyor}
+            className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+          >
+            {gonderiliyor ? 'Gönderiliyor…' : 'Adisyona ekle'}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobil: sepet bottom sheet */}
+      {sepetAcik && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-40 flex items-end bg-background/80 backdrop-blur lg:hidden"
+          onClick={() => setSepetAcik(false)}
+        >
+          <div
+            className="flex max-h-[85vh] w-full flex-col gap-3 overflow-hidden rounded-t-2xl border bg-card p-4 pb-[max(1rem,env(safe-area-inset-bottom))] shadow-lg"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="mx-auto h-1 w-10 shrink-0 rounded-full bg-border" />
+            <div className="flex-1 space-y-3 overflow-y-auto">
+              {sepetIcerigi}
+            </div>
+          </div>
+        </div>
+      )}
 
       {opsiyonUrun && (
         <OpsiyonSecici
