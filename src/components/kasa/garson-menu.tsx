@@ -574,7 +574,7 @@ function UrunListesi({
     );
   }
   return (
-    <ul className="grid grid-cols-2 gap-1.5 sm:gap-2 lg:grid-cols-3">
+    <ul className="grid grid-cols-2 gap-2.5 sm:gap-3 lg:grid-cols-3">
       {urunler.map((u) => {
         const adet = urunAdedi(u.id);
         return (
@@ -582,26 +582,26 @@ function UrunListesi({
             <button
               type="button"
               onClick={() => urunEkle(u)}
-              className="relative flex h-full w-full flex-col justify-between gap-2 rounded-lg border bg-card p-2.5 text-left shadow-soft transition active:bg-secondary/40 sm:p-3"
+              className="relative flex h-full min-h-[7rem] w-full flex-col justify-between gap-3 rounded-xl border bg-card p-3.5 text-left shadow-soft transition active:bg-secondary/40 sm:min-h-[8rem] sm:p-4"
               aria-label={`${u.ad} ekle`}
             >
-              <span className="block text-[13px] font-medium leading-tight line-clamp-2 sm:text-sm">
+              <span className="block text-sm font-semibold leading-snug line-clamp-3 sm:text-base">
                 {u.ad}
               </span>
-              <span className="flex items-center justify-between gap-2">
-                <span className="text-[13px] tabular-nums text-muted-foreground sm:text-sm">
+              <span className="flex items-end justify-between gap-2">
+                <span className="text-sm font-medium tabular-nums text-foreground sm:text-base">
                   {formatTL(u.fiyatKurus)}
                 </span>
                 <span
-                  className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-primary px-2 py-1 text-primary-foreground"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2.5 py-1.5 text-primary-foreground shadow-soft"
                   aria-hidden="true"
                 >
                   {adet > 0 && (
-                    <span className="text-xs font-bold tabular-nums">
+                    <span className="text-sm font-bold tabular-nums">
                       {adet}
                     </span>
                   )}
-                  <Plus className="size-3.5" strokeWidth={3} />
+                  <Plus className="size-4" strokeWidth={3} />
                 </span>
               </span>
             </button>
