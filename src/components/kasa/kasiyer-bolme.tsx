@@ -105,16 +105,18 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   };
 
   const urunOde = () => {
-    const kalemler = Array.from(secili).map((key) => {
-      const item = tumKalemler.find((k) => k.key === key)!;
-      return {
+    const kalemler = Array.from(secili).flatMap((key) => {
+      const item = tumKalemler.find((k) => k.key === key);
+      if (!item) return [];
+      return [{
         siparisId: item.siparisId,
         siparisNo: item.siparisNo,
         ad: item.ad,
         adet: item.adet,
         araToplamKurus: item.araToplamKurus,
-      };
+      }];
     });
+    if (kalemler.length === 0) return;
     const secilenKeyler = new Set(secili);
     talep(
       { yontem: 'urun', secilenKalemler: kalemler },
