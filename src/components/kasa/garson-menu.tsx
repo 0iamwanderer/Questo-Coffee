@@ -413,9 +413,9 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
         type="button"
         onClick={gonder}
         disabled={sepet.length === 0 || gonderiliyor}
-        className="w-full rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        className="min-h-[52px] w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-soft transition active:scale-[0.98] disabled:opacity-50"
       >
-        {gonderiliyor ? 'Gönderiliyor…' : 'Adisyona ekle'}
+        {gonderiliyor ? 'Gönderiliyor…' : 'Sipariş Ver'}
       </button>
     </>
   );
@@ -522,18 +522,18 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
 
       {/* Mobil: alt sticky özet barı */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
-        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-2.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => setSepetAcik(true)}
             disabled={sepet.length === 0}
-            className="flex flex-1 items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left disabled:opacity-60"
+            className="flex min-h-[52px] flex-1 items-center justify-between gap-2 rounded-xl border bg-background px-3.5 py-2.5 text-left transition active:scale-[0.98] disabled:opacity-60"
             aria-label="Sepeti gör"
           >
-            <span className="text-[13px] font-semibold">
+            <span className="text-sm font-semibold">
               {sepetAdet > 0 ? `${sepetAdet} kalem` : 'Sepet boş'}
             </span>
-            <span className="text-[13px] tabular-nums text-muted-foreground">
+            <span className="text-sm tabular-nums text-muted-foreground">
               {formatTL(sepetTopla)}
             </span>
           </button>
@@ -541,9 +541,9 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             type="button"
             onClick={gonder}
             disabled={sepet.length === 0 || gonderiliyor}
-            className="rounded-md bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground disabled:opacity-40"
+            className="min-h-[52px] min-w-[140px] rounded-xl bg-primary px-5 py-3 text-base font-semibold text-primary-foreground shadow-soft transition active:scale-[0.97] disabled:opacity-40"
           >
-            {gonderiliyor ? 'Gönderiliyor…' : 'Ekle'}
+            {gonderiliyor ? 'Gönderiliyor…' : 'Sipariş Ver'}
           </button>
         </div>
       </div>
