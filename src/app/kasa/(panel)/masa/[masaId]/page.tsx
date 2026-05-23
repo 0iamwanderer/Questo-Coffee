@@ -43,18 +43,31 @@ export default async function MasaSiparisSayfasi({
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-3 space-y-3 sm:p-4 sm:space-y-4">
-      <Link
-        href="/kasa/masalar"
-        className="inline-flex items-center gap-1.5 text-xs text-muted-foreground sm:text-sm"
-      >
-        <ArrowLeft className="size-3.5 sm:size-4" />
-        Masalar
-      </Link>
+    <div className="mx-auto max-w-6xl px-2 py-2 space-y-2 sm:px-4 sm:py-4 sm:space-y-4">
+      {/* Mobil: tek satır kompakt başlık */}
+      <div className="flex items-center gap-2 sm:hidden">
+        <Link
+          href="/kasa/masalar"
+          aria-label="Masalar"
+          className="-ml-1 inline-flex size-8 items-center justify-center rounded-md text-muted-foreground active:bg-secondary"
+        >
+          <ArrowLeft className="size-4" />
+        </Link>
+        <h1 className="text-base font-semibold">{masa.ad}</h1>
+        <span className="text-xs text-muted-foreground">· yeni sipariş</span>
+      </div>
 
-      <div>
-        <h1 className="text-lg font-semibold sm:text-2xl">{masa.ad}</h1>
-        <p className="text-xs text-muted-foreground sm:text-sm">İlk sipariş alınıyor</p>
+      {/* Tablet/masaüstü: ayrıntılı başlık */}
+      <div className="hidden sm:block">
+        <Link
+          href="/kasa/masalar"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          Masalar
+        </Link>
+        <h1 className="mt-2 text-2xl font-semibold">{masa.ad}</h1>
+        <p className="text-sm text-muted-foreground">İlk sipariş alınıyor</p>
       </div>
 
       <GarsonMenu masaToken={masa.token} masaAd={masa.ad} />

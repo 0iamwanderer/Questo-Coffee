@@ -394,13 +394,17 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             {aramaAktif ? 'Eşleşen ürün yok.' : 'Bu kategoride ürün yok.'}
           </div>
         ) : (
-          <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 sm:gap-2 lg:grid-cols-3">
+          <ul className="overflow-hidden rounded-lg border bg-card divide-y sm:grid sm:grid-cols-2 sm:gap-2 sm:divide-y-0 sm:border-0 sm:bg-transparent sm:overflow-visible lg:grid-cols-3">
             {gosterilen.map((u) => {
-              const opsiyonlu = opsiyonluMu(u);
               const adet = urunAdedi(u.id);
               return (
-                <li key={u.id}>
-                  <div className="flex items-center gap-2 rounded-lg border bg-card p-2.5 text-left shadow-soft sm:gap-3 sm:p-3">
+                <li key={u.id} className="sm:rounded-lg sm:border sm:bg-card sm:shadow-soft">
+                  <button
+                    type="button"
+                    onClick={() => urunEkle(u)}
+                    className="flex w-full items-center gap-2 px-3 py-2.5 text-left transition active:bg-secondary/40 sm:gap-3 sm:p-3"
+                    aria-label={`${u.ad} ekle`}
+                  >
                     <div className="min-w-0 flex-1">
                       <div className="text-[13px] font-medium leading-tight line-clamp-2 sm:text-sm">
                         {u.ad}
@@ -409,55 +413,21 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                         {formatTL(u.fiyatKurus)}
                       </div>
                     </div>
-                    <div className="shrink-0">
-                      {opsiyonlu ? (
-                        <button
-                          type="button"
-                          onClick={() => urunEkle(u)}
-                          className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-primary-foreground transition active:scale-95"
-                          aria-label={`${u.ad} ekle`}
-                        >
-                          {adet > 0 && (
-                            <span className="rounded-full bg-primary-foreground/20 px-1.5 text-xs font-medium tabular-nums">
-                              {adet}
-                            </span>
-                          )}
-                          <Plus className="size-4" />
-                        </button>
-                      ) : adet > 0 ? (
-                        <div className="inline-flex items-center rounded-full border bg-card">
-                          <button
-                            type="button"
-                            onClick={() => azalt(u)}
-                            className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
-                            aria-label="Azalt"
-                          >
-                            <Minus className="size-4" />
-                          </button>
-                          <span className="w-7 text-center text-sm font-semibold tabular-nums">
-                            {adet}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => urunEkle(u)}
-                            className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
-                            aria-label="Artır"
-                          >
-                            <Plus className="size-4" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => urunEkle(u)}
-                          className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90"
-                          aria-label={`${u.ad} ekle`}
-                        >
-                          <Plus className="size-5" />
-                        </button>
+                    <span
+                      className={cn(
+                        'inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1.5 text-sm font-medium transition',
+                        adet > 0
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-secondary text-secondary-foreground',
                       )}
-                    </div>
-                  </div>
+                      aria-hidden="true"
+                    >
+                      {adet > 0 && (
+                        <span className="tabular-nums">{adet}</span>
+                      )}
+                      <Plus className="size-4" strokeWidth={2.5} />
+                    </span>
+                  </button>
                 </li>
               );
             })}
@@ -471,16 +441,16 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
       </aside>
 
       {/* Mobil: alt sticky özet barı */}
-      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80 lg:hidden">
-        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-2.5 py-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))]">
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
+        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-2.5 py-2 pb-[max(0.5rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => setSepetAcik(true)}
             disabled={sepet.length === 0}
-            className="flex flex-1 items-center justify-between gap-2 rounded-md border bg-background px-2.5 py-1.5 text-left disabled:opacity-60"
+            className="flex flex-1 items-center justify-between gap-2 rounded-md border bg-background px-3 py-2 text-left disabled:opacity-60"
             aria-label="Sepeti gör"
           >
-            <span className="text-[13px] font-medium">
+            <span className="text-[13px] font-semibold">
               {sepetAdet > 0 ? `${sepetAdet} kalem` : 'Sepet boş'}
             </span>
             <span className="text-[13px] tabular-nums text-muted-foreground">
@@ -491,9 +461,9 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             type="button"
             onClick={gonder}
             disabled={sepet.length === 0 || gonderiliyor}
-            className="rounded-md bg-primary px-3 py-1.5 text-[13px] font-medium text-primary-foreground disabled:opacity-50"
+            className="rounded-md bg-primary px-4 py-2 text-[13px] font-semibold text-primary-foreground disabled:opacity-40"
           >
-            {gonderiliyor ? 'Gönderiliyor…' : 'Adisyona ekle'}
+            {gonderiliyor ? 'Gönderiliyor…' : 'Ekle'}
           </button>
         </div>
       </div>
