@@ -13,7 +13,6 @@ import type {
 import { AdisyonuKapatBtn } from './kapat-btn';
 import { OdemeTalepleri } from '@/components/kasa/odeme-talepleri';
 import { KasiyerBolme } from '@/components/kasa/kasiyer-bolme';
-import { GarsonMenu } from '@/components/kasa/garson-menu';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -53,10 +52,9 @@ export default async function AdisyonDetay({
   ]);
 
   const masaData = masaSnap.exists
-    ? (masaSnap.data() as { ad: string; token: string })
+    ? (masaSnap.data() as { ad: string })
     : null;
   const masaAd = masaData?.ad ?? 'Bilinmeyen masa';
-  const masaToken = masaData?.token ?? null;
 
   const siparisler = siparisSnap.docs.map(
     (d) => ({ id: d.id, ...d.data() }) as unknown as Siparis,
@@ -239,13 +237,6 @@ export default async function AdisyonDetay({
           );
         })}
       </ul>
-
-      {acik && masaToken && (
-        <section className="space-y-2 rounded-lg border bg-card p-3">
-          <h2 className="text-sm font-semibold">Sipariş ekle</h2>
-          <GarsonMenu masaToken={masaToken} masaAd={masaAd} />
-        </section>
-      )}
 
       {acik && (
         <KasiyerBolme

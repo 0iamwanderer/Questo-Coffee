@@ -1,8 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Clock, Minus, Plus, Users } from 'lucide-react';
+import { Check, Minus, Plus, Users } from 'lucide-react';
 import { formatTL } from '@/lib/utils/para';
 import type { SiparisDurumu } from '@/types/model';
 
@@ -27,72 +27,22 @@ interface Props {
   siparisler: SiparisOzet[];
 }
 
-type Sekme = 'kisi' | 'esit' | 'urun';
-
-interface KisiGrubu {
-  ad: string | null;
-  toplam: number;
-  teslimEdildi: boolean;
-  kalemler: Array<{
-    siparisId: string;
-    siparisNo: number;
-    ad: string;
-    adet: number;
-    araToplamKurus: number;
-  }>;
-}
+type Sekme = 'esit' | 'urun';
 
 export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   const router = useRouter();
+  const [aktifSekme, setAktifSekme] = useState<Sekme>('esit');
   const [kisiSayisi, setKisiSayisi] = useState(2);
   const [secili, setSecili] = useState<Set<string>>(new Set());
-  const [odenenler, setOdenenler] = useState<Set<string>>(new Set());
   const [odenenSayisi, setOdenenSayisi] = useState(0);
+  const [odenenUrunler, setOdenenUrunler] = useState<Set<string>>(new Set());
   const [yukleniyor, setYukleniyor] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
 
   const aktifSiparisler = siparisler.filter((s) => s.durum !== 'iptal');
 
-  const kisiGruplari = useMemo<KisiGrubu[]>(() => {
-    const map = new Map<string, KisiGrubu>();
-    for (const s of aktifSiparisler) {
-      const anahtar = s.musteriAd ?? '__adsiz__';
-      const mevcut = map.get(anahtar) ?? {
-        ad: s.musteriAd ?? null,
-        toplam: 0,
-        teslimEdildi: true,
-        kalemler: [],
-      };
-      mevcut.toplam += s.toplamKurus;
-      if (s.durum !== 'teslim') mevcut.teslimEdildi = false;
-      for (const k of s.kalemler) {
-        mevcut.kalemler.push({
-          siparisId: s.id,
-          siparisNo: s.gunlukNo,
-          ad: k.ad,
-          adet: k.adet,
-          araToplamKurus: k.araToplamKurus,
-        });
-      }
-      map.set(anahtar, mevcut);
-    }
-    return Array.from(map.values());
-  }, [aktifSiparisler]);
-
-  const adliGrup = kisiGruplari.some((g) => g.ad !== null);
-  const tumTeslimEdildi = aktifSiparisler.every((s) => s.durum === 'teslim');
-
-  const [aktifSekme, setAktifSekme] = useState<Sekme>(
-    adliGrup ? 'kisi' : 'esit',
-  );
-
-  // Ürün Seç: yalnızca teslim edilmiş sipariş kalemleri seçilebilir
-  const teslimSiparisler = aktifSiparisler.filter((s) => s.durum === 'teslim');
-  const bekleyenSiparisler = aktifSiparisler.filter(
-    (s) => s.durum !== 'teslim',
-  );
-
-  const teslimKalemler = teslimSiparisler.flatMap((s) =>
+  // Tüm aktif sipariş kalemleri (teslim durumu fark etmeksizin)
+  const tumKalemler = aktifSiparisler.flatMap((s) =>
     s.kalemler.map((k, i) => ({
       key: `${s.id}-${i}`,
       siparisId: s.id,
@@ -105,19 +55,21 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   );
 
   const seciliToplam = Array.from(secili).reduce((acc, key) => {
-    const item = teslimKalemler.find((k) => k.key === key);
+    const item = tumKalemler.find((k) => k.key === key);
     return acc + (item?.araToplamKurus ?? 0);
   }, 0);
 
   const kisiPayi = Math.ceil(toplamKurus / kisiSayisi);
 
-  const toggleSecili = (key: string) =>
+  const toggleSecili = (key: string) => {
+    if (odenenUrunler.has(key)) return;
     setSecili((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
       return next;
     });
+  };
 
   const talep = async (
     body: Record<string, unknown>,
@@ -136,7 +88,6 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
         const j = (await res.json().catch(() => ({}))) as { mesaj?: string };
         throw new Error(j.mesaj ?? `HTTP ${res.status}`);
       }
-      setOdenenler((prev) => new Set([...prev, anahtarId]));
       onSuccess?.();
       router.refresh();
     } catch (e) {
@@ -144,18 +95,6 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
     } finally {
       setYukleniyor(null);
     }
-  };
-
-  const kisiOde = (grup: KisiGrubu) => {
-    const anahtar = grup.ad ?? '__adsiz__';
-    talep(
-      {
-        yontem: 'urun',
-        secilenKalemler: grup.kalemler,
-        ...(grup.ad ? { musteriAd: grup.ad } : {}),
-      },
-      anahtar,
-    );
   };
 
   const esitDilimOde = () => {
@@ -167,7 +106,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
 
   const urunOde = () => {
     const kalemler = Array.from(secili).map((key) => {
-      const item = teslimKalemler.find((k) => k.key === key)!;
+      const item = tumKalemler.find((k) => k.key === key)!;
       return {
         siparisId: item.siparisId,
         siparisNo: item.siparisNo,
@@ -176,26 +115,27 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
         araToplamKurus: item.araToplamKurus,
       };
     });
+    const secilenKeyler = new Set(secili);
     talep(
       { yontem: 'urun', secilenKalemler: kalemler },
       `urun-${Date.now()}`,
-      () => setSecili(new Set()),
+      () => {
+        setOdenenUrunler((prev) => new Set([...prev, ...secilenKeyler]));
+        setSecili(new Set());
+      },
     );
   };
 
   const sekmeler: { id: Sekme; etiket: string }[] = [
-    ...(adliGrup ? [{ id: 'kisi' as Sekme, etiket: 'Kişiye Göre' }] : []),
     { id: 'esit', etiket: 'Eşit Böl' },
     { id: 'urun', etiket: 'Ürün Seç' },
   ];
 
   return (
     <div className="space-y-3 rounded-lg border bg-card p-3">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2 text-sm font-semibold">
-          <Users className="size-4" />
-          Ödemeyi Al
-        </div>
+      <div className="flex items-center gap-2 text-sm font-semibold">
+        <Users className="size-4" />
+        Ödemeyi Al
       </div>
 
       {hata && (
@@ -222,76 +162,9 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
         ))}
       </div>
 
-      {/* ─── Kişiye Göre ─────────────────────────────── */}
-      {aktifSekme === 'kisi' && (
-        <ul className="space-y-2">
-          {kisiGruplari.map((grup) => {
-            const anahtar = grup.ad ?? '__adsiz__';
-            const odendi = odenenler.has(anahtar);
-            return (
-              <li
-                key={anahtar}
-                className={`rounded-lg border p-3 ${odendi ? 'opacity-60' : ''}`}
-              >
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0 space-y-1">
-                    <p className="text-sm font-medium">
-                      {grup.ad ?? 'Adsız'}
-                    </p>
-                    <ul className="space-y-0.5 text-xs text-muted-foreground">
-                      {grup.kalemler.map((k, i) => (
-                        <li key={i}>
-                          <span className="tabular-nums">{k.adet}×</span>{' '}
-                          {k.ad}
-                          <span className="ml-1 tabular-nums">
-                            {formatTL(k.araToplamKurus)}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5">
-                    <span className="text-sm font-semibold tabular-nums">
-                      {formatTL(grup.toplam)}
-                    </span>
-                    {odendi ? (
-                      <span className="flex items-center gap-1 text-xs text-emerald-700 dark:text-emerald-400">
-                        <Check className="size-3" /> Ödeme alındı
-                      </span>
-                    ) : !grup.teslimEdildi ? (
-                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <Clock className="size-3" /> Teslim bekleniyor
-                      </span>
-                    ) : (
-                      <button
-                        type="button"
-                        onClick={() => kisiOde(grup)}
-                        disabled={yukleniyor === anahtar}
-                        className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground disabled:opacity-50"
-                      >
-                        {yukleniyor === anahtar ? '…' : 'Ödeme al'}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
       {/* ─── Eşit Böl ────────────────────────────────── */}
       {aktifSekme === 'esit' && (
         <div className="space-y-3">
-          {!tumTeslimEdildi && (
-            <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-              <Clock className="size-3 shrink-0" />
-              {bekleyenSiparisler.length === 1
-                ? '1 sipariş henüz teslim edilmedi.'
-                : `${bekleyenSiparisler.length} sipariş henüz teslim edilmedi.`}
-            </div>
-          )}
-
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">Kişi sayısı</span>
             <div className="flex items-center gap-3">
@@ -329,7 +202,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
           <div className="space-y-1.5">
             {Array.from({ length: kisiSayisi }).map((_, i) => {
               const odendi = i < odenenSayisi;
-              const aktif = tumTeslimEdildi && i === odenenSayisi;
+              const aktif = i === odenenSayisi;
               return (
                 <div
                   key={i}
@@ -352,15 +225,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                       {yukleniyor ? '…' : 'Ödeme al'}
                     </button>
                   ) : (
-                    <span className="text-xs text-muted-foreground">
-                      {!tumTeslimEdildi && i === 0 ? (
-                        <span className="flex items-center gap-1">
-                          <Clock className="size-3" /> Teslim bekleniyor
-                        </span>
-                      ) : (
-                        'bekliyor'
-                      )}
-                    </span>
+                    <span className="text-xs text-muted-foreground">bekliyor</span>
                   )}
                 </div>
               );
@@ -372,21 +237,14 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
       {/* ─── Ürün Seç ────────────────────────────────── */}
       {aktifSekme === 'urun' && (
         <div className="space-y-2">
-          {bekleyenSiparisler.length > 0 && (
-            <div className="flex items-center gap-1.5 rounded-lg bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/30 dark:text-amber-300">
-              <Clock className="size-3 shrink-0" />
-              Teslim edilmemiş siparişlerin ürünleri seçilemiyor.
-            </div>
-          )}
-
-          {teslimKalemler.length === 0 ? (
+          {tumKalemler.length === 0 ? (
             <p className="py-3 text-center text-sm text-muted-foreground">
-              Henüz teslim edilmiş ürün yok.
+              Henüz sipariş kalemi yok.
             </p>
           ) : (
             <>
               <ul className="max-h-56 space-y-0.5 overflow-y-auto">
-                {teslimSiparisler.map((s) => (
+                {aktifSiparisler.map((s) => (
                   <li key={s.id}>
                     <p className="px-2 pt-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                       {s.musteriAd
@@ -395,18 +253,20 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                     </p>
                     {s.kalemler.map((k, i) => {
                       const key = `${s.id}-${i}`;
+                      const odendi = odenenUrunler.has(key);
                       return (
                         <label
                           key={key}
-                          className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-muted/50"
+                          className={`flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-muted/50 ${odendi ? 'opacity-40 cursor-default' : ''}`}
                         >
                           <input
                             type="checkbox"
-                            checked={secili.has(key)}
+                            checked={secili.has(key) || odendi}
                             onChange={() => toggleSecili(key)}
+                            disabled={odendi}
                             className="size-4 rounded"
                           />
-                          <span className="flex-1 text-sm">
+                          <span className={`flex-1 text-sm ${odendi ? 'line-through' : ''}`}>
                             <span className="tabular-nums text-muted-foreground">
                               {k.adet}×
                             </span>{' '}
