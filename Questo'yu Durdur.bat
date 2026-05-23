@@ -3,6 +3,18 @@ chcp 65001 >nul
 title Questo - Durduruluyor
 color 04
 
+REM ===== Self-elevate (UAC) =====
+REM Başlat.bat yönetici olarak çalışmışsa node/java prosesleri admin
+REM yetkili olur; normal user'dan taskkill yapılamaz. Buradan UAC iste.
+net session >nul 2>&1
+if %errorLevel% NEQ 0 (
+    echo.
+    echo  Yonetici yetkisi gerekiyor — UAC iletisinde "Evet" deyin.
+    timeout /t 2 /nobreak >nul
+    powershell -NoProfile -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','\"%~f0\"' -Verb RunAs"
+    exit /b
+)
+
 echo.
 echo  ╔════════════════════════════════════════════╗
 echo  ║          Questo durduruluyor...            ║
