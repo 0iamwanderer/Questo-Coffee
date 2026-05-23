@@ -49,6 +49,23 @@ export const UrunGirdi = z.object({
 });
 export type UrunGirdiT = z.infer<typeof UrunGirdi>;
 
+/**
+ * stoktaMi ↔ stokMiktar tutarlılık kontrolü. POST/PATCH route'larında
+ * `UrunGirdi.parse(body)` sonrası çağır. UrunGirdi.partial() ile uyumlu
+ * olsun diye discriminated union veya superRefine yerine ayrı fonksiyon.
+ */
+export const stokTutarliMi = (
+  v: Partial<Pick<UrunGirdiT, 'stoktaMi' | 'stokMiktar'>>,
+): string | null => {
+  if (v.stoktaMi === false && (v.stokMiktar ?? 0) > 0) {
+    return 'Stokta yok işaretliyken stok miktarı 0 olmalı.';
+  }
+  if (v.stoktaMi === true && v.stokMiktar === 0) {
+    return 'Stok miktarı 0 ise stokta yok olarak işaretle.';
+  }
+  return null;
+};
+
 export const KategoriGirdi = z.object({
   ad: z.string().trim().min(1).max(80),
   sira: z.number().int().min(0).max(9999).default(0),

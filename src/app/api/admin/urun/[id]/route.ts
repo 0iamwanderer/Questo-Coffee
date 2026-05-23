@@ -1,7 +1,7 @@
 import { apiSahip } from '@/lib/auth/guard';
 import { getAdminDb } from '@/lib/firebase/admin';
-import { httpHata } from '@/lib/utils/hata';
-import { UrunYama } from '@/lib/utils/zod-semalar';
+import { AppError, httpHata } from '@/lib/utils/hata';
+import { UrunYama, stokTutarliMi } from '@/lib/utils/zod-semalar';
 import { kapsamiDogrula } from '@/lib/admin/restoran';
 import { auditLogla } from '@/lib/audit/log';
 
@@ -16,6 +16,24 @@ export async function PATCH(
     const R = kapsamiDogrula(u);
     const { id } = await params;
     const body = UrunYama.parse(await req.json());
+
+    // stoktaMi veya stokMiktar değişiyorsa, sonraki durum tutarlı mı doğrula
+    if (body.stoktaMi !== undefined || body.stokMiktar !== undefined) {
+      const ref = getAdminDb().doc(`restoranlar/${R}/urunler/${id}`);
+      const oncekiSnap = await ref.get();
+      const oncekiVeri = (oncekiSnap.data() ?? {}) as {
+        stoktaMi?: boolean;
+        stokMiktar?: number;
+      };
+      const sonraki = {
+        stoktaMi: body.stoktaMi ?? oncekiVeri.stoktaMi,
+        stokMiktar: body.stokMiktar ?? oncekiVeri.stokMiktar,
+      };
+      const stokHata = stokTutarliMi(sonraki);
+      if (stokHata) {
+        throw new AppError('stok_tutarsiz', stokHata, 400);
+      }
+    }
 
     const ref = getAdminDb().doc(`restoranlar/${R}/urunler/${id}`);
     const onceki = (await ref.get()).data();

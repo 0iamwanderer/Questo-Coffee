@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { formatTL } from '@/lib/utils/para';
+import { AdisyonOtoYenile } from '@/components/musteri/adisyon-oto-yenile';
 import { AdisyonYenile } from '@/components/musteri/adisyon-yenile';
 import { AyriOdeme } from '@/components/musteri/ayri-odeme';
 import type {
@@ -77,7 +78,12 @@ export default async function AdisyonSayfasi({ params, searchParams }: Props) {
             <ArrowLeft className="size-4" />
             Menü
           </Link>
-          {!adisyonSnap.empty && <AdisyonYenile />}
+          {!adisyonSnap.empty && (
+            <>
+              <AdisyonOtoYenile adisyonId={adisyonSnap.docs[0]!.id} />
+              <AdisyonYenile />
+            </>
+          )}
         </div>
         <div className="space-y-1">
           <p className="micro-caps text-muted-foreground">{masaAd}</p>

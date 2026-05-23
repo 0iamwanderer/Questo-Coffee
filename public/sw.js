@@ -14,7 +14,6 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(self.clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
-  // Şimdilik network passthrough — offline cache eklenecekse buraya
-  // (stale-while-revalidate menü için, network-only sipariş için)
-});
+// fetch listener şimdilik yok — boş bir listener SW aktivasyon maliyeti yaratır
+// ama hiçbir iş yapmaz. Offline cache eklenirse (stale-while-revalidate menü
+// için, network-only sipariş için) buraya tanımlayabilirsin.

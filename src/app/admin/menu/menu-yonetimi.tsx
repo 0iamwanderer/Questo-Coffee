@@ -9,7 +9,7 @@ import {
   orderBy,
   query,
 } from 'firebase/firestore';
-import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
 import { toast } from 'sonner';
 import { getClientDb, getClientStorage } from '@/lib/firebase/client';
 import {
@@ -206,15 +206,26 @@ export function MenuYonetimi() {
     const restoran = process.env.NEXT_PUBLIC_RESTORAN_ID;
     if (!restoran) return;
 
+    // MIME tipinden uzantı türet — kullanıcı dosya adından gelmiş "bypass" denemelerine güvenme
+    const mimeUzanti = dosya.type.split('/')[1] ?? 'jpg';
+    const yol = `restoranlar/${restoran}/urunler/${u.id}/${Date.now()}.${mimeUzanti}`;
+    const ref = storageRef(getClientStorage(), yol);
+    let yuklemeYapildi = false;
     try {
-      const uzanti = dosya.name.split('.').pop() ?? 'jpg';
-      const yol = `restoranlar/${restoran}/urunler/${u.id}/${Date.now()}.${uzanti}`;
-      const ref = storageRef(getClientStorage(), yol);
       await uploadBytes(ref, dosya, { contentType: dosya.type });
+      yuklemeYapildi = true;
       const url = await getDownloadURL(ref);
       await istek(`/api/admin/urun/${u.id}`, 'PATCH', { gorselUrl: url });
       toast.success('Görsel yüklendi.');
     } catch (e) {
+      // PATCH başarısızsa yüklenen blob orphan kalmasın — temizle
+      if (yuklemeYapildi) {
+        try {
+          await deleteObject(ref);
+        } catch {
+          /* temizlik başarısız olsa da orijinal hatayı bildirelim */
+        }
+      }
       const msg = e instanceof Error ? e.message : 'Yükleme başarısız.';
       setHata(msg);
       toast.error(msg);

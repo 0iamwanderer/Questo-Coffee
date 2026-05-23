@@ -2,7 +2,7 @@ import { FieldValue } from 'firebase-admin/firestore';
 import { apiSahip } from '@/lib/auth/guard';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
-import { UrunGirdi } from '@/lib/utils/zod-semalar';
+import { UrunGirdi, stokTutarliMi } from '@/lib/utils/zod-semalar';
 import { kapsamiDogrula } from '@/lib/admin/restoran';
 import { auditLogla } from '@/lib/audit/log';
 
@@ -13,6 +13,11 @@ export async function POST(req: Request) {
     const u = await apiSahip();
     const R = kapsamiDogrula(u);
     const body = UrunGirdi.parse(await req.json());
+
+    const stokHata = stokTutarliMi(body);
+    if (stokHata) {
+      throw new AppError('stok_tutarsiz', stokHata, 400);
+    }
 
     const db = getAdminDb();
     const katSnap = await db
