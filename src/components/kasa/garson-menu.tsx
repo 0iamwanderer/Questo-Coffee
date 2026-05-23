@@ -183,17 +183,32 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
       .filter((k) => k.urunId === urunId)
       .reduce((acc, k) => acc + k.adet, 0);
 
-  // Opsiyonsuz tek satırı azalt; 0'a inerse satır kaldırılır.
-  const azalt = (urun: Urun) => {
+  // Ürünün sepetten bir adet düşürür: önce opsiyonsuz satır, yoksa en son
+  // eklenen opsiyonlu varyant. 0'a inen satır tamamen kaldırılır.
+  const urunCikar = (urun: Urun) => {
     setSepet((s) => {
-      const mevcut = s.find((k) => k.urunId === urun.id && !k.secimler);
-      if (!mevcut) return s;
-      if (mevcut.adet <= 1) {
-        return s.filter((k) => k.satirId !== mevcut.satirId);
+      const opsiyonsuz = s.find((k) => k.urunId === urun.id && !k.secimler);
+      if (opsiyonsuz) {
+        if (opsiyonsuz.adet <= 1) {
+          return s.filter((k) => k.satirId !== opsiyonsuz.satirId);
+        }
+        return s.map((k) =>
+          k.satirId === opsiyonsuz.satirId ? { ...k, adet: k.adet - 1 } : k,
+        );
       }
-      return s.map((k) =>
-        k.satirId === mevcut.satirId ? { ...k, adet: k.adet - 1 } : k,
-      );
+      let lastIdx = -1;
+      for (let i = s.length - 1; i >= 0; i--) {
+        if (s[i]?.urunId === urun.id) {
+          lastIdx = i;
+          break;
+        }
+      }
+      const last = lastIdx >= 0 ? s[lastIdx] : undefined;
+      if (!last) return s;
+      if (last.adet <= 1) {
+        return s.filter((_, i) => i !== lastIdx);
+      }
+      return s.map((k, i) => (i === lastIdx ? { ...k, adet: k.adet - 1 } : k));
     });
   };
 
@@ -459,6 +474,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             urunler={aramaSonuc}
             urunAdedi={urunAdedi}
             urunEkle={urunEkle}
+            urunCikar={urunCikar}
             bosMesaj="Eşleşen ürün yok."
           />
         ) : (
@@ -482,6 +498,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                     urunler={lst}
                     urunAdedi={urunAdedi}
                     urunEkle={urunEkle}
+                    urunCikar={urunCikar}
                     bosMesaj=""
                   />
                 </section>
@@ -559,11 +576,13 @@ function UrunListesi({
   urunler,
   urunAdedi,
   urunEkle,
+  urunCikar,
   bosMesaj,
 }: {
   urunler: Urun[];
   urunAdedi: (id: string) => number;
   urunEkle: (u: Urun) => void;
+  urunCikar: (u: Urun) => void;
   bosMesaj: string;
 }) {
   if (urunler.length === 0) {
@@ -579,32 +598,67 @@ function UrunListesi({
         const adet = urunAdedi(u.id);
         return (
           <li key={u.id}>
-            <button
-              type="button"
+            <div
+              role="button"
+              tabIndex={0}
               onClick={() => urunEkle(u)}
-              className="relative flex h-full min-h-[7rem] w-full flex-col justify-between gap-3 rounded-xl border bg-card p-3.5 text-left shadow-soft transition active:bg-secondary/40 sm:min-h-[8rem] sm:p-4"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  urunEkle(u);
+                }
+              }}
+              className="relative flex h-full min-h-[8rem] w-full cursor-pointer flex-col justify-between gap-3 rounded-xl border bg-card p-3.5 text-left shadow-soft transition active:bg-secondary/40 sm:min-h-[9rem] sm:p-4"
               aria-label={`${u.ad} ekle`}
             >
               <span className="block text-sm font-semibold leading-snug line-clamp-3 sm:text-base">
                 {u.ad}
               </span>
-              <span className="flex items-end justify-between gap-2">
+              <div className="flex items-end justify-between gap-2">
                 <span className="text-sm font-medium tabular-nums text-foreground sm:text-base">
                   {formatTL(u.fiyatKurus)}
                 </span>
-                <span
-                  className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-2.5 py-1.5 text-primary-foreground shadow-soft"
-                  aria-hidden="true"
-                >
-                  {adet > 0 && (
-                    <span className="text-sm font-bold tabular-nums">
+                {adet === 0 ? (
+                  <span
+                    aria-hidden="true"
+                    className="inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-full bg-primary px-3 text-primary-foreground shadow-soft"
+                  >
+                    <Plus className="size-5" strokeWidth={3} />
+                  </span>
+                ) : (
+                  <div
+                    className="inline-flex h-11 shrink-0 items-center rounded-full bg-primary text-primary-foreground shadow-soft"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        urunCikar(u);
+                      }}
+                      className="flex h-11 w-11 items-center justify-center rounded-l-full active:bg-primary/80"
+                      aria-label={`${u.ad} azalt`}
+                    >
+                      <Minus className="size-5" strokeWidth={3} />
+                    </button>
+                    <span className="min-w-6 text-center text-sm font-bold tabular-nums">
                       {adet}
                     </span>
-                  )}
-                  <Plus className="size-4" strokeWidth={3} />
-                </span>
-              </span>
-            </button>
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        urunEkle(u);
+                      }}
+                      className="flex h-11 w-11 items-center justify-center rounded-r-full active:bg-primary/80"
+                      aria-label={`${u.ad} ekle`}
+                    >
+                      <Plus className="size-5" strokeWidth={3} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
           </li>
         );
       })}
