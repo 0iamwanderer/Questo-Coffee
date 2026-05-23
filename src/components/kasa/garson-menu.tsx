@@ -394,64 +394,66 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             {aramaAktif ? 'Eşleşen ürün yok.' : 'Bu kategoride ürün yok.'}
           </div>
         ) : (
-          <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {gosterilen.map((u) => {
               const opsiyonlu = opsiyonluMu(u);
               const adet = urunAdedi(u.id);
               return (
                 <li key={u.id}>
-                  <div className="flex h-full w-full flex-col justify-between gap-2 rounded-lg border bg-card p-3 text-left shadow-soft">
-                    <span className="text-sm font-medium leading-tight line-clamp-2">
-                      {u.ad}
-                    </span>
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-sm tabular-nums">
+                  <div className="flex items-center gap-3 rounded-lg border bg-card p-3 text-left shadow-soft">
+                    <div className="min-w-0 flex-1">
+                      <div className="text-sm font-medium leading-tight line-clamp-2">
+                        {u.ad}
+                      </div>
+                      <div className="text-sm tabular-nums text-muted-foreground mt-0.5">
                         {formatTL(u.fiyatKurus)}
-                      </span>
+                      </div>
+                    </div>
+                    <div className="shrink-0">
                       {opsiyonlu ? (
                         <button
                           type="button"
                           onClick={() => urunEkle(u)}
-                          className="inline-flex items-center gap-1 rounded-full bg-primary px-2.5 py-1 text-primary-foreground transition active:scale-95"
+                          className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-2 text-primary-foreground transition active:scale-95"
                           aria-label={`${u.ad} ekle`}
                         >
                           {adet > 0 && (
-                            <span className="rounded-full bg-primary-foreground/20 px-1.5 text-[10px] font-medium tabular-nums">
+                            <span className="rounded-full bg-primary-foreground/20 px-1.5 text-xs font-medium tabular-nums">
                               {adet}
                             </span>
                           )}
-                          <Plus className="size-3.5" />
+                          <Plus className="size-4" />
                         </button>
                       ) : adet > 0 ? (
                         <div className="inline-flex items-center rounded-full border bg-card">
                           <button
                             type="button"
                             onClick={() => azalt(u)}
-                            className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
+                            className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
                             aria-label="Azalt"
                           >
-                            <Minus className="size-3" />
+                            <Minus className="size-4" />
                           </button>
-                          <span className="w-5 text-center text-sm font-medium tabular-nums">
+                          <span className="w-7 text-center text-sm font-semibold tabular-nums">
                             {adet}
                           </span>
                           <button
                             type="button"
                             onClick={() => urunEkle(u)}
-                            className="flex size-7 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
+                            className="flex size-9 items-center justify-center text-muted-foreground hover:text-foreground transition active:scale-90"
                             aria-label="Artır"
                           >
-                            <Plus className="size-3" />
+                            <Plus className="size-4" />
                           </button>
                         </div>
                       ) : (
                         <button
                           type="button"
                           onClick={() => urunEkle(u)}
-                          className="flex size-8 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90"
+                          className="flex size-10 items-center justify-center rounded-full bg-primary text-primary-foreground transition active:scale-90"
                           aria-label={`${u.ad} ekle`}
                         >
-                          <Plus className="size-4" />
+                          <Plus className="size-5" />
                         </button>
                       )}
                     </div>
