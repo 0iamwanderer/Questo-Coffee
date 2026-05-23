@@ -112,6 +112,50 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
     );
   }, [urunler, aktifKategoriId, arama]);
 
+  // Kategori → kendi ürünleri (mobil yatay pager için)
+  const kategoriUrunleri = useMemo(() => {
+    const map: Record<string, Urun[]> = {};
+    for (const k of kategoriler) {
+      map[k.id] = urunler.filter(
+        (u) => u.kategoriId === k.id && u.stoktaMi !== false,
+      );
+    }
+    return map;
+  }, [kategoriler, urunler]);
+
+  // Mobil yatay snap pager ref + scroll → aktif kategori senkronu
+  const pagerRef = useRef<HTMLDivElement>(null);
+  const scrollRafRef = useRef<number | null>(null);
+
+  const handleKategoriClick = (id: string) => {
+    setAktifKategoriId(id);
+    const el = pagerRef.current;
+    if (!el) return;
+    const idx = kategoriler.findIndex((k) => k.id === id);
+    if (idx < 0) return;
+    el.scrollTo({ left: idx * el.clientWidth, behavior: 'smooth' });
+  };
+
+  const handlePagerScroll = () => {
+    if (scrollRafRef.current !== null) return;
+    scrollRafRef.current = requestAnimationFrame(() => {
+      scrollRafRef.current = null;
+      const el = pagerRef.current;
+      if (!el || el.clientWidth === 0) return;
+      const idx = Math.round(el.scrollLeft / el.clientWidth);
+      const k = kategoriler[idx];
+      if (k && k.id !== aktifKategoriId) setAktifKategoriId(k.id);
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (scrollRafRef.current !== null) {
+        cancelAnimationFrame(scrollRafRef.current);
+      }
+    };
+  }, []);
+
   const opsiyonluMu = (u: Urun) => (u.opsiyonGruplari?.length ?? 0) > 0;
 
   // Ürünün sepetteki toplam adedi (opsiyonlu varyantlar dahil)
@@ -372,7 +416,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                   <button
                     key={k.id}
                     type="button"
-                    onClick={() => setAktifKategoriId(k.id)}
+                    onClick={() => handleKategoriClick(k.id)}
                     className={cn(
                       'whitespace-nowrap rounded-full border px-2.5 py-1 text-xs transition sm:px-3 sm:text-sm',
                       aktif
@@ -388,47 +432,47 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
           )}
         </div>
 
-        {/* Ürün grid */}
-        {gosterilen.length === 0 ? (
-          <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
-            {aramaAktif ? 'Eşleşen ürün yok.' : 'Bu kategoride ürün yok.'}
-          </div>
+        {/* Ürün listesi */}
+        {aramaAktif ? (
+          <UrunListesi
+            urunler={gosterilen}
+            urunAdedi={urunAdedi}
+            urunEkle={urunEkle}
+            bosMesaj="Eşleşen ürün yok."
+          />
         ) : (
-          <ul className="overflow-hidden rounded-lg border bg-card divide-y sm:grid sm:grid-cols-2 sm:gap-2 sm:divide-y-0 sm:border-0 sm:bg-transparent sm:overflow-visible lg:grid-cols-3">
-            {gosterilen.map((u) => {
-              const adet = urunAdedi(u.id);
-              return (
-                <li key={u.id} className="sm:rounded-lg sm:border sm:bg-card sm:shadow-soft">
-                  <button
-                    type="button"
-                    onClick={() => urunEkle(u)}
-                    className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition active:bg-secondary/40 sm:p-3"
-                    aria-label={`${u.ad} ekle`}
-                  >
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-[13px] font-medium leading-tight line-clamp-2 sm:text-sm">
-                        {u.ad}
-                      </span>
-                      <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground sm:text-sm">
-                        {formatTL(u.fiyatKurus)}
-                      </span>
-                    </span>
-                    <span
-                      className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-2 text-primary-foreground"
-                      aria-hidden="true"
-                    >
-                      {adet > 0 && (
-                        <span className="text-sm font-bold tabular-nums">
-                          {adet}
-                        </span>
-                      )}
-                      <Plus className="size-4" strokeWidth={3} />
-                    </span>
-                  </button>
-                </li>
-              );
-            })}
-          </ul>
+          <>
+            {/* Mobil: yatay snap pager — kategoriler arası swipe */}
+            <div
+              ref={pagerRef}
+              onScroll={handlePagerScroll}
+              className="-mx-2 flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:hidden"
+            >
+              {kategoriler.map((k) => (
+                <div
+                  key={k.id}
+                  className="w-screen shrink-0 snap-start px-2"
+                >
+                  <UrunListesi
+                    urunler={kategoriUrunleri[k.id] ?? []}
+                    urunAdedi={urunAdedi}
+                    urunEkle={urunEkle}
+                    bosMesaj="Bu kategoride ürün yok."
+                  />
+                </div>
+              ))}
+            </div>
+
+            {/* Tablet/masaüstü: aktif kategori grid */}
+            <div className="hidden sm:block">
+              <UrunListesi
+                urunler={gosterilen}
+                urunAdedi={urunAdedi}
+                urunEkle={urunEkle}
+                bosMesaj="Bu kategoride ürün yok."
+              />
+            </div>
+          </>
         )}
       </div>
 
@@ -493,6 +537,66 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
         />
       )}
     </div>
+  );
+}
+
+function UrunListesi({
+  urunler,
+  urunAdedi,
+  urunEkle,
+  bosMesaj,
+}: {
+  urunler: Urun[];
+  urunAdedi: (id: string) => number;
+  urunEkle: (u: Urun) => void;
+  bosMesaj: string;
+}) {
+  if (urunler.length === 0) {
+    return (
+      <div className="rounded-lg border bg-card p-8 text-center text-sm text-muted-foreground">
+        {bosMesaj}
+      </div>
+    );
+  }
+  return (
+    <ul className="overflow-hidden rounded-lg border bg-card divide-y sm:grid sm:grid-cols-2 sm:gap-2 sm:divide-y-0 sm:border-0 sm:bg-transparent sm:overflow-visible lg:grid-cols-3">
+      {urunler.map((u) => {
+        const adet = urunAdedi(u.id);
+        return (
+          <li
+            key={u.id}
+            className="sm:rounded-lg sm:border sm:bg-card sm:shadow-soft"
+          >
+            <button
+              type="button"
+              onClick={() => urunEkle(u)}
+              className="flex w-full items-center justify-between gap-3 px-3 py-2.5 text-left transition active:bg-secondary/40 sm:p-3"
+              aria-label={`${u.ad} ekle`}
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block text-[13px] font-medium leading-tight line-clamp-2 sm:text-sm">
+                  {u.ad}
+                </span>
+                <span className="mt-0.5 block text-xs tabular-nums text-muted-foreground sm:text-sm">
+                  {formatTL(u.fiyatKurus)}
+                </span>
+              </span>
+              <span
+                className="inline-flex shrink-0 items-center gap-1 rounded-full bg-primary px-3 py-2 text-primary-foreground"
+                aria-hidden="true"
+              >
+                {adet > 0 && (
+                  <span className="text-sm font-bold tabular-nums">
+                    {adet}
+                  </span>
+                )}
+                <Plus className="size-4" strokeWidth={3} />
+              </span>
+            </button>
+          </li>
+        );
+      })}
+    </ul>
   );
 }
 
