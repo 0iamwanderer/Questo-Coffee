@@ -1,38 +1,48 @@
 @echo off
 chcp 65001 >nul
+setlocal enableextensions enabledelayedexpansion
 title Questo - Durduruluyor
 color 04
+cd /d "%~dp0"
 
-REM ===== Self-elevate (UAC) =====
-REM Başlat.bat yönetici olarak çalışmışsa node/java prosesleri admin
-REM yetkili olur; normal user'dan taskkill yapılamaz. Buradan UAC iste.
+REM Self-elevate (UAC) - Baslat'tan gelen prosesler admin yetkili olabilir;
+REM normal user'dan taskkill yapilamaz. Buradan yonetici yetki iste.
 net session >nul 2>&1
 if %errorLevel% NEQ 0 (
     echo.
-    echo  Yonetici yetkisi gerekiyor — UAC iletisinde "Evet" deyin.
+    echo   Yonetici yetkisi gerekiyor - UAC iletisinde "Evet" deyin.
     timeout /t 2 /nobreak >nul
     powershell -NoProfile -Command "Start-Process -FilePath 'cmd.exe' -ArgumentList '/c','\"%~f0\"' -Verb RunAs"
     exit /b
 )
 
 echo.
-echo  ╔════════════════════════════════════════════╗
-echo  ║          Questo durduruluyor...            ║
-echo  ╚════════════════════════════════════════════╝
+echo   Questo durduruluyor...
 echo.
 
-REM Periodic yedek scriptini sonlandir (sadece bu scripti, baska powershell'lere dokunma)
-echo  • Periodic yedek scripti kapatiliyor...
-wmic process where "name='powershell.exe' and CommandLine like '%%yedek-periodic.ps1%%'" delete >nul 2>&1
+REM [1/3] Periodic yedek scripti (sadece bu, baska powershell'lere dokunma)
+echo   [1/3] Periodic yedek scripti kapatiliyor...
+powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { $_.CommandLine -like '*yedek-periodic.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 
-REM Node.js ve Java (emulator) işlemlerini sonlandır
-echo  • Next.js (node) kapatiliyor...
+REM [2/3] Next.js (node.exe)
+echo   [2/3] Next.js (node) kapatiliyor...
 taskkill /F /IM node.exe >nul 2>&1
 
-echo  • Emulator (java) kapatiliyor...
+REM [3/3] Emulator (java.exe)
+echo   [3/3] Emulator (java) kapatiliyor...
 taskkill /F /IM java.exe >nul 2>&1
 
+REM Dogrulama - portlar gercekten serbest mi?
+timeout /t 2 /nobreak >nul
+set "DURUM=Tum portlar bos"
+for %%p in (3000 8080 9099) do (
+    powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',%%p)).Close();exit 0}catch{exit 1}" >nul 2>&1
+    if not errorlevel 1 set "DURUM=UYARI: bazi portlar hala dolu (3000/8080/9099)"
+)
+
 echo.
-echo  ✓ Tum islemler durduruldu.
+echo   !DURUM!
 echo.
 timeout /t 3 /nobreak >nul
+endlocal
+exit /b 0
