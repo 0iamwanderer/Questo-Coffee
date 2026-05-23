@@ -13,7 +13,7 @@ const restoranId = (): string => {
 };
 
 export async function POST(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
@@ -24,24 +24,56 @@ export async function POST(
     }
 
     const { id } = await params;
+    const url = new URL(req.url);
+    // Kasiyer açıkça "kalan parayı yok say, yine de kapat" diyorsa override
+    const zorla = url.searchParams.get('zorla') === '1';
+
     const db = getAdminDb();
     const aRef = db.doc(`restoranlar/${R}/adisyonlar/${id}`);
 
     let masaId: string | undefined;
+    let kalanKurus = 0;
 
     await db.runTransaction(async (tx) => {
       const aSnap = await tx.get(aRef);
       if (!aSnap.exists) {
         throw new AppError('adisyon_yok', 'Adisyon bulunamadı.', 404);
       }
-      const a = aSnap.data() as { durum: string; masaId: string };
+      const a = aSnap.data() as {
+        durum: string;
+        masaId: string;
+        toplamKurus: number;
+      };
       if (a.durum !== 'acik') {
         throw new AppError('zaten_kapali', 'Adisyon zaten kapalı.', 409);
       }
+
+      // Onaylanmış ödemeleri transaction içinde topla (tutarlılık için)
+      const odenenSnap = await tx.get(
+        aRef.collection('odemeTalepleri').where('durum', '==', 'odendi'),
+      );
+      const odenen = odenenSnap.docs.reduce(
+        (acc, d) =>
+          acc + ((d.data() as { toplamKurus?: number }).toplamKurus ?? 0),
+        0,
+      );
+      kalanKurus = Math.max(0, a.toplamKurus - odenen);
+
+      if (kalanKurus > 0 && !zorla) {
+        throw new AppError(
+          'odenmemis_tutar',
+          `Adisyonda ödenmemiş ${kalanKurus} kuruş var. Zorla kapatmak için ?zorla=1.`,
+          409,
+        );
+      }
+
       masaId = a.masaId;
       tx.update(aRef, {
         durum: 'kapali',
         kapanisAt: FieldValue.serverTimestamp(),
+        ...(zorla && kalanKurus > 0
+          ? { zorlaKapatildi: true, zorlaKapatilanKurus: kalanKurus }
+          : {}),
       });
     });
 
@@ -52,7 +84,10 @@ export async function POST(
         .update({ token: uretMasaToken() });
     }
 
-    return Response.json({ ok: true });
+    return Response.json({
+      ok: true,
+      ...(zorla && kalanKurus > 0 ? { zorla: true, atlanan: kalanKurus } : {}),
+    });
   } catch (e) {
     return httpHata(e);
   }

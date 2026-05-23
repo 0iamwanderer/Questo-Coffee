@@ -2,16 +2,27 @@
 
 import { RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export function AdisyonYenile() {
   const router = useRouter();
   const [yukleniyor, setYukleniyor] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
 
   const yenile = () => {
     setYukleniyor(true);
     router.refresh();
-    setTimeout(() => setYukleniyor(false), 800);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => {
+      setYukleniyor(false);
+      timerRef.current = null;
+    }, 800);
   };
 
   return (

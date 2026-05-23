@@ -83,8 +83,27 @@ export async function PATCH(
             toplamKurus: number;
             siparisSayisi: number;
           };
+          const yeniToplam = Math.max(0, a.toplamKurus - mevcut.toplamKurus);
+
+          // Ödenmiş tutarın altına düşemez — ödeme yapılmışsa iptal yasak
+          const odenenSnap = await tx.get(
+            aRef.collection('odemeTalepleri').where('durum', '==', 'odendi'),
+          );
+          const odenen = odenenSnap.docs.reduce(
+            (acc, d) =>
+              acc + ((d.data() as { toplamKurus?: number }).toplamKurus ?? 0),
+            0,
+          );
+          if (yeniToplam < odenen) {
+            throw new AppError(
+              'odeme_yapilmis',
+              `Bu siparişi iptal etmek adisyon toplamını (${yeniToplam}kr) ödenen tutarın (${odenen}kr) altına düşürür. İptal yasak.`,
+              409,
+            );
+          }
+
           adisyonGuncelle = {
-            toplamKurus: Math.max(0, a.toplamKurus - mevcut.toplamKurus),
+            toplamKurus: yeniToplam,
             siparisSayisi: Math.max(0, a.siparisSayisi - 1),
           };
         }

@@ -106,3 +106,10 @@ export const OdemeTalebiIstegi = z.discriminatedUnion('yontem', [
   }),
 ]);
 export type OdemeTalebiIstegiT = z.infer<typeof OdemeTalebiIstegi>;
+
+// Müşteri tarafı: ek olarak masaToken — adisyon-masa eşleşmesini doğrulamak için
+export const MusteriOdemeTalebiIstegi = z.intersection(
+  OdemeTalebiIstegi,
+  z.object({ masaToken: z.string().min(16).max(64) }),
+);
+export type MusteriOdemeTalebiIstegiT = z.infer<typeof MusteriOdemeTalebiIstegi>;

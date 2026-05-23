@@ -47,6 +47,14 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
   const [kapaniyor, setKapaniyor] = useState(false);
   const [secimler, setSecimler] = useState<Record<string, string[]>>({});
   const gorselRef = useRef<HTMLDivElement>(null);
+  const kapatTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Unmount'ta sarkmış timer'ı temizle
+  useEffect(() => {
+    return () => {
+      if (kapatTimerRef.current) clearTimeout(kapatTimerRef.current);
+    };
+  }, []);
 
   const ekle = useSepet((s) => s.ekle);
 
@@ -105,9 +113,11 @@ export function UrunDetaySheet({ urun, acik, onKapat }: Props) {
 
   const kapat = () => {
     setKapaniyor(true);
-    setTimeout(() => {
+    if (kapatTimerRef.current) clearTimeout(kapatTimerRef.current);
+    kapatTimerRef.current = setTimeout(() => {
       setRender(false);
       setKapaniyor(false);
+      kapatTimerRef.current = null;
       onKapat();
     }, 240);
   };

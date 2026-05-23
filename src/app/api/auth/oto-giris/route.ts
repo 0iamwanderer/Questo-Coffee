@@ -5,6 +5,14 @@ export const runtime = 'nodejs';
 
 export async function POST() {
   try {
+    // Üretim ortamında otomatik giriş kesin yasak — env yanlışlıkla kalsa bile
+    if (process.env.NODE_ENV === 'production') {
+      throw new AppError(
+        'devre_disi',
+        'Otomatik giriş üretim ortamında devre dışıdır.',
+        403,
+      );
+    }
     const email =
       process.env.KASA_OTOGIRIS_EMAIL ?? process.env.SEED_SAHIP_EMAIL;
     if (!email) {

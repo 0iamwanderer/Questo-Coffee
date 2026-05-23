@@ -3,6 +3,7 @@ import { apiKasiyer } from '@/lib/auth/guard';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
 import { OdemeTalebiIstegi } from '@/lib/utils/zod-semalar';
+import { esitOdemeTutariHesapla, odenmisTutarKurus } from '@/lib/siparis/odeme';
 
 export const runtime = 'nodejs';
 
@@ -37,21 +38,37 @@ export async function POST(
       throw new AppError('adisyon_kapali', 'Adisyon açık değil.', 409);
     }
 
+    // Kalan-farkındalı hesaplama
+    const odenmis = await odenmisTutarKurus(aRef);
+    const kalan = Math.max(0, adisyon.toplamKurus - odenmis);
+    if (kalan <= 0) {
+      throw new AppError(
+        'tamamen_odendi',
+        'Adisyon zaten tamamen ödenmiş.',
+        409,
+      );
+    }
+
     let toplamKurus: number;
     let extra: Record<string, unknown> = {};
 
     if (body.yontem === 'esit') {
-      toplamKurus = Math.ceil(adisyon.toplamKurus / body.kisiSayisi);
+      toplamKurus = esitOdemeTutariHesapla(
+        adisyon.toplamKurus,
+        body.kisiSayisi,
+        kalan,
+      );
       extra = { kisiSayisi: body.kisiSayisi, kisiPayi: toplamKurus };
     } else if (body.yontem === 'urun') {
-      toplamKurus = body.secilenKalemler.reduce(
+      const secimToplam = body.secilenKalemler.reduce(
         (acc, k) => acc + k.araToplamKurus,
         0,
       );
+      toplamKurus = Math.min(secimToplam, kalan);
       extra = { secilenKalemler: body.secilenKalemler };
     } else {
-      // 'tam' — adisyonun kalan tutarının hepsi
-      toplamKurus = adisyon.toplamKurus;
+      // 'tam' — adisyonun KALAN tutarı (toplam değil!)
+      toplamKurus = kalan;
     }
 
     const talepRef = aRef.collection('odemeTalepleri').doc();

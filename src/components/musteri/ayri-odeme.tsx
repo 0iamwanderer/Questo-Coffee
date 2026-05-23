@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2, Minus, Plus } from 'lucide-react';
 import { formatTL } from '@/lib/utils/para';
 import { anonGirisiSagla } from '@/lib/auth/anon';
+import { useMasa } from '@/app/m/[token]/masa-provider';
 import type { SiparisDurumu } from '@/types/model';
 
 interface KalemOzet {
@@ -37,6 +38,7 @@ const TAB_ETIKET: Record<Yontem, string> = {
 };
 
 export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
+  const { masaToken } = useMasa();
   const [yontem, setYontem] = useState<Yontem>('tam');
   const [kisiSayisi, setKisiSayisi] = useState(2);
   const [secili, setSecili] = useState<Set<string>>(new Set());
@@ -80,24 +82,34 @@ export function AyriOdeme({ adisyonId, toplamKurus, siparisler }: Props) {
       const user = await anonGirisiSagla();
       const idToken = await user.getIdToken();
 
+      const ortak = { masaToken };
       const body =
         yontem === 'tam'
-          ? { yontem: 'tam' as const }
+          ? { yontem: 'tam' as const, ...ortak }
           : yontem === 'esit'
-            ? { yontem: 'esit' as const, kisiSayisi }
+            ? { yontem: 'esit' as const, kisiSayisi, ...ortak }
             : {
                 yontem: 'urun' as const,
-                secilenKalemler: Array.from(secili).map((key) => {
-                  const item = tumKalemler.find((k) => k.key === key)!;
-                  return {
+                secilenKalemler: Array.from(secili).flatMap((key) => {
+                  const item = tumKalemler.find((k) => k.key === key);
+                  if (!item) return [];
+                  return [{
                     siparisId: item.siparisId,
                     siparisNo: item.siparisNo,
                     ad: item.ad,
                     adet: item.adet,
                     araToplamKurus: item.araToplamKurus,
-                  };
+                  }];
                 }),
+                ...ortak,
               };
+
+      // Hiçbir geçerli seçim kalmamışsa erken çık
+      if (yontem === 'urun' && body.yontem === 'urun' && body.secilenKalemler.length === 0) {
+        setHata('Seçili ürün bulunamadı.');
+        setYukleme('hata');
+        return;
+      }
 
       const res = await fetch(`/api/adisyon/${adisyonId}/odeme-talebi`, {
         method: 'POST',
