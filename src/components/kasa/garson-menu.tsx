@@ -98,19 +98,81 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
   }, [kategoriler, aktifKategoriId]);
 
   const aramaAktif = arama.trim().length > 0;
-  const gosterilen = useMemo(() => {
+
+  // Arama sonuçları (tüm ürünler arasında)
+  const aramaSonuc = useMemo(() => {
     const term = arama.trim().toLocaleLowerCase('tr');
-    if (term) {
-      return urunler.filter(
-        (u) =>
-          u.stoktaMi !== false &&
-          u.ad.toLocaleLowerCase('tr').includes(term),
+    if (!term) return [];
+    return urunler.filter(
+      (u) =>
+        u.stoktaMi !== false &&
+        u.ad.toLocaleLowerCase('tr').includes(term),
+    );
+  }, [urunler, arama]);
+
+  // Kategori → ürünleri eşlemesi (feed grupları için)
+  const kategoriUrunleri = useMemo(() => {
+    const map: Record<string, Urun[]> = {};
+    for (const k of kategoriler) {
+      map[k.id] = urunler.filter(
+        (u) => u.kategoriId === k.id && u.stoktaMi !== false,
       );
     }
-    return urunler.filter(
-      (u) => u.kategoriId === aktifKategoriId && u.stoktaMi !== false,
+    return map;
+  }, [kategoriler, urunler]);
+
+  // Bölüm referansları — scroll-spy ve smooth scroll için
+  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const chipBarRef = useRef<HTMLElement | null>(null);
+
+  // Kategori chip'ine tıklayınca o bölüme smooth scroll
+  const kategoriyeGit = (id: string) => {
+    setAktifKategoriId(id);
+    const el = sectionRefs.current[id];
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  // Scroll-spy: görünür bölümün chip'ini aktif yap
+  useEffect(() => {
+    if (aramaAktif) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const top = entries
+          .filter((e) => e.isIntersecting)
+          .sort(
+            (a, b) => a.boundingClientRect.top - b.boundingClientRect.top,
+          )[0];
+        if (!top) return;
+        const id = (top.target as HTMLElement).dataset.kategoriId;
+        if (id) setAktifKategoriId(id);
+      },
+      {
+        // Sticky bar altından viewport ortasına kadar olan bant = "aktif" bölge
+        rootMargin: '-120px 0px -55% 0px',
+        threshold: 0,
+      },
     );
-  }, [urunler, aktifKategoriId, arama]);
+    for (const k of kategoriler) {
+      const el = sectionRefs.current[k.id];
+      if (el) observer.observe(el);
+    }
+    return () => observer.disconnect();
+  }, [kategoriler, aramaAktif]);
+
+  // Aktif chip'i yatay bar içinde görünür yap
+  useEffect(() => {
+    if (!aktifKategoriId || !chipBarRef.current) return;
+    const chip = chipBarRef.current.querySelector<HTMLElement>(
+      `[data-chip-id="${aktifKategoriId}"]`,
+    );
+    if (chip) {
+      chip.scrollIntoView({
+        behavior: 'smooth',
+        inline: 'center',
+        block: 'nearest',
+      });
+    }
+  }, [aktifKategoriId]);
 
 
   const opsiyonluMu = (u: Urun) => (u.opsiyonGruplari?.length ?? 0) > 0;
@@ -364,6 +426,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
 
           {!aramaAktif && (
             <nav
+              ref={chipBarRef}
               className="flex items-center gap-1 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               aria-label="Kategoriler"
             >
@@ -373,7 +436,8 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                   <button
                     key={k.id}
                     type="button"
-                    onClick={() => setAktifKategoriId(k.id)}
+                    data-chip-id={k.id}
+                    onClick={() => kategoriyeGit(k.id)}
                     className={cn(
                       'whitespace-nowrap rounded-full border px-2.5 py-1 text-xs transition sm:px-3 sm:text-sm',
                       aktif
@@ -389,13 +453,42 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
           )}
         </div>
 
-        {/* Ürün listesi — aktif kategori (ya da arama sonucu) */}
-        <UrunListesi
-          urunler={gosterilen}
-          urunAdedi={urunAdedi}
-          urunEkle={urunEkle}
-          bosMesaj={aramaAktif ? 'Eşleşen ürün yok.' : 'Bu kategoride ürün yok.'}
-        />
+        {/* Ürün feed'i — arama açıkken düz liste, normalde kategoriye göre gruplu */}
+        {aramaAktif ? (
+          <UrunListesi
+            urunler={aramaSonuc}
+            urunAdedi={urunAdedi}
+            urunEkle={urunEkle}
+            bosMesaj="Eşleşen ürün yok."
+          />
+        ) : (
+          <div className="space-y-5">
+            {kategoriler.map((k) => {
+              const lst = kategoriUrunleri[k.id] ?? [];
+              if (lst.length === 0) return null;
+              return (
+                <section
+                  key={k.id}
+                  ref={(el) => {
+                    sectionRefs.current[k.id] = el;
+                  }}
+                  data-kategori-id={k.id}
+                  className="scroll-mt-28 sm:scroll-mt-4"
+                >
+                  <h2 className="mb-2 font-serif text-base font-semibold sm:text-lg">
+                    {k.ad}
+                  </h2>
+                  <UrunListesi
+                    urunler={lst}
+                    urunAdedi={urunAdedi}
+                    urunEkle={urunEkle}
+                    bosMesaj=""
+                  />
+                </section>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Masaüstü: sağ sticky sepet paneli */}
