@@ -413,7 +413,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
         type="button"
         onClick={gonder}
         disabled={sepet.length === 0 || gonderiliyor}
-        className="min-h-[52px] w-full rounded-xl bg-primary px-4 py-3 text-base font-semibold text-primary-foreground shadow-soft transition active:scale-[0.98] disabled:opacity-50"
+        className="min-h-[60px] w-full rounded-xl bg-primary px-4 py-3.5 text-lg font-semibold text-primary-foreground shadow-soft transition active:scale-[0.98] disabled:opacity-50 lg:min-h-[52px] lg:py-3 lg:text-base"
       >
         {gonderiliyor ? 'Gönderiliyor…' : 'Sipariş Ver'}
       </button>
@@ -426,13 +426,13 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
         {/* Arama + kategoriler — mobilde sticky */}
         <div className="sticky top-11 z-20 -mx-2 space-y-2 border-b border-transparent bg-background/95 px-2 pt-1 pb-2 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:static sm:top-auto sm:mx-0 sm:border-0 sm:bg-transparent sm:p-0 sm:backdrop-blur-0">
           <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground sm:left-3 sm:size-4" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
             <input
               type="search"
               value={arama}
               onChange={(e) => setArama(e.target.value)}
               placeholder="Ürün ara…"
-              className="w-full rounded-md border bg-background pl-8 pr-3 py-1.5 text-[13px] outline-none focus:ring-2 focus:ring-ring sm:pl-9 sm:py-2 sm:text-sm"
+              className="w-full rounded-md border bg-background pl-9 pr-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
             />
             {arama && (
               <button
@@ -441,7 +441,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                 className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:text-foreground sm:right-2"
                 aria-label="Aramayı temizle"
               >
-                <X className="size-3.5 sm:size-4" />
+                <X className="size-4" />
               </button>
             )}
           </div>
@@ -449,7 +449,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
           {!aramaAktif && (
             <nav
               ref={chipBarRef}
-              className="flex items-center gap-1 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              className="flex items-center gap-1.5 overflow-x-auto pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               aria-label="Kategoriler"
             >
               {kategoriler.map((k) => {
@@ -461,7 +461,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
                     data-chip-id={k.id}
                     onClick={() => kategoriyeGit(k.id)}
                     className={cn(
-                      'whitespace-nowrap rounded-full border px-2.5 py-1 text-xs transition sm:px-3 sm:text-sm',
+                      'whitespace-nowrap rounded-full border px-3.5 py-1.5 text-sm transition sm:px-3',
                       aktif
                         ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-border bg-card text-muted-foreground hover:text-foreground',
@@ -522,18 +522,18 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
 
       {/* Mobil: alt sticky özet barı */}
       <div className="fixed inset-x-0 bottom-0 z-30 border-t bg-card shadow-[0_-4px_12px_rgba(0,0,0,0.08)] lg:hidden">
-        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="mx-auto flex max-w-6xl items-stretch gap-2 px-3 py-3.5 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
           <button
             type="button"
             onClick={() => setSepetAcik(true)}
             disabled={sepet.length === 0}
-            className="flex min-h-[52px] flex-1 items-center justify-between gap-2 rounded-xl border bg-background px-3.5 py-2.5 text-left transition active:scale-[0.98] disabled:opacity-60"
+            className="flex min-h-[60px] flex-1 items-center justify-between gap-2 rounded-xl border bg-background px-4 py-3 text-left transition active:scale-[0.98] disabled:opacity-60"
             aria-label="Sepeti gör"
           >
-            <span className="text-sm font-semibold">
+            <span className="text-base font-semibold">
               {sepetAdet > 0 ? `${sepetAdet} kalem` : 'Sepet boş'}
             </span>
-            <span className="text-sm tabular-nums text-muted-foreground">
+            <span className="text-base tabular-nums text-muted-foreground">
               {formatTL(sepetTopla)}
             </span>
           </button>
@@ -541,7 +541,7 @@ export function GarsonMenu({ masaToken, masaAd }: Props) {
             type="button"
             onClick={gonder}
             disabled={sepet.length === 0 || gonderiliyor}
-            className="min-h-[52px] min-w-[140px] rounded-xl bg-primary px-5 py-3 text-base font-semibold text-primary-foreground shadow-soft transition active:scale-[0.97] disabled:opacity-40"
+            className="min-h-[60px] min-w-[160px] rounded-xl bg-primary px-6 py-3.5 text-lg font-semibold text-primary-foreground shadow-soft transition active:scale-[0.97] disabled:opacity-40"
           >
             {gonderiliyor ? 'Gönderiliyor…' : 'Sipariş Ver'}
           </button>
@@ -615,26 +615,26 @@ function UrunListesi({
                   urunEkle(u);
                 }
               }}
-              className="relative flex h-full min-h-[8rem] w-full cursor-pointer flex-col justify-between gap-3 rounded-xl border bg-card p-3.5 text-left shadow-soft transition active:bg-secondary/40 sm:min-h-[9rem] sm:p-4"
+              className="relative flex h-full min-h-[10rem] w-full cursor-pointer flex-col justify-between gap-3 rounded-xl border bg-card p-4 text-left shadow-soft transition active:bg-secondary/40 sm:min-h-[9rem]"
               aria-label={`${u.ad} ekle`}
             >
-              <span className="block text-sm font-semibold leading-snug line-clamp-3 sm:text-base">
+              <span className="block text-base font-semibold leading-snug line-clamp-3">
                 {u.ad}
               </span>
               <div className="flex items-end justify-between gap-2">
-                <span className="text-sm font-medium tabular-nums text-foreground sm:text-base">
+                <span className="text-base font-medium tabular-nums text-foreground">
                   {formatTL(u.fiyatKurus)}
                 </span>
                 {adet === 0 ? (
                   <span
                     aria-hidden="true"
-                    className="inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-full bg-primary px-3 text-primary-foreground shadow-soft"
+                    className="inline-flex h-12 min-w-12 shrink-0 items-center justify-center rounded-full bg-primary px-3 text-primary-foreground shadow-soft sm:h-11 sm:min-w-11"
                   >
                     <Plus className="size-5" strokeWidth={3} />
                   </span>
                 ) : (
                   <div
-                    className="inline-flex h-11 shrink-0 items-center rounded-full bg-primary text-primary-foreground shadow-soft"
+                    className="inline-flex h-12 shrink-0 items-center rounded-full bg-primary text-primary-foreground shadow-soft sm:h-11"
                     onClick={(e) => e.stopPropagation()}
                   >
                     <button
@@ -643,12 +643,12 @@ function UrunListesi({
                         e.stopPropagation();
                         urunCikar(u);
                       }}
-                      className="flex h-11 w-11 items-center justify-center rounded-l-full active:bg-primary/80"
+                      className="flex h-12 w-12 items-center justify-center rounded-l-full active:bg-primary/80 sm:h-11 sm:w-11"
                       aria-label={`${u.ad} azalt`}
                     >
                       <Minus className="size-5" strokeWidth={3} />
                     </button>
-                    <span className="min-w-6 text-center text-sm font-bold tabular-nums">
+                    <span className="min-w-7 text-center text-base font-bold tabular-nums sm:min-w-6 sm:text-sm">
                       {adet}
                     </span>
                     <button
@@ -657,7 +657,7 @@ function UrunListesi({
                         e.stopPropagation();
                         urunEkle(u);
                       }}
-                      className="flex h-11 w-11 items-center justify-center rounded-r-full active:bg-primary/80"
+                      className="flex h-12 w-12 items-center justify-center rounded-r-full active:bg-primary/80 sm:h-11 sm:w-11"
                       aria-label={`${u.ad} ekle`}
                     >
                       <Plus className="size-5" strokeWidth={3} />
