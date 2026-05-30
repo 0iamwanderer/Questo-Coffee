@@ -130,6 +130,9 @@ export interface Siparis {
   durum: SiparisDurumu;
   durumTarihleri: SiparisDurumTarihleri;
   olusturulduAt: Date;
+  /** Yönetici raporda hariç tuttuysa true — denemelik/test siparişleri ciroya
+   *  karışmasın diye. Gerçek sipariş silinmez, yalnız rapor istatistiğinden çıkar. */
+  raporDisi?: boolean;
   /** SLA Cloud Function tarafından konur (10 dk yeni / 15 dk hazırlanıyor). */
   slaUyari?: boolean;
   /** Siparişi veren kişinin adı — hesap bölme için isteğe bağlı. */
