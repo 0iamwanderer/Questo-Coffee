@@ -2,10 +2,12 @@ import Link from 'next/link';
 import { Timestamp } from 'firebase-admin/firestore';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { formatTL } from '@/lib/utils/para';
-import { istanbulGunId } from '@/lib/siparis/sayac';
+import { istanbulGunId, istanbulGunAraligi } from '@/lib/siparis/sayac';
 import type { SiparisDurumu } from '@/types/model';
 import { YazdirButton } from './yazdir-btn';
 import { RaporSiparisListesi, type RaporSiparis } from './siparis-listesi';
+import { RaporTarihGezgini, type GunSecenek } from './tarih-gezgini';
+import { RaporSifirlaBtn } from './rapor-sifirla-btn';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -33,21 +35,10 @@ interface KalemRapor {
   ciroKurus: number;
 }
 
-const tarihAraligi = (yyyymmdd: string) => {
-  // Europe/Istanbul'da o günün başlangıcı ve bitişi → UTC Date
-  // Basit yaklaşım: yerel saat olarak yorumla, +03:00 ekle (TR DST yok)
-  const [y, m, d] = yyyymmdd.split('-').map(Number);
-  if (!y || !m || !d) throw new Error('Geçersiz tarih.');
-  // 00:00 Istanbul = 21:00 UTC önceki gün
-  const baslangic = new Date(Date.UTC(y, m - 1, d, -3, 0, 0));
-  const bitis = new Date(Date.UTC(y, m - 1, d, 21, 0, 0));
-  return { baslangic, bitis };
-};
-
 export default async function RaporSayfasi({ searchParams }: Props) {
   const { tarih } = await searchParams;
   const seciliTarih = tarih ?? istanbulGunId();
-  const { bitis } = tarihAraligi(seciliTarih);
+  const { bitis } = istanbulGunAraligi(seciliTarih);
   const db = getAdminDb();
   const restoranId = R();
 
@@ -71,7 +62,7 @@ export default async function RaporSayfasi({ searchParams }: Props) {
   const haftaGunleri = Array.from({ length: 7 }, (_, i) =>
     istanbulGunId(new Date(seciliDate.getTime() - (6 - i) * 86_400_000)),
   );
-  const haftaBaslangic = tarihAraligi(haftaGunleri[0]!).baslangic;
+  const haftaBaslangic = istanbulGunAraligi(haftaGunleri[0]!).baslangic;
 
   // Tek sorgu: 7 günlük pencere → hem günlük detay hem haftalık özet bundan üretilir
   const siparisSnap = await db
@@ -222,9 +213,6 @@ export default async function RaporSayfasi({ searchParams }: Props) {
     (a, b) => b.ciroKurus - a.ciroKurus,
   );
 
-  const satilanSiparis = toplamSiparisSayisi - iptalSayisi;
-  const ortalamaBilet = satilanSiparis > 0 ? toplamCiro / satilanSiparis : 0;
-
   // Saatlik ciro — yalnız aktif saatler gösterilsin (sıfır saatler gizlenir)
   const aktifSaatler = saatCiro
     .map((ciro, saat) => ({ saat, ciro, sayi: saatSayisi[saat] ?? 0 }))
@@ -239,6 +227,21 @@ export default async function RaporSayfasi({ searchParams }: Props) {
   const degisimYuzde =
     dunCiro > 0 ? Math.round(((bugunCiro - dunCiro) / dunCiro) * 100) : null;
   const haftaToplam = haftaDeger.reduce((a, b) => a + b, 0);
+
+  // Tarih gezgini için son 7 günün etiketleri (İstanbul saatine göre)
+  const gezginGunleri: GunSecenek[] = sonYediGun.map((g, i) => {
+    const d = gunDate(g);
+    return {
+      id: g,
+      ust:
+        g === bugunId
+          ? 'Bugün'
+          : i === 1
+            ? 'Dün'
+            : istFmt({ weekday: 'short' }).format(d),
+      alt: istFmt({ day: '2-digit', month: '2-digit' }).format(d),
+    };
+  });
 
   return (
     <div className="mx-auto max-w-5xl p-4 space-y-6 rapor-belge">
@@ -261,53 +264,13 @@ export default async function RaporSayfasi({ searchParams }: Props) {
       <div className="yazdir-gizle space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="text-2xl font-semibold">Günlük Rapor</h1>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <YazdirButton />
-            <form className="flex items-center gap-2">
-              <input
-                type="date"
-                name="tarih"
-                defaultValue={seciliTarih}
-                className="rounded-md border bg-background px-2 py-1 text-sm"
-              />
-              <button
-                type="submit"
-                className="rounded-md border px-3 py-1 text-sm"
-              >
-                Göster
-              </button>
-            </form>
+            <RaporSifirlaBtn tarih={seciliTarih} haricVar={haricSayisi > 0} />
           </div>
         </div>
 
-        {/* Son 7 gün — hızlı erişim */}
-        <div className="flex flex-wrap gap-1.5">
-          {sonYediGun.map((g, i) => {
-            const secili = g === seciliTarih;
-            const d = gunDate(g);
-            const ustEtiket =
-              g === bugunId
-                ? 'Bugün'
-                : i === 1
-                  ? 'Dün'
-                  : istFmt({ weekday: 'short' }).format(d);
-            const altEtiket = istFmt({ day: '2-digit', month: '2-digit' }).format(d);
-            return (
-              <Link
-                key={g}
-                href={`/admin/rapor?tarih=${g}`}
-                className={`flex min-w-16 flex-col items-center rounded-md border px-3 py-1.5 text-center text-xs transition ${
-                  secili
-                    ? 'border-primary bg-primary text-primary-foreground'
-                    : 'bg-card text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <span className="font-medium capitalize">{ustEtiket}</span>
-                <span className="tabular-nums opacity-80">{altEtiket}</span>
-              </Link>
-            );
-          })}
-        </div>
+        <RaporTarihGezgini gunler={gezginGunleri} seciliTarih={seciliTarih} />
       </div>
 
       {/* Baskıya özel öne çıkan özet — Net Ciro ve satış belgede ilk sırada */}
@@ -318,13 +281,12 @@ export default async function RaporSayfasi({ searchParams }: Props) {
         </div>
         <div className="belge-net-yan">
           <span>{toplamSiparisSayisi} sipariş</span>
-          <span>Ort. bilet {formatTL(Math.round(ortalamaBilet))}</span>
           {iptalSayisi > 0 && <span>{iptalSayisi} iptal</span>}
         </div>
       </div>
 
-      {/* ── Özet kartları (ekran) ── */}
-      <div className="yazdir-gizle grid grid-cols-3 gap-3">
+      {/* ── Özet kartları (ekran) — Net ciro + Sipariş sayısı ── */}
+      <div className="yazdir-gizle grid grid-cols-2 gap-3">
         <Kart
           etiket="Net ciro"
           deger={formatTL(toplamCiro)}
@@ -338,10 +300,6 @@ export default async function RaporSayfasi({ searchParams }: Props) {
           etiket="Sipariş sayısı"
           deger={`${toplamSiparisSayisi}`}
           alt={`${iptalSayisi} iptal`}
-        />
-        <Kart
-          etiket="Ortalama bilet"
-          deger={formatTL(Math.round(ortalamaBilet))}
         />
       </div>
 
@@ -357,65 +315,65 @@ export default async function RaporSayfasi({ searchParams }: Props) {
         </p>
       )}
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        {/* En çok satan ürünler */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium">En çok satan ürünler</h2>
-          {enCokSatan.length === 0 ? (
-            <p className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
-              Bu tarihte sipariş yok.
-            </p>
-          ) : (
-            <ul className="space-y-1">
-              {enCokSatan.map((k) => (
-                <li
-                  key={k.ad}
-                  className="flex items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm"
-                >
-                  <span className="min-w-0 truncate">{k.ad}</span>
-                  <span className="shrink-0 text-right">
-                    <span className="tabular-nums font-medium">{k.adet}</span>
-                    <span className="ml-2 text-xs text-muted-foreground tabular-nums">
-                      {formatTL(k.ciroKurus)}
-                    </span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+      {/* ── En çok satan ürünler — raporun en önemli kısmı, öne çıkar ── */}
+      <section className="space-y-2 rapor-urunler">
+        <h2 className="text-base font-semibold">Hangi üründen ne kadar satıldı</h2>
+        {enCokSatan.length === 0 ? (
+          <p className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
+            Bu tarihte sipariş yok.
+          </p>
+        ) : (
+          <ul className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+            {enCokSatan.map((k) => (
+              <li
+                key={k.ad}
+                className="flex items-center justify-between gap-2 rounded-md border bg-card px-3 py-2 text-sm"
+              >
+                <span className="min-w-0 truncate">
+                  <span className="tabular-nums font-semibold text-primary">
+                    {k.adet}×
+                  </span>{' '}
+                  {k.ad}
+                </span>
+                <span className="shrink-0 tabular-nums font-medium">
+                  {formatTL(k.ciroKurus)}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-        {/* Kategori bazlı satış */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-medium">Kategori bazlı satış</h2>
-          {kategoriler.length === 0 ? (
-            <p className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
-              Bu tarihte satış yok.
-            </p>
-          ) : (
-            <ul className="space-y-1.5 rounded-lg border bg-card p-3">
-              {kategoriler.map((k) => {
-                const yuzde = toplamCiro > 0 ? (k.ciroKurus / toplamCiro) * 100 : 0;
-                return (
-                  <li key={k.ad} className="space-y-0.5">
-                    <div className="flex items-center justify-between gap-2 text-xs">
-                      <span className="min-w-0 truncate">{k.ad}</span>
-                      <span className="shrink-0 tabular-nums text-muted-foreground">
-                        {formatTL(k.ciroKurus)} · %{Math.round(yuzde)}
-                      </span>
-                    </div>
-                    <div className="h-2 overflow-hidden rounded-sm bg-muted">
-                      <div
-                        className="h-full bg-primary"
-                        style={{ width: `${yuzde}%` }}
-                      />
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-        </div>
+      {/* ── Kategori bazlı satış ── */}
+      <section className="space-y-3">
+        <h2 className="text-sm font-medium">Kategori bazlı satış</h2>
+        {kategoriler.length === 0 ? (
+          <p className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
+            Bu tarihte satış yok.
+          </p>
+        ) : (
+          <ul className="space-y-1.5 rounded-lg border bg-card p-3">
+            {kategoriler.map((k) => {
+              const yuzde = toplamCiro > 0 ? (k.ciroKurus / toplamCiro) * 100 : 0;
+              return (
+                <li key={k.ad} className="space-y-0.5">
+                  <div className="flex items-center justify-between gap-2 text-xs">
+                    <span className="min-w-0 truncate">{k.ad}</span>
+                    <span className="shrink-0 tabular-nums text-muted-foreground">
+                      {formatTL(k.ciroKurus)} · %{Math.round(yuzde)}
+                    </span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-sm bg-muted">
+                    <div
+                      className="h-full bg-primary"
+                      style={{ width: `${yuzde}%` }}
+                    />
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </section>
 
       {/* ── Haftalık özet ── */}

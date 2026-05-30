@@ -512,6 +512,31 @@
     break-inside: avoid;
   }
 
+  /* En çok satan ürünler — belgede öne çıkan kutu, 2 sütun */
+  .rapor-urunler {
+    border: 1.5px solid #c9b487 !important;
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: #fffdf6;
+  }
+  .rapor-urunler h2 {
+    font-size: 13pt;
+    font-weight: 700;
+    color: #5b2818;
+    margin: 0 0 8px;
+  }
+  .rapor-urunler ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 14px;
+  }
+  .rapor-urunler li {
+    border: none !important;
+    border-bottom: 1px dotted #d8c7a0 !important;
+    border-radius: 0 !important;
+    padding: 3px 0 !important;
+  }
+
   .belge-dipnot {
     display: block;
     margin-top: 24px;
