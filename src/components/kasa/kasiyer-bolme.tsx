@@ -30,7 +30,7 @@ interface Props {
   siparisler: SiparisOzet[];
 }
 
-type Sekme = 'esit' | 'urun';
+type Sekme = 'tam' | 'esit' | 'urun';
 
 export function KasiyerBolme({
   adisyonId,
@@ -39,7 +39,7 @@ export function KasiyerBolme({
   siparisler,
 }: Props) {
   const router = useRouter();
-  const [aktifSekme, setAktifSekme] = useState<Sekme>('esit');
+  const [aktifSekme, setAktifSekme] = useState<Sekme>('tam');
   const [kisiSayisi, setKisiSayisi] = useState(2);
   const [secili, setSecili] = useState<Set<string>>(new Set());
   const [odenenSayisi, setOdenenSayisi] = useState(0);
@@ -109,6 +109,11 @@ export function KasiyerBolme({
     }
   };
 
+  const tamOde = () => {
+    if (tamamenOdendi) return; // 0 tutarlı talep guard'ı
+    talep({ yontem: 'tam' }, `tam-${Date.now()}`);
+  };
+
   const esitDilimOde = () => {
     if (tamamenOdendi) return; // 0 tutarlı talep guard'ı
     const anahtar = `esit-${odenenSayisi}`;
@@ -141,8 +146,9 @@ export function KasiyerBolme({
   };
 
   const sekmeler: { id: Sekme; etiket: string }[] = [
-    { id: 'esit', etiket: 'Eşit Böl' },
-    { id: 'urun', etiket: 'Ürün Seç' },
+    { id: 'tam', etiket: 'Hesabı Öde' },
+    { id: 'esit', etiket: 'Eşit Bölerek Öde' },
+    { id: 'urun', etiket: 'Ürün Seçerek Öde' },
   ];
 
   return (
@@ -172,7 +178,7 @@ export function KasiyerBolme({
             key={s.id}
             type="button"
             onClick={() => setAktifSekme(s.id)}
-            className={`flex-1 rounded-md py-1 text-xs font-medium transition-colors ${
+            className={`flex-1 rounded-md px-1 py-1 text-center text-[11px] font-medium leading-tight transition-colors ${
               aktifSekme === s.id
                 ? 'bg-background text-foreground shadow-sm'
                 : 'text-muted-foreground'
@@ -182,6 +188,30 @@ export function KasiyerBolme({
           </button>
         ))}
       </div>
+
+      {/* ─── Hesabı Öde (tüm masa tek seferde) ───────── */}
+      {aktifSekme === 'tam' && (
+        <div className="space-y-3">
+          <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm">
+            <div className="flex justify-between text-muted-foreground">
+              <span>Toplam</span>
+              <span>{formatTL(genelToplamKurus)}</span>
+            </div>
+            <div className="flex justify-between font-medium mt-1">
+              <span>Kalan</span>
+              <span>{formatTL(toplamKurus)}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={tamOde}
+            disabled={!!yukleniyor}
+            className="w-full rounded-md bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground disabled:opacity-50"
+          >
+            {yukleniyor ? '…' : `${formatTL(toplamKurus)} — Hesabı Öde`}
+          </button>
+        </div>
+      )}
 
       {/* ─── Eşit Böl ────────────────────────────────── */}
       {aktifSekme === 'esit' && (
