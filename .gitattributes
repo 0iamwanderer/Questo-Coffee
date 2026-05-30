@@ -1,0 +1,8 @@
+# Windows batch dosyalari CRLF olmali — LF olursa cmd.exe komutlari yanlis
+# ayristirir (komut baslari yenir, label/goto bozulur). Her zaman CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Windows-ozel betikler de CRLF tutulsun
+*.ps1 text eol=crlf
+*.vbs text eol=crlf
