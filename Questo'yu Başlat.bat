@@ -29,54 +29,43 @@ rem [2/5] Emulator (gizli pencere, vbs launcher)
 echo   [2/5] Emulator baslatiliyor (gizli, log: %LOG%\emulator.log)...
 wscript "%~dp0scripts\gizli-calistir.vbs" "emulator.log" "npm run emulators"
 
-rem [3/5] Emulator portlarini bekle (firestore 8080, auth 9099) - max 90 sn
-echo   [3/5] Emulator hazir olana kadar bekleniyor...
-set /a emu_sure=0
-:bekle_emu
-powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',8080)).Close();(New-Object Net.Sockets.TcpClient('127.0.0.1',9099)).Close();exit 0}catch{exit 1}" >nul 2>&1
-if errorlevel 1 (
-    set /a emu_sure+=2
-    if !emu_sure! geq 90 (
-        echo.
-        echo   HATA: Emulator 90 saniye icinde baslamadi.
-        echo   Log: %LOG%\emulator.log
-        pause
-        exit /b 1
-    )
-    timeout /t 2 /nobreak >nul
-    goto bekle_emu
-)
-
-rem [4/5] Demo veri yukle
-echo   [4/5] Demo veri yukleniyor...
-call npm run seed > "%LOG%\seed.log" 2>&1
-
-rem [5/5] Next.js — PRODUCTION modu (gizli pencere)
-rem Kaynak degismediyse build atlanir, aninda baslar; degistiyse bir kez build
-rem edilir. Production'da sayfalar onceden derlidir => ilk tiklamalar yavas degil.
-echo   [5/5] Next.js baslatiliyor (production, gizli, log: %LOG%\nextjs.log)...
-echo         (kod degismisse ilk acilista ~30 sn build olabilir)
+rem [3/5] Next.js'i HEMEN baslat — boot icin emulatore ihtiyaci yok. Boylece
+rem olasi ~30 sn build, emulator hazirligi ve seed ile PARALEL ilerler (sirayla
+rem beklemek yerine). Production'da sayfalar onceden derli => ilk tiklamalar hizli.
+echo   [3/5] Next.js baslatiliyor (production, paralel, log: %LOG%\nextjs.log)...
+echo         (kod degismisse ilk acilista ~30 sn build olabilir — arka planda)
 wscript "%~dp0scripts\gizli-calistir.vbs" "nextjs.log" "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\uygulama-baslat.ps1"
 
-rem Periodic yedek scripti (15 dk'da bir export + gunluk zip)
+rem Periodic yedek scripti (15 dk'da bir export + gunluk zip) — paralel, kritik degil
 echo   [+]   Periodic yedek scripti baslatiliyor (log: %LOG%\yedek.log)...
 wscript "%~dp0scripts\gizli-calistir.vbs" "yedek.log" "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\yedek-periodic.ps1"
 
-rem Next.js portunu bekle (3000) - max 180 sn (production build payi dahil)
-set /a next_sure=0
-:bekle_next
-powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',3000)).Close();exit 0}catch{exit 1}" >nul 2>&1
+rem [4/5] Emulator portlarini bekle (firestore 8080, auth 9099) - max 90 sn
+rem TEK PowerShell prosesi icinde 300 ms araliklarla yoklar; her yoklamada yeni
+rem proses acmak (eski yontem, ~2 sn granulerlik + proses maliyeti) yerine hizli.
+echo   [4/5] Emulator hazir olana kadar bekleniyor...
+powershell -NoProfile -Command "$d=0.0; while($d -lt 90){ try{ (New-Object Net.Sockets.TcpClient('127.0.0.1',8080)).Close(); (New-Object Net.Sockets.TcpClient('127.0.0.1',9099)).Close(); exit 0 }catch{ Start-Sleep -Milliseconds 300; $d+=0.3 } }; exit 1"
 if errorlevel 1 (
-    set /a next_sure+=2
-    if !next_sure! geq 180 (
-        echo.
-        echo   HATA: Next.js 180 saniye icinde baslamadi.
-        echo   Log: %LOG%\nextjs.log
-        pause
-        exit /b 1
-    )
-    timeout /t 2 /nobreak >nul
-    goto bekle_next
+    echo.
+    echo   HATA: Emulator 90 saniye icinde baslamadi.
+    echo   Log: %LOG%\emulator.log
+    pause
+    exit /b 1
+)
+
+rem [5/5] Demo veri yukle (emulator hazir; Next.js bu sirada zaten boot/build oluyor)
+echo   [5/5] Demo veri yukleniyor...
+call npm run seed > "%LOG%\seed.log" 2>&1
+
+rem Next.js portunu bekle (3000) - max 180 sn (paralel build payi dahil)
+rem TEK PowerShell prosesi, 300 ms yoklama.
+powershell -NoProfile -Command "$d=0.0; while($d -lt 180){ try{ (New-Object Net.Sockets.TcpClient('127.0.0.1',3000)).Close(); exit 0 }catch{ Start-Sleep -Milliseconds 300; $d+=0.3 } }; exit 1"
+if errorlevel 1 (
+    echo.
+    echo   HATA: Next.js 180 saniye icinde baslamadi.
+    echo   Log: %LOG%\nextjs.log
+    pause
+    exit /b 1
 )
 
 rem Tarayiciyi ac - Chrome onceligi, Edge fallback, son care: shell URL handler
