@@ -1,4 +1,5 @@
 import { ZodError } from 'zod';
+import { emulatorOrtami } from '@/lib/utils/ortam';
 
 export class AppError extends Error {
   constructor(
@@ -43,10 +44,10 @@ export const httpHata = (e: unknown): Response => {
   }
   const hata = e instanceof Error ? e : new Error(String(e));
   console.error('[questo] beklenmedik hata:', hata.message, hata);
-  const mesaj =
-    process.env.NODE_ENV === 'development'
-      ? `Sunucu hatası: ${hata.message}`
-      : 'Beklenmedik bir hata oluştu.';
+  // Gerçek üretimde detay sızdırma; yerel/emülatör POS'ta teşhis için göster.
+  const mesaj = emulatorOrtami()
+    ? `Sunucu hatası: ${hata.message}`
+    : 'Beklenmedik bir hata oluştu.';
   return Response.json(
     { kod: 'sunucu_hata', mesaj },
     { status: 500 },

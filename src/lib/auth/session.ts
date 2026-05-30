@@ -4,6 +4,7 @@ import { cookies } from 'next/headers';
 import { getAdminAuth } from '@/lib/firebase/admin';
 import type { DecodedIdToken } from 'firebase-admin/auth';
 import { COOKIE_ADI, COOKIE_OMUR_MS } from './cookie';
+import { emulatorOrtami } from '@/lib/utils/ortam';
 
 export { COOKIE_ADI };
 
@@ -28,7 +29,10 @@ export const oturumCereziDogrula =
 export const cerezAyarla = async (value: string): Promise<void> => {
   (await cookies()).set(COOKIE_ADI, value, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    // Secure yalnız gerçek üretimde (HTTPS). Yerel POS HTTP üzerinden çalışır
+    // (telefon/LAN: http://192.168.x.x) — Secure olursa cookie gönderilmez ve
+    // oturum kırılır. Emülatör ortamında Secure kapalı.
+    secure: !emulatorOrtami(),
     sameSite: 'lax',
     path: '/',
     maxAge: COOKIE_OMUR_MS / 1000,

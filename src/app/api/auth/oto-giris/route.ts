@@ -1,12 +1,15 @@
 import { getAdminAuth } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
+import { emulatorOrtami } from '@/lib/utils/ortam';
 
 export const runtime = 'nodejs';
 
 export async function POST() {
   try {
-    // Üretim ortamında otomatik giriş kesin yasak — env yanlışlıkla kalsa bile
-    if (process.env.NODE_ENV === 'production') {
+    // Otomatik giriş yalnızca yerel/emülatör POS'ta — gerçek bulut üretiminde
+    // (emülatör yok) kesin yasak. NODE_ENV değil emülatör sinyaline bakılır,
+    // çünkü hız için yerel POS da NODE_ENV=production ile çalışır.
+    if (!emulatorOrtami()) {
       throw new AppError(
         'devre_disi',
         'Otomatik giriş üretim ortamında devre dışıdır.',
