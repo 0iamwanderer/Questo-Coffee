@@ -20,16 +20,22 @@ echo.
 echo   Questo durduruluyor...
 echo.
 
-REM [1/3] Periodic yedek scripti (sadece bu, baska powershell'lere dokunma)
-echo   [1/3] Periodic yedek scripti kapatiliyor...
+REM [1/4] Periodic yedek scripti (sadece bu, baska powershell'lere dokunma)
+echo   [1/4] Periodic yedek scripti kapatiliyor...
 powershell -NoProfile -Command "Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { $_.CommandLine -like '*yedek-periodic.ps1*' } | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }" >nul 2>&1
 
-REM [2/3] Next.js (node.exe)
-echo   [2/3] Next.js (node) kapatiliyor...
+REM [2/4] Adisyonlari diske yaz (emulator hala calisirken kapanis yedegi al).
+REM      Force-kill --export-on-exit'i tetiklemedigi icin bu adim adisyonlarin
+REM      kaybolmasini onler. Emulator zaten durmussa sessizce gecer.
+echo   [2/4] Adisyonlar kaydediliyor (kapanis yedegi)...
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0scripts\kapanis-yedek.ps1"
+
+REM [3/4] Next.js (node.exe)
+echo   [3/4] Next.js (node) kapatiliyor...
 taskkill /F /IM node.exe >nul 2>&1
 
-REM [3/3] Emulator (java.exe)
-echo   [3/3] Emulator (java) kapatiliyor...
+REM [4/4] Emulator (java.exe)
+echo   [4/4] Emulator (java) kapatiliyor...
 taskkill /F /IM java.exe >nul 2>&1
 
 REM Dogrulama - portlar gercekten serbest mi?
