@@ -393,3 +393,93 @@
 .anim-fly-to-cart {
   animation: fly-to-cart 720ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+
+/* ──────────────────────────────────────────────────────────────────────
+   Yazdırma / PDF — Günlük rapor belgesi
+   "Belge olarak kaydet" tıklanınca window.print() çağrılır; tarayıcının
+   "PDF olarak kaydet" hedefi şık bir A4 belge üretir. Yalnız .rapor-belge
+   bölgesi basılır; uygulama çerçevesi (nav, butonlar) gizlenir.
+   ────────────────────────────────────────────────────────────────────── */
+
+/* Ekranda yalnız baskıda görünecek belge başlığı gizli durur */
+.belge-baslik {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 16mm 14mm;
+  }
+
+  /* Her şeyi gizle, sadece rapor belgesini göster */
+  body * {
+    visibility: hidden;
+  }
+  .rapor-belge,
+  .rapor-belge * {
+    visibility: visible;
+  }
+  .rapor-belge {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    color: #1a120b;
+  }
+
+  /* Ekran-içi etkileşim öğelerini baskıda tamamen çıkar */
+  .yazdir-gizle {
+    display: none !important;
+  }
+
+  /* Arka plan renkleri/çubuk grafik baskıda korunsun */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Baskıya özel belge başlığı */
+  .belge-baslik {
+    display: block;
+    border-bottom: 2px solid #5b2818;
+    padding-bottom: 10px;
+    margin-bottom: 18px;
+  }
+  .belge-baslik h1 {
+    font-size: 22pt;
+    font-weight: 700;
+    color: #5b2818;
+    margin: 0;
+  }
+  .belge-baslik .belge-alt {
+    font-size: 10pt;
+    color: #6a4f3a;
+    margin-top: 2px;
+  }
+
+  /* Kart ve kutuların kenarlıkları net çıksın */
+  .rapor-belge .rounded-lg,
+  .rapor-belge .rounded-md {
+    border: 1px solid #d8c7a0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Sayfa ortası bölünmesin */
+  .rapor-belge section,
+  .rapor-belge li {
+    break-inside: avoid;
+  }
+
+  .belge-dipnot {
+    display: block;
+    margin-top: 24px;
+    padding-top: 8px;
+    border-top: 1px solid #d8c7a0;
+    font-size: 9pt;
+    color: #6a4f3a;
+  }
+}

@@ -4,9 +4,17 @@ import { getAdminDb } from '@/lib/firebase/admin';
 import { formatTL } from '@/lib/utils/para';
 import { istanbulGunId } from '@/lib/siparis/sayac';
 import type { SiparisDurumu } from '@/types/model';
+import { YazdirButton } from './yazdir-btn';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
+
+// Istanbul saatine göre biçimleyiciler (belge başlığı + hızlı gün butonları)
+const istFmt = (opts: Intl.DateTimeFormatOptions) =>
+  new Intl.DateTimeFormat('tr-TR', { timeZone: 'Europe/Istanbul', ...opts });
+
+// yyyy-mm-dd → o günü temsil eden Date (öğle, Istanbul) — biçimleme için güvenli
+const gunDate = (yyyymmdd: string) => new Date(`${yyyymmdd}T12:00:00+03:00`);
 
 const R = (): string => {
   const id = process.env.NEXT_PUBLIC_RESTORAN_ID;
@@ -41,6 +49,21 @@ export default async function RaporSayfasi({ searchParams }: Props) {
   const { baslangic, bitis } = tarihAraligi(seciliTarih);
   const db = getAdminDb();
   const restoranId = R();
+
+  // Restoran meta — belge başlığı için ad/şehir
+  const restoranSnap = await db.doc(`restoranlar/${restoranId}`).get();
+  const restoranMeta = (restoranSnap.data() ?? {}) as {
+    ad?: string;
+    sehir?: string;
+  };
+  const restoranAd = restoranMeta.ad ?? 'Questo';
+
+  // Son 7 gün (bugün dahil) — hızlı erişim butonları için
+  const sonYediGun = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(Date.now() - i * 86_400_000);
+    return istanbulGunId(d);
+  });
+  const bugunId = sonYediGun[0]!;
 
   // Bu gün açılan TÜM siparişleri çek (collectionGroup)
   const siparisSnap = await db
@@ -110,23 +133,73 @@ export default async function RaporSayfasi({ searchParams }: Props) {
   const maxSaat = Math.max(...saatDagilimi, 1);
 
   return (
-    <div className="mx-auto max-w-5xl p-4 space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Günlük Rapor</h1>
-        <form className="flex items-center gap-2">
-          <input
-            type="date"
-            name="tarih"
-            defaultValue={seciliTarih}
-            className="rounded-md border bg-background px-2 py-1 text-sm"
-          />
-          <button
-            type="submit"
-            className="rounded-md border px-3 py-1 text-sm"
-          >
-            Göster
-          </button>
-        </form>
+    <div className="mx-auto max-w-5xl p-4 space-y-6 rapor-belge">
+      {/* Baskıya özel belge başlığı (ekranda gizli, PDF'te görünür) */}
+      <div className="belge-baslik">
+        <h1>{restoranAd} — Günlük Rapor</h1>
+        <div className="belge-alt">
+          {restoranMeta.sehir ? `${restoranMeta.sehir} · ` : ''}
+          {istFmt({
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+          }).format(gunDate(seciliTarih))}
+          {' · '}
+          Oluşturuldu: {istFmt({ dateStyle: 'short', timeStyle: 'short' }).format(new Date())}
+        </div>
+      </div>
+
+      <div className="yazdir-gizle space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h1 className="text-2xl font-semibold">Günlük Rapor</h1>
+          <div className="flex items-center gap-2">
+            <YazdirButton />
+            <form className="flex items-center gap-2">
+              <input
+                type="date"
+                name="tarih"
+                defaultValue={seciliTarih}
+                className="rounded-md border bg-background px-2 py-1 text-sm"
+              />
+              <button
+                type="submit"
+                className="rounded-md border px-3 py-1 text-sm"
+              >
+                Göster
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Son 7 gün — hızlı erişim */}
+        <div className="flex flex-wrap gap-1.5">
+          {sonYediGun.map((g, i) => {
+            const secili = g === seciliTarih;
+            const d = gunDate(g);
+            const ustEtiket =
+              g === bugunId
+                ? 'Bugün'
+                : i === 1
+                  ? 'Dün'
+                  : istFmt({ weekday: 'short' }).format(d);
+            const altEtiket = istFmt({ day: '2-digit', month: '2-digit' }).format(d);
+            return (
+              <Link
+                key={g}
+                href={`/admin/rapor?tarih=${g}`}
+                className={`flex min-w-16 flex-col items-center rounded-md border px-3 py-1.5 text-center text-xs transition ${
+                  secili
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'bg-card text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <span className="font-medium capitalize">{ustEtiket}</span>
+                <span className="tabular-nums opacity-80">{altEtiket}</span>
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -200,7 +273,7 @@ export default async function RaporSayfasi({ searchParams }: Props) {
         </div>
       </section>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="yazdir-gizle text-xs text-muted-foreground">
         <Link href="/admin/menu" className="underline">
           Menü
         </Link>
@@ -209,6 +282,11 @@ export default async function RaporSayfasi({ searchParams }: Props) {
           Masalar
         </Link>
       </p>
+
+      {/* Baskıya özel dipnot (ekranda gizli) */}
+      <div className="belge-dipnot">
+        {restoranAd} · Bu belge {istFmt({ dateStyle: 'long', timeStyle: 'short' }).format(new Date())} tarihinde Questo tarafından oluşturulmuştur.
+      </div>
     </div>
   );
 }
