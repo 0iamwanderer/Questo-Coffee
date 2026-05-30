@@ -2,9 +2,10 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { EyeOff, RotateCcw } from 'lucide-react';
+import { EyeOff, RotateCcw, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatTL } from '@/lib/utils/para';
+import { useOnay } from '@/components/ortak/onay-dialog';
 import type { SiparisDurumu } from '@/types/model';
 
 export interface RaporSiparis {
@@ -33,6 +34,7 @@ export function RaporSiparisListesi({
   siparisler: RaporSiparis[];
 }) {
   const router = useRouter();
+  const onay = useOnay();
   const [yukleniyor, setYukleniyor] = useState<string | null>(null);
 
   const degistir = async (s: RaporSiparis, haric: boolean) => {
@@ -55,6 +57,40 @@ export function RaporSiparisListesi({
       router.refresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : 'İşlem başarısız.');
+    } finally {
+      setYukleniyor(null);
+    }
+  };
+
+  const sil = async (s: RaporSiparis) => {
+    const ok = await onay({
+      baslik: 'Siparişi tamamen sil',
+      mesaj:
+        `#${s.gunlukNo} (${s.masaAd}) siparişi KALICI olarak silinecek. ` +
+        'Stok geri verilir; adisyonda başka sipariş kalmazsa adisyon da kapanır. ' +
+        'Bu işlem geri alınamaz. Devam edilsin mi?',
+      onayEtiket: 'Tamamen sil',
+      tehlikeli: true,
+    });
+    if (!ok) return;
+    setYukleniyor(s.siparisId);
+    try {
+      const res = await fetch('/api/admin/siparis-sil', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          adisyonId: s.adisyonId,
+          siparisId: s.siparisId,
+        }),
+      });
+      if (!res.ok) {
+        const j = (await res.json().catch(() => ({}))) as { mesaj?: string };
+        throw new Error(j.mesaj ?? `HTTP ${res.status}`);
+      }
+      toast.success('Sipariş tamamen silindi.');
+      router.refresh();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Silme başarısız.');
     } finally {
       setYukleniyor(null);
     }
@@ -105,27 +141,40 @@ export function RaporSiparisListesi({
             <span className="text-sm font-medium tabular-nums">
               {formatTL(s.toplamKurus)}
             </span>
-            {s.raporDisi ? (
+            <div className="flex items-center gap-1">
+              {s.raporDisi ? (
+                <button
+                  type="button"
+                  onClick={() => void degistir(s, false)}
+                  disabled={yukleniyor === s.siparisId}
+                  className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-emerald-700 disabled:opacity-50 dark:text-emerald-400"
+                >
+                  <RotateCcw className="size-3" />
+                  Geri ekle
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => void degistir(s, true)}
+                  disabled={yukleniyor === s.siparisId}
+                  className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-destructive disabled:opacity-50"
+                >
+                  <EyeOff className="size-3" />
+                  Rapordan çıkar
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => void degistir(s, false)}
+                onClick={() => void sil(s)}
                 disabled={yukleniyor === s.siparisId}
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-emerald-700 disabled:opacity-50 dark:text-emerald-400"
+                aria-label="Tamamen sil"
+                title="Tamamen sil"
+                className="inline-flex items-center gap-1 rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive disabled:opacity-50"
               >
-                <RotateCcw className="size-3" />
-                Geri ekle
+                <Trash2 className="size-3" />
+                Sil
               </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => void degistir(s, true)}
-                disabled={yukleniyor === s.siparisId}
-                className="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-xs text-muted-foreground hover:text-destructive disabled:opacity-50"
-              >
-                <EyeOff className="size-3" />
-                Rapordan çıkar
-              </button>
-            )}
+            </div>
           </div>
         </li>
       ))}
