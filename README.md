@@ -5,6 +5,28 @@ sipariş verdiği, kasanın canlı olarak takip edip kapattığı yerel ağ
 (LAN-only) sistemi. İnternet bağlantısı gerektirmez — Firebase emulator
 restoranın PC'sinde çalışır, telefon/tabletler aynı WiFi üzerinden bağlanır.
 
+## İndirdikten Sonra (Windows — Önemli)
+
+Projeyi internetten (ZIP olarak) indirdiyseniz Windows, dosyalara **"Mark of
+the Web"** (internetten geldi işareti) ekler. Bu yüzden `Questo'yu Başlat.bat`
+ve `scripts\*.vbs` dosyaları **"güvenli olmayabilir"** diye engellenebilir
+(SmartScreen / Akıllı Uygulama Denetimi).
+
+Çözüm — şunlardan **birini** yapın:
+
+- **Kolay yol:** `scripts\engeli-kaldir.bat` dosyasına çift tıklayın. (İlk
+  çalıştırmada Windows uyarı verirse **"Yine de çalıştır"** deyin.) Bu script
+  proje kökündeki tüm dosyalardan internet işaretini kaldırır.
+- **Elle:** İndirilen ZIP'e sağ tık → **Özellikler** → altta **"Engellemeyi
+  Kaldır"** kutusunu işaretleyip ZIP'i öyle açın.
+- **PowerShell ile:** Proje klasöründe şu tek satırı çalıştırın:
+  ```powershell
+  Get-ChildItem . -Recurse -File | Unblock-File
+  ```
+
+> Not: Bu işaret dosya içeriği değil, Windows'a özgü gizli meta veridir; git
+> bunu takip etmez. Yani temizlemek git'te bir değişiklik üretmez.
+
 ## Teknoloji
 
 - **Frontend:** Next.js 15 (App Router) · TypeScript (strict) · Tailwind +

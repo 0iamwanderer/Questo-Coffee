@@ -21,6 +21,8 @@ service-account*.json
 
 # Yerel kullanım batch dosyaları
 *.bat
+# ...ama internet engelini kaldıran yardımcı script repoda kalsın (zip'le dağıtım için)
+!scripts/engeli-kaldir.bat
 
 # Başlat.bat'ın gizli proseslerinin log çıktıları
 logs/
