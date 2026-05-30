@@ -51,23 +51,26 @@ rem [4/5] Demo veri yukle
 echo   [4/5] Demo veri yukleniyor...
 call npm run seed > "%LOG%\seed.log" 2>&1
 
-rem [5/5] Next.js (gizli pencere)
-echo   [5/5] Next.js baslatiliyor (gizli, log: %LOG%\nextjs.log)...
-wscript "%~dp0scripts\gizli-calistir.vbs" "nextjs.log" "npm run dev"
+rem [5/5] Next.js — PRODUCTION modu (gizli pencere)
+rem Kaynak degismediyse build atlanir, aninda baslar; degistiyse bir kez build
+rem edilir. Production'da sayfalar onceden derlidir => ilk tiklamalar yavas degil.
+echo   [5/5] Next.js baslatiliyor (production, gizli, log: %LOG%\nextjs.log)...
+echo         (kod degismisse ilk acilista ~30 sn build olabilir)
+wscript "%~dp0scripts\gizli-calistir.vbs" "nextjs.log" "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\uygulama-baslat.ps1"
 
 rem Periodic yedek scripti (15 dk'da bir export + gunluk zip)
 echo   [+]   Periodic yedek scripti baslatiliyor (log: %LOG%\yedek.log)...
 wscript "%~dp0scripts\gizli-calistir.vbs" "yedek.log" "powershell -NoProfile -ExecutionPolicy Bypass -File scripts\yedek-periodic.ps1"
 
-rem Next.js portunu bekle (3000) - max 60 sn
+rem Next.js portunu bekle (3000) - max 180 sn (production build payi dahil)
 set /a next_sure=0
 :bekle_next
 powershell -NoProfile -Command "try{(New-Object Net.Sockets.TcpClient('127.0.0.1',3000)).Close();exit 0}catch{exit 1}" >nul 2>&1
 if errorlevel 1 (
     set /a next_sure+=2
-    if !next_sure! geq 60 (
+    if !next_sure! geq 180 (
         echo.
-        echo   HATA: Next.js 60 saniye icinde baslamadi.
+        echo   HATA: Next.js 180 saniye icinde baslamadi.
         echo   Log: %LOG%\nextjs.log
         pause
         exit /b 1
