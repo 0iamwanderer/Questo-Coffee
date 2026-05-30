@@ -401,8 +401,9 @@
    bölgesi basılır; uygulama çerçevesi (nav, butonlar) gizlenir.
    ────────────────────────────────────────────────────────────────────── */
 
-/* Ekranda yalnız baskıda görünecek belge başlığı gizli durur */
-.belge-baslik {
+/* Ekranda yalnız baskıda görünecek belge öğeleri gizli durur */
+.belge-baslik,
+.belge-ozet {
   display: none;
 }
 
@@ -448,6 +449,43 @@
     border-bottom: 2px solid #5b2818;
     padding-bottom: 10px;
     margin-bottom: 18px;
+  }
+
+  /* Öne çıkan özet — Net Ciro belgede en görünür öğe */
+  .belge-ozet {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    border: 1.5px solid #5b2818;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    background: #faf4e4;
+  }
+  .belge-net {
+    display: flex;
+    flex-direction: column;
+  }
+  .belge-net-etiket {
+    font-size: 10pt;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #6a4f3a;
+  }
+  .belge-net-deger {
+    font-size: 30pt;
+    font-weight: 700;
+    line-height: 1.05;
+    color: #5b2818;
+  }
+  .belge-net-yan {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 10pt;
+    color: #1a120b;
   }
   .belge-baslik h1 {
     font-size: 22pt;

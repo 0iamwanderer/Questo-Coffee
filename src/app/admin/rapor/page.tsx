@@ -110,7 +110,6 @@ export default async function RaporSayfasi({ searchParams }: Props) {
   // ── Seçili gün detay birikimleri ────────────────────────────────────
   let toplamCiro = 0;
   let iptalCiro = 0;
-  let teslimSayisi = 0;
   let iptalSayisi = 0;
   let toplamSiparisSayisi = 0; // yalnız rapora dahil
   let haricSayisi = 0;
@@ -186,7 +185,6 @@ export default async function RaporSayfasi({ searchParams }: Props) {
     }
 
     toplamCiro += s.toplamKurus;
-    if (s.durum === 'teslim') teslimSayisi++;
 
     const istSaat = (dt.getUTCHours() + 3) % 24;
     saatSayisi[istSaat] = (saatSayisi[istSaat] ?? 0) + 1;
@@ -312,8 +310,21 @@ export default async function RaporSayfasi({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* ── Özet kartları ── */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {/* Baskıya özel öne çıkan özet — Net Ciro ve satış belgede ilk sırada */}
+      <div className="belge-ozet">
+        <div className="belge-net">
+          <span className="belge-net-etiket">Net Ciro</span>
+          <span className="belge-net-deger">{formatTL(toplamCiro)}</span>
+        </div>
+        <div className="belge-net-yan">
+          <span>{toplamSiparisSayisi} sipariş</span>
+          <span>Ort. bilet {formatTL(Math.round(ortalamaBilet))}</span>
+          {iptalSayisi > 0 && <span>{iptalSayisi} iptal</span>}
+        </div>
+      </div>
+
+      {/* ── Özet kartları (ekran) ── */}
+      <div className="yazdir-gizle grid grid-cols-3 gap-3">
         <Kart
           etiket="Net ciro"
           deger={formatTL(toplamCiro)}
@@ -328,7 +339,6 @@ export default async function RaporSayfasi({ searchParams }: Props) {
           deger={`${toplamSiparisSayisi}`}
           alt={`${iptalSayisi} iptal`}
         />
-        <Kart etiket="Teslim edilen" deger={`${teslimSayisi}`} />
         <Kart
           etiket="Ortalama bilet"
           deger={formatTL(Math.round(ortalamaBilet))}
@@ -346,50 +356,6 @@ export default async function RaporSayfasi({ searchParams }: Props) {
           {haricCiro > 0 ? ` (${formatTL(haricCiro)} sayılmadı)` : ''}.
         </p>
       )}
-
-      {/* ── Haftalık özet ── */}
-      <section className="space-y-3">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-sm font-medium">Haftalık ciro (son 7 gün)</h2>
-          <span className="text-xs text-muted-foreground">
-            Toplam {formatTL(haftaToplam)}
-          </span>
-        </div>
-        <div className="flex items-end justify-between gap-1.5 rounded-lg border bg-card p-3">
-          {haftaGunleri.map((g, i) => {
-            const ciro = haftaDeger[i] ?? 0;
-            const secili = g === seciliTarih;
-            const d = gunDate(g);
-            return (
-              <Link
-                key={g}
-                href={`/admin/rapor?tarih=${g}`}
-                className="group flex flex-1 flex-col items-center gap-1"
-                title={`${g} · ${formatTL(ciro)}`}
-              >
-                <span className="text-[9px] tabular-nums text-muted-foreground">
-                  {ciro > 0 ? `₺${Math.round(ciro / 100)}` : ''}
-                </span>
-                <span className="flex h-24 w-full items-end justify-center">
-                  <span
-                    className={`w-full max-w-7 rounded-t transition-all ${
-                      secili ? 'bg-primary' : 'bg-primary/35 group-hover:bg-primary/60'
-                    }`}
-                    style={{ height: `${Math.max(2, (ciro / maxHafta) * 100)}%` }}
-                  />
-                </span>
-                <span
-                  className={`text-[10px] capitalize ${
-                    secili ? 'font-semibold text-foreground' : 'text-muted-foreground'
-                  }`}
-                >
-                  {istFmt({ weekday: 'short' }).format(d)}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* En çok satan ürünler */}
@@ -452,8 +418,52 @@ export default async function RaporSayfasi({ searchParams }: Props) {
         </div>
       </section>
 
-      {/* ── Saatlik ciro ── */}
+      {/* ── Haftalık özet ── */}
       <section className="space-y-3">
+        <div className="flex items-baseline justify-between">
+          <h2 className="text-sm font-medium">Haftalık ciro (son 7 gün)</h2>
+          <span className="text-xs text-muted-foreground">
+            Toplam {formatTL(haftaToplam)}
+          </span>
+        </div>
+        <div className="flex items-end justify-between gap-1.5 rounded-lg border bg-card p-3">
+          {haftaGunleri.map((g, i) => {
+            const ciro = haftaDeger[i] ?? 0;
+            const secili = g === seciliTarih;
+            const d = gunDate(g);
+            return (
+              <Link
+                key={g}
+                href={`/admin/rapor?tarih=${g}`}
+                className="group flex flex-1 flex-col items-center gap-1"
+                title={`${g} · ${formatTL(ciro)}`}
+              >
+                <span className="text-[9px] tabular-nums text-muted-foreground">
+                  {ciro > 0 ? `₺${Math.round(ciro / 100)}` : ''}
+                </span>
+                <span className="flex h-24 w-full items-end justify-center">
+                  <span
+                    className={`w-full max-w-7 rounded-t transition-all ${
+                      secili ? 'bg-primary' : 'bg-primary/35 group-hover:bg-primary/60'
+                    }`}
+                    style={{ height: `${Math.max(2, (ciro / maxHafta) * 100)}%` }}
+                  />
+                </span>
+                <span
+                  className={`text-[10px] capitalize ${
+                    secili ? 'font-semibold text-foreground' : 'text-muted-foreground'
+                  }`}
+                >
+                  {istFmt({ weekday: 'short' }).format(d)}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* ── Saatlik ciro — ekran-içi; belgede gizli (öne çıkmasın) ── */}
+      <section className="yazdir-gizle space-y-3">
         <h2 className="text-sm font-medium">Saatlik ciro (₺)</h2>
         {aktifSaatler.length === 0 ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-xs text-muted-foreground">
