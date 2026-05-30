@@ -35,6 +35,9 @@ if (Test-Path $buildId) {
 
 if ($rebuild) {
     Write-Host "[build] Kaynak degismis ya da ilk calistirma -> production build yapiliyor (~30 sn)..."
+    # Temiz build: yarim kalmis/eski artefaktlar (dev<->prod karisimi) vendor
+    # chunk hatalarina yol acabiliyor; her build oncesi .next sifirlanir.
+    Remove-Item -Recurse -Force .next -ErrorAction SilentlyContinue
     npm run build
     if ($LASTEXITCODE -ne 0) {
         Write-Host "[build] BASARISIZ! Dukkan acilabilsin diye dev moduna dusuluyor (ilk tiklamalar yavas olabilir)."
