@@ -242,6 +242,7 @@ export default async function AdisyonDetay({
         <KasiyerBolme
           adisyonId={adisyonId}
           toplamKurus={kalanToplam}
+          genelToplamKurus={adisyon.toplamKurus as number}
           siparisler={siparisler
             .map((s) => {
               const kdl = siparisKalemDurum.get(s.id) ?? [];

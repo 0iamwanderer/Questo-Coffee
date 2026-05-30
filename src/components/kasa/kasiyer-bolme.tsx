@@ -23,21 +23,32 @@ interface SiparisOzet {
 
 interface Props {
   adisyonId: string;
+  /** Adisyonun kalan (ödenmemiş) tutarı. */
   toplamKurus: number;
+  /** Adisyonun değişmeyen genel toplamı — "Kişi başı" sabit gösterimi için. */
+  genelToplamKurus: number;
   siparisler: SiparisOzet[];
 }
 
 type Sekme = 'esit' | 'urun';
 
-export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
+export function KasiyerBolme({
+  adisyonId,
+  toplamKurus,
+  genelToplamKurus,
+  siparisler,
+}: Props) {
   const router = useRouter();
   const [aktifSekme, setAktifSekme] = useState<Sekme>('esit');
   const [kisiSayisi, setKisiSayisi] = useState(2);
   const [secili, setSecili] = useState<Set<string>>(new Set());
   const [odenenSayisi, setOdenenSayisi] = useState(0);
-  const [odenenUrunler, setOdenenUrunler] = useState<Set<string>>(new Set());
   const [yukleniyor, setYukleniyor] = useState<string | null>(null);
   const [hata, setHata] = useState<string | null>(null);
+
+  // Adisyon tamamen ödendiyse (kalan = 0) ödeme alanı yerine "Tamamen ödendi"
+  // durumu gösterilir; 0 tutarlı talep oluşmaz.
+  const tamamenOdendi = toplamKurus <= 0;
 
   const aktifSiparisler = siparisler.filter((s) => s.durum !== 'iptal');
 
@@ -59,10 +70,11 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
     return acc + (item?.araToplamKurus ?? 0);
   }, 0);
 
-  const kisiPayi = Math.ceil(toplamKurus / kisiSayisi);
+  // Kişi başı, KALAN değil değişmeyen GENEL toplam üzerinden sabit hesaplanır;
+  // bir kişi ödeyince bekleyenlerin tutarı düşmüş gibi görünmez.
+  const kisiPayi = Math.ceil(genelToplamKurus / kisiSayisi);
 
   const toggleSecili = (key: string) => {
-    if (odenenUrunler.has(key)) return;
     setSecili((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -98,6 +110,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   };
 
   const esitDilimOde = () => {
+    if (tamamenOdendi) return; // 0 tutarlı talep guard'ı
     const anahtar = `esit-${odenenSayisi}`;
     talep({ yontem: 'esit', kisiSayisi }, anahtar, () =>
       setOdenenSayisi((n) => n + 1),
@@ -105,6 +118,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
   };
 
   const urunOde = () => {
+    if (tamamenOdendi) return; // 0 tutarlı talep guard'ı
     const kalemler = Array.from(secili).flatMap((key) => {
       const item = tumKalemler.find((k) => k.key === key);
       if (!item) return [];
@@ -117,14 +131,12 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
       }];
     });
     if (kalemler.length === 0) return;
-    const secilenKeyler = new Set(secili);
+    const secimToplam = kalemler.reduce((acc, k) => acc + k.araToplamKurus, 0);
+    if (secimToplam <= 0) return; // 0 tutarlı talep guard'ı
     talep(
       { yontem: 'urun', secilenKalemler: kalemler },
       `urun-${Date.now()}`,
-      () => {
-        setOdenenUrunler((prev) => new Set([...prev, ...secilenKeyler]));
-        setSecili(new Set());
-      },
+      () => setSecili(new Set()),
     );
   };
 
@@ -146,9 +158,16 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
         </p>
       )}
 
-      {/* Sekme seçici */}
-      <div className="flex gap-1 rounded-lg bg-muted p-0.5">
-        {sekmeler.map((s) => (
+      {tamamenOdendi ? (
+        <div className="flex items-center gap-2 rounded-lg border border-emerald-600/30 bg-emerald-50 px-3 py-3 text-sm font-medium text-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200">
+          <Check className="size-4 shrink-0" />
+          Adisyon tamamen ödendi. Aşağıdan adisyonu kapatabilirsiniz.
+        </div>
+      ) : (
+        <>
+          {/* Sekme seçici */}
+          <div className="flex gap-1 rounded-lg bg-muted p-0.5">
+            {sekmeler.map((s) => (
           <button
             key={s.id}
             type="button"
@@ -172,8 +191,9 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
             <div className="flex items-center gap-3">
               <button
                 type="button"
-                onClick={() => setKisiSayisi((k) => Math.max(2, k - 1))}
-                className="flex size-7 items-center justify-center rounded-full border"
+                onClick={() => setKisiSayisi((k) => Math.max(1, k - 1))}
+                disabled={kisiSayisi <= 1}
+                className="flex size-7 items-center justify-center rounded-full border disabled:opacity-40"
               >
                 <Minus className="size-3.5" />
               </button>
@@ -193,7 +213,7 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
           <div className="rounded-lg bg-muted/50 px-3 py-2 text-sm">
             <div className="flex justify-between text-muted-foreground">
               <span>Toplam</span>
-              <span>{formatTL(toplamKurus)}</span>
+              <span>{formatTL(genelToplamKurus)}</span>
             </div>
             <div className="flex justify-between font-medium mt-1">
               <span>Kişi başı</span>
@@ -255,20 +275,18 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
                     </p>
                     {s.kalemler.map((k, i) => {
                       const key = `${s.id}-${i}`;
-                      const odendi = odenenUrunler.has(key);
                       return (
                         <label
                           key={key}
-                          className={`flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-muted/50 ${odendi ? 'opacity-40 cursor-default' : ''}`}
+                          className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-1.5 hover:bg-muted/50"
                         >
                           <input
                             type="checkbox"
-                            checked={secili.has(key) || odendi}
+                            checked={secili.has(key)}
                             onChange={() => toggleSecili(key)}
-                            disabled={odendi}
                             className="size-4 rounded"
                           />
-                          <span className={`flex-1 text-sm ${odendi ? 'line-through' : ''}`}>
+                          <span className="flex-1 text-sm">
                             <span className="tabular-nums text-muted-foreground">
                               {k.adet}×
                             </span>{' '}
@@ -302,6 +320,8 @@ export function KasiyerBolme({ adisyonId, toplamKurus, siparisler }: Props) {
             </>
           )}
         </div>
+      )}
+        </>
       )}
     </div>
   );

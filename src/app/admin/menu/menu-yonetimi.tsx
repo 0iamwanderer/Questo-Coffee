@@ -69,6 +69,7 @@ export function MenuYonetimi() {
   }>({ acik: false, duzenleId: null, veri: bosUrun });
   const [opsiyonUrun, setOpsiyonUrun] = useState<Urun | null>(null);
   const [hata, setHata] = useState<string | null>(null);
+  const [yukleniyor, setYukleniyor] = useState(true);
 
   useEffect(() => {
     const db = getClientDb();
@@ -84,8 +85,23 @@ export function MenuYonetimi() {
       ),
       orderBy('sira', 'asc'),
     );
-    const u1 = onSnapshot(kQ, (s) => setKategoriler(s.docs.map((d) => d.data())));
-    const u2 = onSnapshot(uQ, (s) => setUrunler(s.docs.map((d) => d.data())));
+    // Boş durumu ("Henüz ürün yok.") yalnızca her iki sorgu da ilk kez yüklendikten
+    // sonra göster; aksi halde veri gelmeden yanıltıcı görünür.
+    let katYuklendi = false;
+    let urunYuklendi = false;
+    const tamamlandiKontrol = () => {
+      if (katYuklendi && urunYuklendi) setYukleniyor(false);
+    };
+    const u1 = onSnapshot(kQ, (s) => {
+      setKategoriler(s.docs.map((d) => d.data()));
+      katYuklendi = true;
+      tamamlandiKontrol();
+    });
+    const u2 = onSnapshot(uQ, (s) => {
+      setUrunler(s.docs.map((d) => d.data()));
+      urunYuklendi = true;
+      tamamlandiKontrol();
+    });
     return () => {
       u1();
       u2();
@@ -543,7 +559,21 @@ export function MenuYonetimi() {
         )}
 
         <ul className="space-y-2">
-          {goruntulenenUrunler.length === 0 ? (
+          {yukleniyor ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <li
+                key={i}
+                className="flex items-start gap-3 rounded-lg border bg-card p-3"
+              >
+                <div className="size-16 shrink-0 animate-pulse rounded-md bg-muted" />
+                <div className="flex-1 space-y-2 py-1">
+                  <div className="h-4 w-1/3 animate-pulse rounded bg-muted" />
+                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                  <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+                </div>
+              </li>
+            ))
+          ) : goruntulenenUrunler.length === 0 ? (
             <li className="rounded-lg border border-dashed bg-card/50 p-6 text-center text-xs text-muted-foreground">
               Henüz ürün yok.
             </li>
