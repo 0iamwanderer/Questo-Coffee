@@ -1,3 +1,4 @@
+import { FieldValue } from 'firebase-admin/firestore';
 import { apiSahip } from '@/lib/auth/guard';
 import { getAdminDb } from '@/lib/firebase/admin';
 import { AppError, httpHata } from '@/lib/utils/hata';
@@ -37,7 +38,12 @@ export async function PATCH(
 
     const ref = getAdminDb().doc(`restoranlar/${R}/urunler/${id}`);
     const onceki = (await ref.get()).data();
-    await ref.update(body);
+    // gorselUrl === null → görseli kaldır (alanı tamamen sil)
+    const guncelle: Record<string, unknown> = { ...body };
+    if (body.gorselUrl === null) {
+      guncelle.gorselUrl = FieldValue.delete();
+    }
+    await ref.update(guncelle);
 
     await auditLogla(u, R, {
       aksiyon: 'urun.update',

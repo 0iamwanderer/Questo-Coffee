@@ -79,7 +79,10 @@ export const MasaGirdi = z.object({
 export type MasaGirdiT = z.infer<typeof MasaGirdi>;
 
 // ── PATCH varyantları (kısmi) ──────────────────────────────────────────
-export const UrunYama = UrunGirdi.partial();
+// gorselUrl ayrıca null kabul eder: null → mevcut görseli kaldır (alan silinir).
+export const UrunYama = UrunGirdi.partial().extend({
+  gorselUrl: z.string().url().nullable().optional(),
+});
 export const KategoriYama = KategoriGirdi.partial();
 export const MasaYama = z.object({
   ad: z.string().trim().min(1).max(40).optional(),

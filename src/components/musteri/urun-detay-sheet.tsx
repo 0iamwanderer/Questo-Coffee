@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Urun, UrunOpsiyonGrubu } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
+import { GORSEL_OPTIMIZASYONSUZ } from '@/lib/utils/gorsel';
 import { useSepet, type SepetSecim } from '@/stores/sepet';
 import { cn } from '@/lib/utils';
 import { flyToCart } from './sepete-uc';
@@ -25,6 +26,7 @@ function DetayGorseli({ urun }: { urun: Urun }) {
         fill
         sizes="(max-width: 480px) 100vw, 480px"
         className="object-cover"
+        unoptimized={GORSEL_OPTIMIZASYONSUZ}
       />
     );
   }

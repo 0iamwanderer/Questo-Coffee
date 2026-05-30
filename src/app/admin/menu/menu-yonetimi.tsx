@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
-import { ImageIcon, Pencil, Plus, Sliders, Trash2, Upload } from 'lucide-react';
+import { ImageIcon, Pencil, Plus, Sliders, Trash2, Upload, X } from 'lucide-react';
 import {
   collection,
   onSnapshot,
@@ -18,6 +18,7 @@ import {
 } from '@/lib/firebase/converters';
 import type { Kategori, Urun } from '@/types/model';
 import { formatTL, tlToKurus } from '@/lib/utils/para';
+import { GORSEL_OPTIMIZASYONSUZ } from '@/lib/utils/gorsel';
 import { cn } from '@/lib/utils';
 import { useOnay } from '@/components/ortak/onay-dialog';
 import { UrunOpsiyonlariModal } from './urun-opsiyonlari';
@@ -257,6 +258,32 @@ export function MenuYonetimi() {
         }
       }
       const msg = e instanceof Error ? e.message : 'Yükleme başarısız.';
+      setHata(msg);
+      toast.error(msg);
+    }
+  };
+
+  const gorselKaldir = async (u: Urun) => {
+    if (!u.gorselUrl) return;
+    const ok = await onay({
+      baslik: 'Görseli kaldır',
+      mesaj: 'Bu ürünün görselini kaldırmak istediğine emin misin?',
+      onayEtiket: 'Kaldır',
+      tehlikeli: true,
+    });
+    if (!ok) return;
+    try {
+      // Önce Firestore alanını temizle (gorselUrl: null → sunucu sahalardan siler)
+      await istek(`/api/admin/urun/${u.id}`, 'PATCH', { gorselUrl: null });
+      // Storage blob'unu best-effort sil — başarısızlık görseli kaldırmayı engellemesin
+      try {
+        await deleteObject(storageRef(getClientStorage(), u.gorselUrl));
+      } catch {
+        /* emulator yeniden başlatılınca temizlenir; orphan blob kritik değil */
+      }
+      toast.success('Görsel kaldırıldı.');
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Kaldırma başarısız.';
       setHata(msg);
       toast.error(msg);
     }
@@ -583,37 +610,51 @@ export function MenuYonetimi() {
                 key={u.id}
                 className="flex items-start gap-3 rounded-lg border bg-card p-3"
               >
-                <label
-                  className="relative size-16 shrink-0 cursor-pointer overflow-hidden rounded-md border bg-muted"
-                  title="Görsel yükle"
-                >
-                  {u.gorselUrl ? (
-                    <Image
-                      src={u.gorselUrl}
-                      alt={u.ad}
-                      fill
-                      sizes="64px"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center text-muted-foreground">
-                      <ImageIcon className="size-5" />
+                <div className="relative size-16 shrink-0">
+                  <label
+                    className="relative block size-16 cursor-pointer overflow-hidden rounded-md border bg-muted"
+                    title="Görsel yükle"
+                  >
+                    {u.gorselUrl ? (
+                      <Image
+                        src={u.gorselUrl}
+                        alt={u.ad}
+                        fill
+                        sizes="64px"
+                        className="object-cover"
+                        unoptimized={GORSEL_OPTIMIZASYONSUZ}
+                      />
+                    ) : (
+                      <div className="flex h-full items-center justify-center text-muted-foreground">
+                        <ImageIcon className="size-5" />
+                      </div>
+                    )}
+                    <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-foreground/60 py-0.5 text-[10px] text-background">
+                      <Upload className="size-3 mr-0.5" /> Yükle
                     </div>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) void gorselYukle(u, f);
+                        e.target.value = '';
+                      }}
+                    />
+                  </label>
+                  {u.gorselUrl && (
+                    <button
+                      type="button"
+                      aria-label="Görseli kaldır"
+                      title="Görseli kaldır"
+                      onClick={() => void gorselKaldir(u)}
+                      className="absolute -right-1.5 -top-1.5 z-10 inline-flex size-5 items-center justify-center rounded-full border border-background bg-destructive text-destructive-foreground shadow-sm transition active:scale-90"
+                    >
+                      <X className="size-3" />
+                    </button>
                   )}
-                  <div className="absolute inset-x-0 bottom-0 flex items-center justify-center bg-foreground/60 py-0.5 text-[10px] text-background">
-                    <Upload className="size-3 mr-0.5" /> Yükle
-                  </div>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) void gorselYukle(u, f);
-                      e.target.value = '';
-                    }}
-                  />
-                </label>
+                </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-medium">{u.ad}</div>
                   {u.aciklama && (

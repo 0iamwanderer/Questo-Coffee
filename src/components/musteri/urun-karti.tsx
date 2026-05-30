@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { Minus, Plus, Sliders, Sparkles } from 'lucide-react';
 import type { Urun } from '@/types/model';
 import { formatTL } from '@/lib/utils/para';
+import { GORSEL_OPTIMIZASYONSUZ } from '@/lib/utils/gorsel';
 import { useSepet } from '@/stores/sepet';
 import { cn } from '@/lib/utils';
 import { flyToCart } from './sepete-uc';
@@ -23,6 +24,7 @@ function UrunGorseli({ urun }: { urun: Urun }) {
         fill
         sizes="96px"
         className="object-cover"
+        unoptimized={GORSEL_OPTIMIZASYONSUZ}
       />
     );
   }
